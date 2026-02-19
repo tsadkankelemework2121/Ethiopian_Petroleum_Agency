@@ -45,7 +45,7 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
         cn(
           'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition',
           'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-          isActive && 'bg-blue-50 text-blue-700 ring-1 ring-blue-200',
+          isActive && 'bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200',
         )
       }
     >
@@ -59,7 +59,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="flex items-center gap-3 px-4 py-4">
-        <div className="grid size-10 place-items-center overflow-hidden rounded-xl bg-blue-50 ring-1 ring-blue-100">
+        <div className="grid size-10 place-items-center overflow-hidden rounded-xl bg-cyan-50 ring-1 ring-cyan-100">
           <img
             src="/logo-placeholder.png"
             alt="Company logo"
@@ -164,7 +164,7 @@ export default function AppLayout() {
               <div className="flex min-w-0 items-center gap-3">
                 <div className="hidden md:block">
                   <input
-                    className="w-[340px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-blue-200"
+                    className="w-[340px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-cyan-200"
                     placeholder="Search dispatch, vehicle, transporter…"
                   />
                 </div>
@@ -173,7 +173,7 @@ export default function AppLayout() {
                     <div className="text-xs font-semibold text-gray-900">PEA Admin</div>
                     <div className="text-xs text-gray-500">Regulator view</div>
                   </div>
-                  <div className="grid size-10 place-items-center rounded-full bg-blue-50 text-blue-700 ring-1 ring-blue-200">
+                  <div className="grid size-10 place-items-center rounded-full bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200">
                     <span className="text-xs font-bold">PA</span>
                   </div>
                 </div>
