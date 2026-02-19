@@ -42,7 +42,7 @@ export default function MapView({
     const map = new maplibregl.Map({
       container: mapContainer.current,
       style:
-        "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json", // Free dark map
+        "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json", // Free map
       center: [center.lng, center.lat],
       zoom: zoom,
     });
@@ -55,7 +55,7 @@ export default function MapView({
     markers.forEach((m) => {
       const el = document.createElement("div");
       el.className =
-        "w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow";
+        "w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 border-2 border-white shadow-lg";
 
       const marker = new maplibregl.Marker(el)
         .setLngLat([m.position.lng, m.position.lat])
