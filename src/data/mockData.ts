@@ -1,0 +1,253 @@
+import type {
+  Depot,
+  DispatchTask,
+  OilCompany,
+  RegionFuelSummary,
+  Transporter,
+} from './types'
+
+export const oilCompanies: OilCompany[] = [
+  {
+    id: 'oc-noc',
+    name: 'NOC',
+    contacts: {
+      person1: 'Abebe Kebede',
+      person2: 'Mekdes A.',
+      phone1: '+251 911 000 111',
+      phone2: '+251 911 000 222',
+      email1: 'contact@noc.et',
+      email2: 'ops@noc.et',
+    },
+  },
+  {
+    id: 'oc-ola',
+    name: 'OLA',
+    contacts: {
+      person1: 'Samuel T.',
+      person2: 'Hana G.',
+      phone1: '+251 911 100 111',
+      phone2: '+251 911 100 222',
+      email1: 'hello@ola.et',
+      email2: 'dispatch@ola.et',
+    },
+  },
+  {
+    id: 'oc-total',
+    name: 'TOTAL',
+    contacts: {
+      person1: 'Fitsum B.',
+      person2: 'Sara W.',
+      phone1: '+251 911 200 111',
+      phone2: '+251 911 200 222',
+      email1: 'support@total.et',
+      email2: 'fleet@total.et',
+    },
+  },
+]
+
+export const depots: Depot[] = [
+  {
+    id: 'ID8548',
+    name: 'Depot 1',
+    contacts: {
+      person1: 'Depot Contact 1',
+      phone1: '+251 911 300 111',
+      phone2: '+251 911 300 222',
+      email1: 'depot1@epa.et',
+    },
+    location: {
+      region: 'Addis Ababa',
+      city: 'Addis Ababa',
+      address: 'Bole, Airport Road',
+    },
+    mapLocation: { lat: 9.0192, lng: 38.7525 },
+  },
+  {
+    id: 'ID6341',
+    name: 'Depot 2',
+    contacts: {
+      person1: 'Depot Contact 2',
+      phone1: '+251 911 310 111',
+      phone2: '+251 911 310 222',
+      email1: 'depot2@epa.et',
+    },
+    location: {
+      region: 'Oromia',
+      city: 'Adama',
+      address: 'Main Depot Avenue',
+    },
+    mapLocation: { lat: 8.541, lng: 39.269 },
+  },
+  {
+    id: 'ID4025',
+    name: 'Depot 3',
+    contacts: {
+      person1: 'Depot Contact 3',
+      phone1: '+251 911 320 111',
+      phone2: '+251 911 320 222',
+      email1: 'depot3@epa.et',
+    },
+    location: {
+      region: 'Amhara',
+      city: 'Bahir Dar',
+      address: 'Industrial Zone',
+    },
+    mapLocation: { lat: 11.5936, lng: 37.3908 },
+  },
+]
+
+export const transporters: Transporter[] = [
+  {
+    id: 'tr-horizon',
+    name: 'Horizon-Djb',
+    contacts: {
+      person1: 'Contact Person 1',
+      person2: 'Contact Person 2',
+      phone1: '+251 911 400 111',
+      phone2: '+251 911 400 222',
+      email1: 'ops@horizon.example',
+    },
+    location: {
+      region: 'Addis Ababa',
+      city: 'Addis Ababa',
+      address: 'Ring Road, Logistics Hub',
+    },
+    vehicles: [
+      {
+        id: 'veh-3-11111',
+        plateRegNo: '3-11111 ET',
+        trailerRegNo: 'TR-7788',
+        manufacturer: 'Mercedes-Benz',
+        model: 'Actros',
+        yearOfManufacture: 2021,
+        sideNo: 'S-12',
+        driverName: 'Driver A',
+        driverPhone: '+251 911 500 111',
+      },
+      {
+        id: 'veh-3-2222',
+        plateRegNo: '3-2222 ET',
+        trailerRegNo: 'TR-1133',
+        manufacturer: 'Mercedes-Benz',
+        model: 'Arocs',
+        yearOfManufacture: 2020,
+        sideNo: 'S-07',
+        driverName: 'Driver B',
+        driverPhone: '+251 911 500 222',
+      },
+    ],
+  },
+  {
+    id: 'tr-eagle',
+    name: 'EAGLE',
+    contacts: {
+      person1: 'Contact Person 1',
+      person2: 'Contact Person 2',
+      phone1: '+251 911 410 111',
+      phone2: '+251 911 410 222',
+      email1: 'dispatch@eagle.example',
+    },
+    location: {
+      region: 'Oromia',
+      city: 'Adama',
+      address: 'Dry Port Road',
+    },
+    vehicles: [
+      {
+        id: 'veh-3-3333',
+        plateRegNo: '3-3333 ET',
+        trailerRegNo: 'TR-5566',
+        manufacturer: 'MAN',
+        model: 'TGX',
+        yearOfManufacture: 2022,
+        sideNo: 'S-21',
+        driverName: 'Driver C',
+        driverPhone: '+251 911 500 333',
+      },
+      {
+        id: 'veh-3-4444',
+        plateRegNo: '3-4444 ET',
+        trailerRegNo: 'TR-9901',
+        manufacturer: 'Volvo',
+        model: 'FH',
+        yearOfManufacture: 2019,
+        sideNo: 'S-03',
+        driverName: 'Driver D',
+        driverPhone: '+251 911 500 444',
+      },
+    ],
+  },
+]
+
+export const dispatchTasks: DispatchTask[] = [
+  {
+    peaDispatchNo: 'PEA001',
+    oilCompanyId: 'oc-noc',
+    transporterId: 'tr-horizon',
+    vehicleId: 'veh-3-11111',
+    dispatchDateTime: '2025-12-02T21:52:30Z',
+    dispatchLocation: 'Horizon-Djb',
+    destinationDepotId: 'ID8548',
+    etaDateTime: '2025-12-06T10:22:00Z',
+    fuelType: 'Diesel',
+    dispatchedLiters: 32000,
+    dropOffDateTime: '2025-12-06T10:22:32Z',
+    dropOffLocation: 'Addis Ababa, ID8548',
+    status: 'Delivered',
+    lastGpsPoint: { position: { lat: 9.03, lng: 38.74 }, timestamp: '2025-12-06T09:50:00Z' },
+  },
+  {
+    peaDispatchNo: 'PEA008',
+    oilCompanyId: 'oc-ola',
+    transporterId: 'tr-horizon',
+    vehicleId: 'veh-3-2222',
+    dispatchDateTime: '2025-12-06T01:00:30Z',
+    dispatchLocation: 'Horizon-Djb',
+    destinationDepotId: 'ID6341',
+    etaDateTime: '2025-12-08T17:05:00Z',
+    fuelType: 'Benzine',
+    dispatchedLiters: 28000,
+    status: 'Exceeded ETA',
+    lastGpsPoint: { position: { lat: 8.9, lng: 38.8 }, timestamp: '2025-12-08T22:40:00Z' },
+  },
+  {
+    peaDispatchNo: 'PEA014',
+    oilCompanyId: 'oc-total',
+    transporterId: 'tr-eagle',
+    vehicleId: 'veh-3-3333',
+    dispatchDateTime: '2025-12-01T21:52:30Z',
+    dispatchLocation: 'Horizon-Djb',
+    destinationDepotId: 'ID4025',
+    etaDateTime: '2025-12-05T17:05:00Z',
+    fuelType: 'Jet Fuel',
+    dispatchedLiters: 24000,
+    status: 'GPS Offline >24h',
+    lastGpsPoint: { position: { lat: 9.4, lng: 39.2 }, timestamp: '2025-12-04T08:15:00Z' },
+  },
+  {
+    peaDispatchNo: 'PEA032',
+    oilCompanyId: 'oc-noc',
+    transporterId: 'tr-eagle',
+    vehicleId: 'veh-3-4444',
+    dispatchDateTime: '2025-12-10T05:31:30Z',
+    dispatchLocation: 'Horizon-Djb',
+    destinationDepotId: 'ID8548',
+    etaDateTime: '2025-12-15T13:27:00Z',
+    fuelType: 'Diesel',
+    dispatchedLiters: 30000,
+    status: 'Stopped >5h',
+    lastGpsPoint: { position: { lat: 9.02, lng: 38.78 }, timestamp: '2025-12-12T16:00:00Z' },
+  },
+]
+
+export const regionalFuelDispatchedThisWeek: RegionFuelSummary[] = [
+  { region: 'Tigray Region', weekLabel: 'This week', benzineM3: 1485, dieselM3: 1745, jetFuelM3: 1074 },
+  { region: 'Afar Region', weekLabel: 'This week', benzineM3: 985, dieselM3: 1230, jetFuelM3: 310 },
+  { region: 'Addis Ababa', weekLabel: 'This week', benzineM3: 1120, dieselM3: 950, jetFuelM3: 430 },
+  { region: 'Oromia Region', weekLabel: 'This week', benzineM3: 1310, dieselM3: 1690, jetFuelM3: 520 },
+  { region: 'Amhara Region', weekLabel: 'This week', benzineM3: 820, dieselM3: 1410, jetFuelM3: 260 },
+  { region: 'CE Region', weekLabel: 'This week', benzineM3: 760, dieselM3: 1020, jetFuelM3: 180 },
+  { region: 'Benshangul Region', weekLabel: 'This week', benzineM3: 410, dieselM3: 610, jetFuelM3: 90 },
+  { region: 'Sidama Region', weekLabel: 'This week', benzineM3: 690, dieselM3: 840, jetFuelM3: 140 },
+]
+
