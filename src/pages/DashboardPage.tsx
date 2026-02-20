@@ -310,7 +310,7 @@ export default function DashboardPage() {
             <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
             <CardBody className="h-48">
               {charts ? (
-                <div className="space-y-6 h-full flex flex-col justify-center">
+                <div className="space-y-4 h-full flex flex-col justify-center">
                   {/* Calculate totals for each fuel type */}
                   {(() => {
                     const fuelData = [
@@ -341,7 +341,7 @@ export default function DashboardPage() {
                               {fuel.volume.toLocaleString()}L ({percentage.toFixed(0)}%)
                             </span>
                           </div>
-                          <div className="w-full h-8 bg-muted/40 rounded-full overflow-hidden border border-border">
+                          <div className="w-full h-5 bg-muted/40 rounded-full overflow-hidden border border-border">
                             <div
                               className="h-full rounded-full transition-all duration-300"
                               style={{
