@@ -65,11 +65,40 @@ export default function DepotsPage() {
             </div>
 
             <div className="p-4">
-              <div className="text-xs font-semibold text-text-muted">Address</div>
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Address</div>
               <div className="mt-1 text-sm text-text">{d.location.address}</div>
 
-              <div className="mt-4 text-xs font-semibold text-text-muted">Contact person</div>
-              <div className="mt-1 text-sm text-text">{d.contacts.person1 ?? '—'}</div>
+              <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Contact Person</div>
+                  <div className="mt-1 text-sm font-medium text-text">{d.contacts.person1 ?? '—'}</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Primary Contact</div>
+                  <div className="mt-1 text-sm text-text flex items-center gap-2">
+                    <span>📞</span>
+                    {d.contacts.phone1 ?? '—'}
+                  </div>
+                </div>
+                {d.contacts.phone2 && (
+                  <div>
+                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Secondary Contact</div>
+                    <div className="mt-1 text-sm text-text flex items-center gap-2">
+                      <span>📞</span>
+                      {d.contacts.phone2}
+                    </div>
+                  </div>
+                )}
+                {d.contacts.email1 && (
+                  <div>
+                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Email</div>
+                    <div className="mt-1 text-sm text-text flex items-center gap-2">
+                      <span>✉️</span>
+                      <span className="truncate">{d.contacts.email1}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {d.mapLocation ? (
                 <div className="mt-4">
