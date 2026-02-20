@@ -1,16 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { DispatchStatus } from '../data/types'
-import { getVehiclesOnTransit } from '../data/mockApi'
+import { getDispatchTasks, getVehiclesOnTransit } from '../data/mockApi'
+import type { DispatchTask } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import MapView from '../components/map/MapView'
+import StatusPill from '../components/ui/StatusPill'
 
 export default function TrackingPage() {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [items, setItems] = useState<Awaited<ReturnType<typeof getVehiclesOnTransit>>>([])
+  const [tasks, setTasks] = useState<DispatchTask[]>([])
 
   useEffect(() => {
-    void getVehiclesOnTransit().then(setItems)
+    void Promise.all([getVehiclesOnTransit(), getDispatchTasks()]).then(([vt, t]) => {
+      setItems(vt)
+      setTasks(t)
+    })
   }, [])
 
   const filtered = useMemo(() => {
@@ -51,13 +56,9 @@ export default function TrackingPage() {
     return { lat: avgLat, lng: avgLng }
   }, [markers, selectedId])
 
-  const statusTone: Record<DispatchStatus, { bg: string; text: string }> = {
-    'On transit': { bg: 'bg-primary/15', text: 'text-primary-strong' },
-    Delivered: { bg: 'bg-emerald-500/15', text: 'text-emerald-700' },
-    'Exceeded ETA': { bg: 'bg-amber-500/15', text: 'text-amber-700' },
-    'GPS Offline >24h': { bg: 'bg-rose-500/15', text: 'text-rose-700' },
-    'Stopped >5h': { bg: 'bg-fuchsia-500/15', text: 'text-fuchsia-700' },
-  }
+  const tasksByDispatchNo = useMemo(() => {
+    return new Map(tasks.map((t) => [t.peaDispatchNo, t] as const))
+  }, [tasks])
 
   return (
     <div>
@@ -100,38 +101,33 @@ export default function TrackingPage() {
             </div>
 
             <div className="divide-y divide-border">
-              {filtered.map((t) => (
-                <button
-                  key={t.peaDispatchNo}
-                  type="button"
-                  onClick={() => setSelectedId(t.peaDispatchNo)}
-                  className="w-full p-4 text-left hover:bg-muted/60"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold text-text">{t.vehiclePlate}</div>
-                      <div className="mt-1 text-xs text-text-muted">
-                        Dispatch: {t.peaDispatchNo} • {t.oilCompanyName} • {t.transporterName}
+              {filtered.map((t) => {
+                const task = tasksByDispatchNo.get(t.peaDispatchNo)
+                return (
+                  <button
+                    key={t.peaDispatchNo}
+                    type="button"
+                    onClick={() => setSelectedId(t.peaDispatchNo)}
+                    className="w-full p-4 text-left hover:bg-muted/60"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold text-text">{t.vehiclePlate}</div>
+                        <div className="mt-1 text-xs text-text-muted">
+                          Dispatch: {t.peaDispatchNo} • {t.oilCompanyName} • {t.transporterName}
+                        </div>
+                        <div className="mt-1 text-xs text-text-muted">
+                          Last GPS:{' '}
+                          {t.lastGpsPoint
+                            ? `${t.lastGpsPoint.position.lat.toFixed(3)}, ${t.lastGpsPoint.position.lng.toFixed(3)}`
+                            : '—'}
+                        </div>
                       </div>
-                      <div className="mt-1 text-xs text-text-muted">
-                        Last GPS:{' '}
-                        {t.lastGpsPoint
-                          ? `${t.lastGpsPoint.position.lat.toFixed(3)}, ${t.lastGpsPoint.position.lng.toFixed(3)}`
-                          : '—'}
-                      </div>
+                      {task ? <StatusPill status={t.status} task={task} /> : <StatusPill status={t.status} />}
                     </div>
-                    <span
-                      className={[
-                        'rounded-full px-3 py-1 text-xs font-semibold',
-                        statusTone[t.status].bg,
-                        statusTone[t.status].text,
-                      ].join(' ')}
-                    >
-                      {t.status}
-                    </span>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>

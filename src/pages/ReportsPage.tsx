@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
 import type { Depot, DispatchTask, OilCompany, Transporter } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
+import StatusPill from '../components/ui/StatusPill'
 
 type TabId = 'dispatch' | 'vehicle' | 'depot'
 
@@ -105,7 +106,19 @@ export default function ReportsPage() {
           const duration =
             t.dropOffDateTime ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime()) : '—'
 
-          return [oilCompany, transporter, t.peaDispatchNo, dispatchDt, t.dispatchLocation, t.dropOffLocation ?? '—', dropDt, duration]
+          return {
+            task: t,
+            cells: [
+              oilCompany,
+              transporter,
+              t.peaDispatchNo,
+              dispatchDt,
+              t.dispatchLocation,
+              t.dropOffLocation ?? '—',
+              dropDt,
+              duration,
+            ],
+          }
         })
 
       return {
@@ -118,6 +131,7 @@ export default function ReportsPage() {
           'Drop Off Location',
           'Drop Off Date/Time',
           'Duration',
+          'Status',
         ],
         rows,
       }
@@ -139,7 +153,20 @@ export default function ReportsPage() {
           const duration =
             t.dropOffDateTime ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime()) : '—'
 
-          return [plate, transporter, oilCompany, t.peaDispatchNo, dispatchDt, t.dispatchLocation, t.dropOffLocation ?? '—', dropDt, duration]
+          return {
+            task: t,
+            cells: [
+              plate,
+              transporter,
+              oilCompany,
+              t.peaDispatchNo,
+              dispatchDt,
+              t.dispatchLocation,
+              t.dropOffLocation ?? '—',
+              dropDt,
+              duration,
+            ],
+          }
         })
 
       return {
@@ -153,6 +180,7 @@ export default function ReportsPage() {
           'Drop Off Location',
           'Drop Off Date/Time',
           'Duration',
+          'Status',
         ],
         rows,
       }
@@ -171,11 +199,14 @@ export default function ReportsPage() {
         const duration =
           t.dropOffDateTime ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime()) : '—'
 
-        return [t.destinationDepotId, depotName, dropDt, plate, oilCompany, transporter, duration]
+        return {
+          task: t,
+          cells: [t.destinationDepotId, depotName, dropDt, plate, oilCompany, transporter, duration],
+        }
       })
 
     return {
-      columns: ['Depot ID', 'Depot Name', 'Drop Off Date/Time', 'Vehicle', 'Oil Company', 'Transporter', 'Duration'],
+      columns: ['Depot ID', 'Depot Name', 'Drop Off Date/Time', 'Vehicle', 'Oil Company', 'Transporter', 'Duration', 'Status'],
       rows,
     }
   }, [applied.from, applied.query, applied.to, companiesById, depotsById, tab, tasks, transportersById, vehiclesById])
@@ -257,13 +288,16 @@ export default function ReportsPage() {
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
-            {result.rows.map((row) => (
-              <tr key={row.join('|')} className="hover:bg-muted/40">
-                {row.map((cell) => (
-                  <td key={cell} className="whitespace-nowrap px-3 py-3 text-text">
+            {result.rows.map((row, idx) => (
+              <tr key={idx} className="hover:bg-muted/40">
+                {row.cells.map((cell, cellIdx) => (
+                  <td key={cellIdx} className="whitespace-nowrap px-3 py-3 text-text">
                     {cell}
                   </td>
                 ))}
+                <td className="whitespace-nowrap px-3 py-3">
+                  <StatusPill status={row.task.status} task={row.task} />
+                </td>
               </tr>
             ))}
 

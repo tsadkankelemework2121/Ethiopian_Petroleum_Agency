@@ -18,8 +18,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   ResponsiveContainer,
@@ -81,11 +79,10 @@ export default function DashboardPage() {
       .sort((a, b) => (a.dispatchDateTime < b.dispatchDateTime ? 1 : -1))
       .slice(0, 6)
       .map((t) => ({
-        peaDispatchNo: t.peaDispatchNo,
+        ...t,
         oilCompany: companiesById.get(t.oilCompanyId)?.name ?? '—',
         transporter: transportersById.get(t.transporterId)?.name ?? '—',
         eta: t.etaDateTime.replace('T', ' ').replace('Z', ''),
-        status: t.status,
       }))
   }, [companiesById, tasks, transportersById])
 
@@ -120,10 +117,32 @@ export default function DashboardPage() {
 
   const statusPie = useMemo(() => {
     if (!charts) return []
-    return charts.statusCounts.map((s) => ({ name: s.status, value: s.count }))
+
+    return charts.statusCounts.reduce(
+      (acc, s) => {
+        if (s.status === 'Delivered') {
+          acc.push({ name: 'Delivered', value: s.count })
+        } else if (s.status === 'On transit') {
+          acc.push({ name: 'In Transit', value: s.count })
+        } else {
+          const alertEntry = acc.find((item) => item.name === 'Alerts')
+          if (alertEntry) {
+            alertEntry.value += s.count
+          } else {
+            acc.push({ name: 'Alerts', value: s.count })
+          }
+        }
+        return acc
+      },
+      [] as Array<{ name: string; value: number }>,
+    )
   }, [charts])
 
-  const pieColors = ['#06b6d4', '#f59e0b', '#fb7185', '#a78bfa', '#10b981']
+  const pieColors = {
+    'Delivered': '#10b981',
+    'In Transit': '#2563EB',
+    'Alerts': '#ef4444',
+  }
 
   return (
     <div>
@@ -184,8 +203,8 @@ export default function DashboardPage() {
         <div className="lg:col-span-8">
           <Card>
             <CardHeader
-              title="Regional fuel dispatched (this week)"
-              subtitle="Stacked view by region (m³) — Benzine / Diesel / Jet Fuel"
+              title="Regional fuel dispatch overview"
+              subtitle="Grouped view by region (liters) — Benzine / Diesel / Jet Fuel"
               right={
                 <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-strong">
                   <MapPinIcon className="size-4" />
@@ -193,7 +212,7 @@ export default function DashboardPage() {
                 </span>
               }
             />
-            <CardBody className="h-[320px]">
+            <CardBody className="h-80">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
@@ -206,6 +225,7 @@ export default function DashboardPage() {
                     height={70}
                   />
                   <YAxis
+                    label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
                     tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
                     tickLine={false}
                     axisLine={false}
@@ -217,9 +237,9 @@ export default function DashboardPage() {
                       background: 'rgba(255,255,255,0.95)',
                     }}
                   />
-                  <Bar dataKey="benzineM3" name="Benzine" stackId="a" fill="#22d3ee" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="dieselM3" name="Diesel" stackId="a" fill="#06b6d4" />
-                  <Bar dataKey="jetFuelM3" name="Jet Fuel" stackId="a" fill="#0ea5e9" radius={[0, 0, 8, 8]} />
+                  <Bar dataKey="benzineM3" name="Benzine" fill="#27A2D8" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="dieselM3" name="Diesel" fill="#2563EB" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="jetFuelM3" name="Jet Fuel" fill="#B1BDD9" radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardBody>
@@ -229,7 +249,7 @@ export default function DashboardPage() {
         <div className="lg:col-span-4">
           <Card>
             <CardHeader title="Dispatch status" subtitle="Distribution of current dispatch tasks" />
-            <CardBody className="h-[320px]">
+            <CardBody className="h-80">
               {charts ? (
                 <div className="grid h-full grid-rows-[1fr_auto] gap-3">
                   <div className="h-full">
@@ -246,12 +266,14 @@ export default function DashboardPage() {
                           data={statusPie}
                           dataKey="value"
                           nameKey="name"
+                          cx="50%"
+                          cy="50%"
                           innerRadius={60}
                           outerRadius={95}
                           paddingAngle={3}
                         >
-                          {statusPie.map((_, idx) => (
-                            <Cell key={idx} fill={pieColors[idx % pieColors.length]} />
+                          {statusPie.map((entry) => (
+                            <Cell key={entry.name} fill={pieColors[entry.name as keyof typeof pieColors]} />
                           ))}
                         </Pie>
                       </PieChart>
@@ -259,11 +281,17 @@ export default function DashboardPage() {
                   </div>
 
                   <div className="grid gap-2">
-                    {charts.statusCounts.slice(0, 5).map((s) => (
-                      <div key={s.status} className="flex items-center justify-between gap-3">
-                        <div className="text-xs font-semibold text-text-muted">{s.status}</div>
+                    {statusPie.map((s) => (
+                      <div key={s.name} className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="h-3 w-3 rounded-full"
+                            style={{ backgroundColor: pieColors[s.name as keyof typeof pieColors] }}
+                          />
+                          <div className="text-xs font-semibold text-text-muted">{s.name}</div>
+                        </div>
                         <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-text">
-                          {s.count}
+                          {s.value}
                         </div>
                       </div>
                     ))}
@@ -276,42 +304,57 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Trend + tables */}
-        <div className="lg:col-span-7">
+        {/* Fuel Type Dispatch Summary */}
+        <div className="lg:col-span-12">
           <Card>
-            <CardHeader title="Dispatched volume trend" subtitle="Daily dispatched liters (from dispatch tasks)" />
-            <CardBody className="h-[260px]">
+            <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
+            <CardBody className="h-48">
               {charts ? (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={charts.dailyLiters} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
-                    <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
-                    <XAxis
-                      dataKey="day"
-                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 14,
-                        border: '1px solid rgba(203,213,225,0.9)',
-                        background: 'rgba(255,255,255,0.95)',
-                      }}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="liters"
-                      stroke="#06b6d4"
-                      strokeWidth={3}
-                      dot={false}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                <div className="space-y-6 h-full flex flex-col justify-center">
+                  {/* Calculate totals for each fuel type */}
+                  {(() => {
+                    const fuelData = [
+                      {
+                        name: 'Benzene',
+                        volume: regions.reduce((sum, r) => sum + r.benzineM3, 0),
+                        color: '#27A2D8',
+                      },
+                      {
+                        name: 'Diesel',
+                        volume: regions.reduce((sum, r) => sum + r.dieselM3, 0),
+                        color: '#2563EB',
+                      },
+                      {
+                        name: 'Jet Fuel',
+                        volume: regions.reduce((sum, r) => sum + r.jetFuelM3, 0),
+                        color: '#B1BDD9',
+                      },
+                    ]
+                    const totalVolume = fuelData.reduce((sum, f) => sum + f.volume, 0)
+                    return fuelData.map((fuel) => {
+                      const percentage = totalVolume > 0 ? (fuel.volume / totalVolume) * 100 : 0
+                      return (
+                        <div key={fuel.name} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm font-semibold text-text">{fuel.name}</span>
+                            <span className="text-sm font-semibold text-primary">
+                              {fuel.volume.toLocaleString()}L ({percentage.toFixed(0)}%)
+                            </span>
+                          </div>
+                          <div className="w-full h-8 bg-muted/40 rounded-full overflow-hidden border border-border">
+                            <div
+                              className="h-full rounded-full transition-all duration-300"
+                              style={{
+                                width: `${percentage}%`,
+                                backgroundColor: fuel.color,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })
+                  })()}
+                </div>
               ) : (
                 <div className="grid h-full place-items-center text-sm text-text-muted">Loading…</div>
               )}
@@ -319,37 +362,11 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-5">
-          <Card>
-            <CardHeader title="Vehicles on transit" subtitle="Top active items (click in Tracking for map)" />
-            <div className="divide-y divide-border">
-              {onTransit.slice(0, 6).map((t) => (
-                <div key={t.peaDispatchNo} className="px-5 py-4 hover:bg-muted/30">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-text">
-                        {t.vehiclePlate} • {t.peaDispatchNo}
-                      </div>
-                      <div className="mt-1 truncate text-xs text-text-muted">
-                        {t.oilCompanyName} • {t.transporterName} • Dest: {t.destinationDepotId}
-                      </div>
-                    </div>
-                    <StatusPill status={t.status} />
-                  </div>
-                </div>
-              ))}
-              {onTransit.length === 0 ? (
-                <div className="px-5 py-6 text-sm text-text-muted">No transit items in mock data.</div>
-              ) : null}
-            </div>
-          </Card>
-        </div>
-
         <div className="lg:col-span-12">
           <Card>
             <CardHeader title="Recent dispatches" subtitle="Latest dispatch tasks with ETA and status" />
             <div className="overflow-x-auto">
-              <table className="min-w-[760px] w-full text-left text-sm">
+              <table className="min-w-190 w-full text-left text-sm">
                 <thead className="bg-muted/40 text-xs text-text-muted">
                   <tr>
                     {['Dispatch', 'Oil company', 'Transporter', 'ETA', 'Status'].map((h) => (
@@ -367,7 +384,7 @@ export default function DashboardPage() {
                       <td className="whitespace-nowrap px-5 py-4 text-text">{r.transporter}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-text">{r.eta}</td>
                       <td className="whitespace-nowrap px-5 py-4">
-                        <StatusPill status={r.status} />
+                        <StatusPill status={r.status} task={r} />
                       </td>
                     </tr>
                   ))}

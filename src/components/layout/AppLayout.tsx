@@ -1,8 +1,9 @@
 import type { ComponentType, SVGProps } from 'react'
-import { useMemo, useState } from 'react'
-import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   AdjustmentsHorizontalIcon,
+  BellIcon,
   BuildingOffice2Icon,
   ChartBarSquareIcon,
   ClipboardDocumentListIcon,
@@ -10,6 +11,7 @@ import {
   Squares2X2Icon,
   TruckIcon,
 } from '@heroicons/react/24/outline'
+import { getDashboardKpis } from '../../data/mockApi'
 import { cn } from '../../lib/cn'
 
 type NavItem = {
@@ -44,8 +46,8 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-semibold transition',
-          'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-          isActive && 'bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200',
+          'text-gray-600 hover:bg-[#27A2D8]/10 hover:text-gray-900',
+          isActive && 'bg-[#27A2D8]/15 text-[#27A2D8] ring-1 ring-[#27A2D8]/30',
         )
       }
     >
@@ -59,7 +61,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-full flex-col bg-white">
       <div className="flex items-center gap-3 px-4 py-4">
-        <div className="grid size-10 place-items-center overflow-hidden rounded-xl bg-cyan-50 ring-1 ring-cyan-100">
+        <div className="grid size-10 place-items-center overflow-hidden rounded-xl bg-[#27A2D8]/10 ring-1 ring-[#27A2D8]/20">
           <img
             src="/logo-placeholder.png"
             alt="Company logo"
@@ -117,8 +119,17 @@ function routeTitle(pathname: string) {
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const location = useLocation()
+  const navigate = useNavigate()
+  const [alertsCount, setAlertsCount] = useState(0)
 
   const title = useMemo(() => routeTitle(location.pathname), [location.pathname])
+
+  useEffect(() => {
+    void getDashboardKpis().then((kpis) => {
+      const total = kpis.exceededEta + kpis.gpsOfflineOver24h + kpis.stoppedOver5h
+      setAlertsCount(total)
+    })
+  }, [])
 
   return (
     <div className="h-full bg-white">
@@ -164,16 +175,29 @@ export default function AppLayout() {
               <div className="flex min-w-0 items-center gap-3">
                 <div className="hidden md:block">
                   <input
-                    className="w-[340px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-cyan-200"
+                    className="w-[340px] rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none placeholder:text-gray-400 focus:ring-2 focus:ring-[#27A2D8]/30"
                     placeholder="Search dispatch, vehicle, transporter…"
                   />
                 </div>
                 <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate('/fuel-dispatch')}
+                    className="relative inline-flex items-center justify-center rounded-full border border-gray-200 bg-white p-2 text-gray-700 hover:bg-gray-50"
+                    aria-label={`${alertsCount} alerts`}
+                  >
+                    <BellIcon className="size-5" />
+                    {alertsCount > 0 ? (
+                      <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white ring-2 ring-white">
+                        {alertsCount > 99 ? '99+' : alertsCount}
+                      </span>
+                    ) : null}
+                  </button>
                   <div className="hidden sm:block text-right">
                     <div className="text-xs font-semibold text-gray-900">PEA Admin</div>
                     <div className="text-xs text-gray-500">Regulator view</div>
                   </div>
-                  <div className="grid size-10 place-items-center rounded-full bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200">
+                  <div className="grid size-10 place-items-center rounded-full bg-[#27A2D8]/15 text-[#27A2D8] ring-1 ring-[#27A2D8]/30">
                     <span className="text-xs font-bold">PA</span>
                   </div>
                 </div>

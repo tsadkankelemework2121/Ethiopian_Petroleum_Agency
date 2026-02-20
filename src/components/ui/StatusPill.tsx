@@ -1,5 +1,6 @@
-import type { DispatchStatus } from '../../data/types'
+import type { DispatchStatus, DispatchTask } from '../../data/types'
 import { cn } from '../../lib/cn'
+import { getStatusDetails } from '../../lib/statusDetails'
 
 const tones: Record<DispatchStatus, string> = {
   'On transit': 'bg-primary/15 text-primary-strong',
@@ -9,17 +10,33 @@ const tones: Record<DispatchStatus, string> = {
   'Stopped >5h': 'bg-fuchsia-500/15 text-fuchsia-700',
 }
 
-export default function StatusPill({ status, className }: { status: DispatchStatus; className?: string }) {
+export default function StatusPill({
+  status,
+  task,
+  className,
+  showDetails = true,
+}: {
+  status: DispatchStatus
+  task?: DispatchTask
+  className?: string
+  showDetails?: boolean
+}) {
+  const details = task && showDetails ? getStatusDetails(task) : null
+
   return (
-    <span
-      className={cn(
-        'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold',
-        tones[status],
-        className,
-      )}
-    >
-      {status}
-    </span>
+    <div className={cn('flex flex-col items-end gap-1', className)}>
+      <span
+        className={cn(
+          'inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold',
+          tones[status],
+        )}
+      >
+        {status}
+      </span>
+      {details ? (
+        <span className="text-[10px] font-medium text-text-muted">{details}</span>
+      ) : null}
+    </div>
   )
 }
 
