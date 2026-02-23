@@ -217,7 +217,7 @@ export default function ReportsPage() {
         title="Reports"
         subtitle="Generate report tables using period + identifiers (mock data for now)."
       />
-      <div className="flex flex-wrap gap-2 mt-6">
+      <div className="flex flex-wrap gap-4 mt-6 border-b border-[#D1D5DB] pb-1">
         {[
           { id: 'dispatch' as const, label: 'By Dispatch' },
           { id: 'vehicle' as const, label: 'By Vehicle' },
@@ -228,8 +228,10 @@ export default function ReportsPage() {
             type="button"
             onClick={() => setTab(t.id)}
             className={[
-              'rounded-lg px-4 py-2 text-sm font-semibold transition border-b-2',
-              tab === t.id ? 'text-primary border-primary bg-primary/5' : 'text-text-muted border-transparent hover:bg-muted/40',
+              'px-1 py-2 text-sm font-semibold transition border-b-2',
+              tab === t.id
+                ? 'text-[#27A2D8] border-[#27A2D8]'
+                : 'text-text-muted border-transparent hover:text-[#27A2D8] hover:border-[#27A2D8]/40',
             ].join(' ')}
           >
             {t.label}
@@ -269,7 +271,7 @@ export default function ReportsPage() {
           <button
             type="button"
             onClick={() => setApplied({ query, from, to })}
-            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
           >
             Run report
           </button>
@@ -277,7 +279,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
-        <table className="min-w-[980px] w-full text-left text-sm">
+        <table className="min-w-245 w-full text-left text-sm">
           <thead className="bg-muted/50 text-xs text-text-muted">
             <tr>
               {result.columns.map((h) => (

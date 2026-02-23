@@ -5,6 +5,7 @@ import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { PlusIcon } from '@heroicons/react/24/outline'
+import { ModalOverlay } from '../components/ui/ModelOverlay'
 
 export default function FuelDispatchPage() {
   const [tasks, setTasks] = useState<DispatchTask[]>([])
@@ -54,8 +55,8 @@ export default function FuelDispatchPage() {
         right={
           <button
             type="button"
-            onClick={() => setShowNewDispatchForm(!showNewDispatchForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            onClick={() => setShowNewDispatchForm(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
           >
             <PlusIcon className="size-4" />
             New Dispatch
@@ -63,23 +64,22 @@ export default function FuelDispatchPage() {
         }
       />
 
-      {showNewDispatchForm && (
-        <Card className="mb-6">
-          <CardHeader title="Add New Dispatch" />
-          <CardBody>
-            <NewDispatchForm
-              oilCompanies={oilCompanies}
-              transporters={transporters}
-              depots={depots}
-              onClose={() => setShowNewDispatchForm(false)}
-              onSubmit={(newTask) => {
-                setTasks([...tasks, newTask])
-                setShowNewDispatchForm(false)
-              }}
-            />
-          </CardBody>
-        </Card>
-      )}
+      <ModalOverlay
+        isOpen={showNewDispatchForm}
+        onClose={() => setShowNewDispatchForm(false)}
+        title="Add New Dispatch"
+      >
+        <NewDispatchForm
+          oilCompanies={oilCompanies}
+          transporters={transporters}
+          depots={depots}
+          onClose={() => setShowNewDispatchForm(false)}
+          onSubmit={(newTask) => {
+            setTasks([...tasks, newTask])
+            setShowNewDispatchForm(false)
+          }}
+        />
+      </ModalOverlay>
 
       <div className="space-y-6">
         {/* New / On Transit Table */}
@@ -90,7 +90,7 @@ export default function FuelDispatchPage() {
           />
           <CardBody>
             <div className="overflow-x-auto">
-              <table className="min-w-[1200px] w-full text-left text-sm">
+              <table className="min-w-300 w-full text-left text-sm">
                 <thead className="bg-muted/50 text-xs text-text-muted">
                   <tr>
                     {[
@@ -158,7 +158,7 @@ export default function FuelDispatchPage() {
           <CardHeader title="Delivered" subtitle={`${delivered.length} completed dispatches`} />
           <CardBody>
             <div className="overflow-x-auto">
-              <table className="min-w-[1200px] w-full text-left text-sm">
+              <table className="min-w-300 w-full text-left text-sm">
                 <thead className="bg-muted/50 text-xs text-text-muted">
                   <tr>
                     {[
@@ -234,7 +234,7 @@ export default function FuelDispatchPage() {
           />
           <CardBody>
             <div className="overflow-x-auto">
-              <table className="min-w-[1200px] w-full text-left text-sm">
+              <table className="min-w-300 w-full text-left text-sm">
                 <thead className="bg-muted/50 text-xs text-text-muted">
                   <tr>
                     {[

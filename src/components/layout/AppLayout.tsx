@@ -1,6 +1,6 @@
 import type { ComponentType, SVGProps } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   AdjustmentsHorizontalIcon,
   BellIcon,
@@ -47,7 +47,8 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
         cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 relative',
           'text-text-muted hover:bg-muted hover:text-text',
-          isActive && 'bg-primary/12 text-primary font-semibold border-l-3 border-primary pl-2.5',
+          isActive &&
+            'font-semibold pl-2.5 bg-[#27A2D8]/10 text-[#27A2D8] border-l-4 border-[#27A2D8]',
         )
       }
     >
@@ -104,26 +105,14 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
-function routeTitle(pathname: string) {
-  if (pathname === '/') return 'Dashboard'
-  if (pathname.startsWith('/tracking')) return 'GPS Tracking'
-  if (pathname.startsWith('/fuel-dispatch')) return 'Fuel Dispatch & Transit'
-  if (pathname.startsWith('/reports')) return 'Reports'
-  if (pathname.startsWith('/entities/oil-companies')) return 'Oil Companies'
-  if (pathname.startsWith('/entities/transporters')) return 'Transporters'
-  if (pathname.startsWith('/entities/depots')) return 'Depots'
-  if (pathname.startsWith('/settings')) return 'Settings'
-  if (pathname.startsWith('/profile')) return 'Admin Profile'
-  return 'EPA Dashboard'
-}
-
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const location = useLocation()
   const navigate = useNavigate()
   const [alertsCount, setAlertsCount] = useState(0)
 
-  const title = useMemo(() => routeTitle(location.pathname), [location.pathname])
+  // Keep the shell header consistent and avoid duplicating per-page titles.
+  // Detailed titles and subtitles are handled by each page via `PageHeader`.
+  const title = useMemo(() => 'EPA Dashboard', [])
 
   useEffect(() => {
     void getDashboardKpis().then((kpis) => {
@@ -136,7 +125,7 @@ export default function AppLayout() {
     <div className="h-full bg-bg">
       <div className="flex h-full">
         {/* Desktop sidebar */}
-        <aside className="hidden w-[280px] shrink-0 border-r border-[#D1D5DB] bg-white shadow-[2px_0_12px_rgba(0,0,0,0.04)] md:block">
+        <aside className="hidden w-70 shrink-0 border-r border-[#D1D5DB] bg-white shadow-[2px_0_12px_rgba(0,0,0,0.04)] md:block">
           <Sidebar />
         </aside>
 
@@ -149,7 +138,7 @@ export default function AppLayout() {
               onClick={() => setMobileOpen(false)}
               aria-label="Close menu"
             />
-            <aside className="absolute left-0 top-0 h-full w-[280px] border-r border-[#D1D5DB] bg-white">
+            <aside className="absolute left-0 top-0 h-full w-70 border-r border-[#D1D5DB] bg-white">
               <Sidebar onNavigate={() => setMobileOpen(false)} />
             </aside>
           </div>

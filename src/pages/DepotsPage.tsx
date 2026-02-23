@@ -3,7 +3,8 @@ import { getDepots } from '../data/mockApi'
 import type { Depot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import MapView from '../components/map/MapView'
-import { Card, CardBody, CardHeader } from '../components/ui/Card'
+import { Card, CardBody } from '../components/ui/Card'
+import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon } from '@heroicons/react/24/outline'
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
@@ -28,7 +29,7 @@ export default function DepotsPage() {
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
           >
             <PlusIcon className="size-4" />
             New Depot
@@ -36,26 +37,25 @@ export default function DepotsPage() {
         }
       />
 
-      {showForm && (
-        <Card className="mb-6">
-          <CardHeader title="Add New Depot" />
-          <CardBody>
-            <NewDepotForm
-              onClose={() => setShowForm(false)}
-              onSubmit={(newDepot) => {
-                setItems([...items, newDepot])
-                setShowForm(false)
-              }}
-            />
-          </CardBody>
-        </Card>
-      )}
+      <ModalOverlay
+        isOpen={showForm}
+        onClose={() => setShowForm(false)}
+        title="Add New Depot"
+      >
+        <NewDepotForm
+          onClose={() => setShowForm(false)}
+          onSubmit={(newDepot) => {
+            setItems([...items, newDepot])
+            setShowForm(false)
+          }}
+        />
+      </ModalOverlay>
       <div className="grid gap-4 lg:grid-cols-3">
         {loading ? (
           <>
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <Card key={i} className="overflow-hidden">
-                <div className="border-b border-border bg-muted/40 p-4">
+                <div className="border-b border-[#D1D5DB] bg-muted/40 p-4">
                   <Skeleton className="h-4 w-32" />
                   <Skeleton className="mt-2 h-3 w-24" />
                 </div>
@@ -81,7 +81,7 @@ export default function DepotsPage() {
                 <button
                   type="button"
                   onClick={() => setShowForm(true)}
-                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   <PlusIcon className="size-4" />
                   Add your first depot
@@ -97,7 +97,7 @@ export default function DepotsPage() {
               style={{ animationDelay: `${i * 50}ms` }}
             >
             <Card className="overflow-hidden">
-              <div className="border-b border-border bg-muted/40 p-4">
+              <div className="border-b border-[#D1D5DB] bg-muted/40 p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <div className="text-sm font-semibold text-text">
@@ -152,7 +152,6 @@ export default function DepotsPage() {
                 {d.mapLocation ? (
                   <div className="mt-4">
                     <MapView
-                      compact
                       center={d.mapLocation}
                       zoom={11}
                       markers={[
@@ -168,7 +167,7 @@ export default function DepotsPage() {
                     <div className="mt-2 text-xs text-text-muted">Map preview</div>
                   </div>
                 ) : (
-                  <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3 text-xs text-text-muted">
+                  <div className="mt-4 rounded-lg border border-[#D1D5DB] bg-muted/40 p-3 text-xs text-text-muted">
                     No map location available.
                   </div>
                 )}
@@ -234,7 +233,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -244,7 +243,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.region}
             onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -254,7 +253,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div className="sm:col-span-2">
@@ -264,7 +263,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -273,7 +272,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="text"
             value={formData.person1}
             onChange={(e) => setFormData({ ...formData, person1: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -282,7 +281,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="text"
             value={formData.person2}
             onChange={(e) => setFormData({ ...formData, person2: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -291,7 +290,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="tel"
             value={formData.phone1}
             onChange={(e) => setFormData({ ...formData, phone1: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -300,7 +299,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="tel"
             value={formData.phone2}
             onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -309,7 +308,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="email"
             value={formData.email1}
             onChange={(e) => setFormData({ ...formData, email1: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -318,7 +317,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="email"
             value={formData.email2}
             onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -328,7 +327,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             step="any"
             value={formData.lat}
             onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -338,7 +337,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             step="any"
             value={formData.lng}
             onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
       </div>
@@ -346,13 +345,13 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="rounded-lg border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-semibold text-text hover:bg-muted/60"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Create Depot
         </button>

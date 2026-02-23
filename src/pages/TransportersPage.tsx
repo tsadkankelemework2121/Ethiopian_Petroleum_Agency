@@ -18,8 +18,8 @@ export default function TransportersPage() {
       />
       <div className="grid gap-4 lg:grid-cols-2">
         {items.map((t) => (
-          <div key={t.id} className="rounded-xl border border-border bg-surface shadow-soft">
-            <div className="border-b border-border p-4">
+          <div key={t.id} className="rounded-xl border border-[#D1D5DB] bg-white shadow-card">
+            <div className="border-b border-[#D1D5DB] p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-semibold text-text">{t.name}</div>
@@ -52,9 +52,9 @@ export default function TransportersPage() {
 
             <div className="p-4">
               <div className="text-xs font-semibold text-text-muted">Vehicle details</div>
-              <div className="mt-3 overflow-hidden rounded-lg border border-border">
+              <div className="mt-3 overflow-hidden rounded-lg border border-[#D1D5DB]">
                 <table className="w-full text-left text-sm">
-                  <thead className="bg-muted/50 text-xs text-text-muted">
+                  <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
                     <tr>
                       {['Plate', 'Trailer', 'Side', 'Driver'].map((h) => (
                         <th key={h} className="whitespace-nowrap px-3 py-2 font-semibold">
@@ -63,7 +63,7 @@ export default function TransportersPage() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-border">
+                  <tbody className="divide-y divide-[#D1D5DB]">
                     {t.vehicles.map((v) => (
                       <tr key={v.id} className="hover:bg-muted/40">
                         <td className="whitespace-nowrap px-3 py-2 text-text">{v.plateRegNo}</td>
