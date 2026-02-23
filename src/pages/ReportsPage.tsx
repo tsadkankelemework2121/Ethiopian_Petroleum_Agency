@@ -217,7 +217,7 @@ export default function ReportsPage() {
         title="Reports"
         subtitle="Generate report tables using period + identifiers (mock data for now)."
       />
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 mt-6">
         {[
           { id: 'dispatch' as const, label: 'By Dispatch' },
           { id: 'vehicle' as const, label: 'By Vehicle' },
@@ -228,8 +228,8 @@ export default function ReportsPage() {
             type="button"
             onClick={() => setTab(t.id)}
             className={[
-              'rounded-full px-4 py-2 text-sm font-semibold transition',
-              tab === t.id ? 'bg-primary text-slate-900' : 'bg-muted text-text hover:bg-muted/70',
+              'rounded-lg px-4 py-2 text-sm font-semibold transition border-b-2',
+              tab === t.id ? 'text-primary border-primary bg-primary/5' : 'text-text-muted border-transparent hover:bg-muted/40',
             ].join(' ')}
           >
             {t.label}
@@ -237,11 +237,11 @@ export default function ReportsPage() {
         ))}
       </div>
 
-      <div className="mt-5 rounded-xl border border-border bg-muted/40 p-4">
+      <div className="mt-5 rounded-xl border border-[#D1D5DB] bg-white p-4">
         <div className="text-sm font-semibold text-text">{title}</div>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <input
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             placeholder={
               tab === 'dispatch'
                 ? 'Dispatch No. (e.g., PEA001)'
@@ -253,13 +253,13 @@ export default function ReportsPage() {
             onChange={(e) => setQuery(e.target.value)}
           />
           <input
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="From (YYYY-MM-DD)"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
           <input
-            className="rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="To (YYYY-MM-DD)"
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -269,14 +269,14 @@ export default function ReportsPage() {
           <button
             type="button"
             onClick={() => setApplied({ query, from, to })}
-            className="rounded-lg bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             Run report
           </button>
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-border bg-surface">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
         <table className="min-w-[980px] w-full text-left text-sm">
           <thead className="bg-muted/50 text-xs text-text-muted">
             <tr>
@@ -287,7 +287,7 @@ export default function ReportsPage() {
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y divide-[#D1D5DB]">
             {result.rows.map((row, idx) => (
               <tr key={idx} className="hover:bg-muted/40">
                 {row.cells.map((cell, cellIdx) => (
