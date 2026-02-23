@@ -21,7 +21,6 @@ type Props = {
   markers?: MarkerType[];
   selectedMarkerId?: string;
   onMarkerSelect?: (id: string) => void;
-  compact?: boolean;
 };
 
 export default function MapView({
@@ -30,7 +29,6 @@ export default function MapView({
   markers = [],
   selectedMarkerId,
   onMarkerSelect,
-  compact = false,
 }: Props) {
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -38,30 +36,50 @@ export default function MapView({
   useEffect(() => {
     if (!mapContainer.current) return;
 
-   
-    // MAP START (MapLibre Setup)
-   
+    // ================================
+    // 🗺️ MAP INITIALIZATION
+    // Google-like light style
+    // ================================
     const map = new maplibregl.Map({
       container: mapContainer.current,
       style:
-        "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json", // Free map
+        "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
       center: [center.lng, center.lat],
-      zoom: zoom,
+      zoom,
     });
 
     mapRef.current = map;
 
-   
-    //  ADD MARKERS
- 
+    // ================================
+    // 🚛 ADD VEHICLE MARKERS
+    // ================================
     markers.forEach((m) => {
       const el = document.createElement("div");
-      el.className =
-        m.id === selectedMarkerId
-          ? "w-5 h-5 rounded-full bg-gradient-to-r from-emerald-400 to-emerald-600 border-2 border-white shadow-lg"
-          : "w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-indigo-500 border-2 border-white shadow-lg";
 
-      new maplibregl.Marker(el)
+      const isSelected = m.id === selectedMarkerId;
+
+      el.innerHTML = `
+        <div style="
+          width:${isSelected ? 42 : 36}px;
+          height:${isSelected ? 42 : 36}px;
+          background:white;
+          border-radius:10px;
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          box-shadow:0 4px 10px rgba(0,0,0,0.15);
+          border:2px solid ${isSelected ? "#06b6d4" : "#e5e7eb"};
+          cursor:pointer;
+          transition:all 0.2s ease;
+        ">
+          <span style="font-size:${isSelected ? 20 : 18}px">🚚</span>
+        </div>
+      `;
+
+      const marker = new maplibregl.Marker({
+        element: el,
+        anchor: "bottom",
+      })
         .setLngLat([m.position.lng, m.position.lat])
         .addTo(map);
 
@@ -71,19 +89,12 @@ export default function MapView({
     });
 
     return () => map.remove();
-  
-    // MAP END
-   
   }, [center, zoom, markers, selectedMarkerId, onMarkerSelect]);
 
   return (
     <div
       ref={mapContainer}
-      className={
-        compact
-          ? "w-full h-48 rounded-xl overflow-hidden"
-          : "w-full h-[500px] rounded-xl overflow-hidden"
-      }
+      className="w-full h-[500px] rounded-xl overflow-hidden border border-border bg-white"
     />
   );
 }

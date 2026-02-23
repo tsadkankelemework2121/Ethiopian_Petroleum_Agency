@@ -108,7 +108,9 @@ export default function TrackingPage() {
                     key={t.peaDispatchNo}
                     type="button"
                     onClick={() => setSelectedId(t.peaDispatchNo)}
-                    className="w-full p-4 text-left hover:bg-muted/60"
+                    className={`w-full p-4 text-left hover:bg-muted/60 ${
+                      selectedId === t.peaDispatchNo ? 'border-l-4 border-cyan-500 bg-cyan-50/30' : ''
+                    }`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -135,4 +137,3 @@ export default function TrackingPage() {
     </div>
   )
 }
-
