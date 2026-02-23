@@ -159,21 +159,12 @@ export default function DashboardPage() {
         title="Dashboard"
         subtitle="Real-time operations view for dispatch, GPS monitoring, and regional fuel movement."
         right={
-          <div className="flex items-center gap-2 sm:gap-3">
-            <button
-              type="button"
-              className="hidden items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-text hover:bg-muted transition sm:inline-flex"
-            >
-              <span className="h-2 w-2 rounded-full bg-green-500" />
-              This week
-            </button>
-            <button
-              type="button"
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            >
-              Export CSV
-            </button>
-          </div>
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            Export CSV
+          </button>
         }
       />
       <div className="grid gap-4 lg:grid-cols-12">
@@ -393,7 +384,7 @@ export default function DashboardPage() {
             <CardHeader title="Recent dispatches" subtitle="Latest dispatch tasks with ETA and status" />
             <div className="overflow-x-auto">
               <table className="min-w-190 w-full text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-muted text-xs font-semibold text-text-muted border-b border-border">
+                <thead className="sticky top-0 z-10 bg-muted text-xs font-semibold text-text-muted border-b border-[#D1D5DB]">
                   <tr>
                     {['Dispatch', 'Oil company', 'Transporter', 'ETA', 'Status'].map((h) => (
                       <th key={h} className="whitespace-nowrap px-5 py-4 font-semibold">
@@ -402,7 +393,7 @@ export default function DashboardPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-[#D1D5DB]">
                   {recentDispatches.map((r) => (
                     <tr key={r.peaDispatchNo} className="hover:bg-muted/50 transition">
                       <td className="whitespace-nowrap px-5 py-4 font-medium text-text">{r.peaDispatchNo}</td>

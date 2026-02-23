@@ -78,15 +78,15 @@ export default function TrackingPage() {
         </div>
 
         <div className="lg:col-span-5">
-          <div className="rounded-xl border border-border bg-surface">
-            <div className="border-b border-border p-4">
+          <div className="rounded-xl border border-[#D1D5DB] bg-white">
+            <div className="border-b border-[#D1D5DB] p-4">
               <div className="text-sm font-semibold text-text">Vehicles</div>
               <div className="mt-1 text-xs text-text-muted">
                 Mock list derived from dispatch tasks (ready to replace with backend later).
               </div>
               <div className="mt-3 flex gap-2">
                 <input
-                  className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+                  className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
                   placeholder="Search plate, dispatch no…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
@@ -100,7 +100,7 @@ export default function TrackingPage() {
               </div>
             </div>
 
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-[#D1D5DB]">
               {filtered.map((t) => {
                 const task = tasksByDispatchNo.get(t.peaDispatchNo)
                 return (
