@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 :root {
-  --bg: 255 255 255;
+  --bg: 243 244 246;
   --surface: 255 255 255;
   --muted: 247 248 250;
-  --border: 226 232 240;
+  --border: 209 213 219;
   --text: 15 23 42;
   --text-muted: 100 116 139;
   --primary: 39 162 216; /* #27A2D8 - company color */
@@ -55,4 +55,24 @@ body {
 
 .animate-fade-in-up {
   animation: fade-in-up 0.4s ease-out forwards;
+}
+
+.blur-backdrop {
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.modal-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 51;
 }
