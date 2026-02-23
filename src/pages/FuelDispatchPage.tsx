@@ -55,7 +55,7 @@ export default function FuelDispatchPage() {
           <button
             type="button"
             onClick={() => setShowNewDispatchForm(!showNewDispatchForm)}
-            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <PlusIcon className="size-4" />
             New Dispatch
@@ -111,7 +111,7 @@ export default function FuelDispatchPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-[#D1D5DB]">
                   {newOnTransit.map((t) => {
                     const transporter = transportersById.get(t.transporterId)?.name ?? '—'
                     const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
@@ -180,7 +180,7 @@ export default function FuelDispatchPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-[#D1D5DB]">
                   {delivered.map((t) => {
                     const transporter = transportersById.get(t.transporterId)?.name ?? '—'
                     const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
@@ -226,6 +226,7 @@ export default function FuelDispatchPage() {
         </Card>
 
         {/* Problem Dispatches Table */}
+        <div id="problem-dispatches">
         <Card>
           <CardHeader
             title="Problem Dispatches"
@@ -255,7 +256,7 @@ export default function FuelDispatchPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-border">
+                <tbody className="divide-y divide-[#D1D5DB]">
                   {problems.map((t) => {
                     const transporter = transportersById.get(t.transporterId)?.name ?? '—'
                     const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
@@ -300,6 +301,7 @@ export default function FuelDispatchPage() {
             </div>
           </CardBody>
         </Card>
+        </div>
       </div>
     </div>
   )
@@ -365,7 +367,7 @@ function NewDispatchForm({
             required
             value={formData.peaDispatchNo}
             onChange={(e) => setFormData({ ...formData, peaDispatchNo: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -374,7 +376,7 @@ function NewDispatchForm({
             required
             value={formData.oilCompanyId}
             onChange={(e) => setFormData({ ...formData, oilCompanyId: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="">Select...</option>
             {oilCompanies.map((c) => (
@@ -390,7 +392,7 @@ function NewDispatchForm({
             required
             value={formData.transporterId}
             onChange={(e) => setFormData({ ...formData, transporterId: e.target.value, vehicleId: '' })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="">Select...</option>
             {transporters.map((t) => (
@@ -424,7 +426,7 @@ function NewDispatchForm({
             required
             value={formData.dispatchDateTime}
             onChange={(e) => setFormData({ ...formData, dispatchDateTime: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -434,7 +436,7 @@ function NewDispatchForm({
             required
             value={formData.dispatchLocation}
             onChange={(e) => setFormData({ ...formData, dispatchLocation: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -443,7 +445,7 @@ function NewDispatchForm({
             required
             value={formData.destinationDepotId}
             onChange={(e) => setFormData({ ...formData, destinationDepotId: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="">Select...</option>
             {depots.map((d) => (
@@ -460,7 +462,7 @@ function NewDispatchForm({
             required
             value={formData.etaDateTime}
             onChange={(e) => setFormData({ ...formData, etaDateTime: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -469,7 +471,7 @@ function NewDispatchForm({
             required
             value={formData.fuelType}
             onChange={(e) => setFormData({ ...formData, fuelType: e.target.value as FuelType })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           >
             <option value="Benzine">Benzine</option>
             <option value="Diesel">Diesel</option>
@@ -484,7 +486,7 @@ function NewDispatchForm({
             min="1"
             value={formData.dispatchedLiters}
             onChange={(e) => setFormData({ ...formData, dispatchedLiters: e.target.value })}
-            className="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
       </div>
@@ -492,13 +494,13 @@ function NewDispatchForm({
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-muted/60"
+          className="rounded-lg border border-[#D1D5DB] bg-white px-4 py-2 text-sm font-semibold text-text hover:bg-muted/60"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Create Dispatch
         </button>

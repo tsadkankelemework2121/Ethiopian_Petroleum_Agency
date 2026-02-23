@@ -12,7 +12,7 @@ export default function SettingsPage() {
         subtitle="Theme + map provider placeholders (frontend-only for now)."
       />
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-border bg-muted/50 p-4">
+        <div className="rounded-xl border border-[#D1D5DB] bg-white p-4">
           <div className="text-sm font-semibold text-text">Theme</div>
           <div className="mt-2 text-sm text-text-muted">
             This UI uses a light background with a light-cyan primary accent. Later we can add
@@ -30,7 +30,7 @@ export default function SettingsPage() {
             </span>
           </div>
 
-          <div className="mt-5 rounded-xl border border-border bg-surface p-4">
+          <div className="mt-5 rounded-xl border border-[#D1D5DB] bg-white p-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-text-muted">Table density</div>
             <div className="mt-3 flex flex-wrap gap-2">
               {[
@@ -58,14 +58,14 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-border bg-muted/50 p-4">
+        <div className="rounded-xl border border-[#D1D5DB] bg-white p-4">
           <div className="text-sm font-semibold text-text">Map provider</div>
           <div className="mt-2 text-sm text-text-muted">
             The app will receive GPS coordinates from the backend. The map component is designed to
             remain provider-agnostic so you can plug in Google Maps later without rewriting pages.
           </div>
 
-          <div className="mt-4 rounded-xl border border-border bg-surface p-4">
+          <div className="mt-4 rounded-xl border border-[#D1D5DB] bg-white p-4">
             <div className="text-xs font-semibold uppercase tracking-wide text-text-muted">Provider</div>
             <div className="mt-3 grid gap-2">
               {[
@@ -75,7 +75,7 @@ export default function SettingsPage() {
               ].map((opt) => (
                 <label
                   key={opt.id}
-                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-muted/20 p-3 hover:bg-muted/40"
+                  className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#D1D5DB] bg-muted p-3 hover:bg-muted/60"
                 >
                   <input
                     type="radio"
@@ -92,7 +92,7 @@ export default function SettingsPage() {
               ))}
             </div>
 
-            <div className="mt-4 rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text">
+            <div className="mt-4 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm text-text">
               Selected: <span className="font-semibold">{provider}</span>
             </div>
             <div className="mt-2 text-xs text-text-muted">
