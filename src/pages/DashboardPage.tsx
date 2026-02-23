@@ -162,16 +162,16 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2 sm:gap-3">
             <button
               type="button"
-              className="hidden items-center gap-2 rounded-full border border-border bg-surface px-3 py-2 text-xs font-semibold text-text shadow-sm hover:bg-muted/60 sm:inline-flex"
+              className="hidden items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-medium text-text hover:bg-muted transition sm:inline-flex"
             >
-              <span className="h-2 w-2 rounded-full bg-emerald-400" />
+              <span className="h-2 w-2 rounded-full bg-green-500" />
               This week
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-3 py-2 text-xs font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
-              <span>Export CSV</span>
+              Export CSV
             </button>
           </div>
         }
@@ -195,22 +195,21 @@ export default function DashboardPage() {
                     className="animate-fade-in-up"
                     style={{ animationDelay: `${i * 50}ms` }}
                   >
-                  <Card className="relative overflow-hidden">
-                  <div className="absolute -right-10 -top-10 size-32 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-2xl" />
-                  <CardBody className="relative">
-                    <div className="flex items-start justify-between gap-3">
+                  <Card>
+                  <CardBody>
+                    <div className="flex items-start justify-between gap-3 mb-4">
                       <div className="min-w-0">
                         <div className="text-sm font-semibold text-text">{k.label}</div>
                         <div className="mt-1 text-xs text-text-muted">{k.hint}</div>
                       </div>
-                      <div className="grid size-10 place-items-center rounded-xl bg-primary/15 text-primary-strong ring-1 ring-primary/15">
+                      <div className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
                         <Icon className="size-5" />
                       </div>
                     </div>
-                    <div className="mt-4 flex items-end justify-between gap-4">
-                      <div className="text-4xl font-extrabold tracking-tight text-text">{k.value}</div>
-                      <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-text-muted">
-                        Updated: mock
+                    <div className="flex items-end justify-between gap-2">
+                      <div className="text-3xl font-bold tracking-tight text-text">{k.value}</div>
+                      <div className="rounded-md bg-muted px-2 py-1 text-[10px] font-medium text-text-muted">
+                        Live
                       </div>
                     </div>
                   </CardBody>
@@ -229,7 +228,7 @@ export default function DashboardPage() {
               title="Regional fuel dispatch overview"
               subtitle="Grouped view by region (liters) — Benzine / Diesel / Jet Fuel"
               right={
-                <span className="inline-flex items-center gap-2 rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-strong">
+                <span className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                   <MapPinIcon className="size-4" />
                   Ethiopia regions
                 </span>
@@ -315,9 +314,9 @@ export default function DashboardPage() {
                             className="h-3 w-3 rounded-full"
                             style={{ backgroundColor: pieColors[s.name as keyof typeof pieColors] }}
                           />
-                          <div className="text-xs font-semibold text-text-muted">{s.name}</div>
+                          <div className="text-xs font-medium text-text-muted">{s.name}</div>
                         </div>
-                        <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-text">
+                        <div className="rounded-md bg-muted px-2 py-1 text-xs font-semibold text-text">
                           {s.value}
                         </div>
                       </div>
@@ -363,14 +362,14 @@ export default function DashboardPage() {
                       return (
                         <div key={fuel.name} className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-semibold text-text">{fuel.name}</span>
+                            <span className="text-sm font-medium text-text">{fuel.name}</span>
                             <span className="text-sm font-semibold text-primary">
                               {fuel.volume.toLocaleString()}L ({percentage.toFixed(0)}%)
                             </span>
                           </div>
-                          <div className="w-full h-5 bg-muted/40 rounded-full overflow-hidden border border-border">
+                          <div className="w-full h-4 bg-muted rounded-lg overflow-hidden">
                             <div
-                              className="h-full rounded-full transition-all duration-300"
+                              className="h-full transition-all duration-300 rounded-lg"
                               style={{
                                 width: `${percentage}%`,
                                 backgroundColor: fuel.color,
@@ -394,19 +393,19 @@ export default function DashboardPage() {
             <CardHeader title="Recent dispatches" subtitle="Latest dispatch tasks with ETA and status" />
             <div className="overflow-x-auto">
               <table className="min-w-190 w-full text-left text-sm">
-                <thead className="sticky top-0 z-10 bg-muted/60 text-xs text-text-muted backdrop-blur-sm">
+                <thead className="sticky top-0 z-10 bg-muted text-xs font-semibold text-text-muted border-b border-border">
                   <tr>
                     {['Dispatch', 'Oil company', 'Transporter', 'ETA', 'Status'].map((h) => (
-                      <th key={h} className="whitespace-nowrap px-5 py-3 font-semibold">
+                      <th key={h} className="whitespace-nowrap px-5 py-4 font-semibold">
                         {h}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {recentDispatches.map((r, i) => (
-                    <tr key={r.peaDispatchNo} className={`hover:bg-muted/30 ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
-                      <td className="whitespace-nowrap px-5 py-4 font-semibold text-text">{r.peaDispatchNo}</td>
+                  {recentDispatches.map((r) => (
+                    <tr key={r.peaDispatchNo} className="hover:bg-muted/50 transition">
+                      <td className="whitespace-nowrap px-5 py-4 font-medium text-text">{r.peaDispatchNo}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-text">{r.oilCompany}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-text">{r.transporter}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-text">{r.eta}</td>
