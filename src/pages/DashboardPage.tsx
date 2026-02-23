@@ -12,6 +12,7 @@ import {
 import type { DispatchTask, OilCompany, Transporter } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
+import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
 import {
   Bar,
@@ -41,7 +42,7 @@ export default function DashboardPage() {
     stoppedOver5h: number
   } | null>(null)
   const [regions, setRegions] = useState<RegionFuelSummary[]>([])
-  const [onTransit, setOnTransit] = useState<Awaited<ReturnType<typeof getVehiclesOnTransit>>>([])
+  const [, setOnTransit] = useState<Awaited<ReturnType<typeof getVehiclesOnTransit>>>([])
   const [tasks, setTasks] = useState<DispatchTask[]>([])
   const [companies, setCompanies] = useState<OilCompany[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
@@ -138,10 +139,18 @@ export default function DashboardPage() {
     )
   }, [charts])
 
-  const pieColors = {
-    'Delivered': '#10b981',
-    'In Transit': '#2563EB',
-    'Alerts': '#ef4444',
+  const chartColors = {
+    benzine: 'rgb(34, 211, 238)',
+    diesel: 'rgb(37, 99, 235)',
+    jetFuel: 'rgb(177, 189, 217)',
+    delivered: 'rgb(16, 185, 129)',
+    inTransit: 'rgb(37, 99, 235)',
+    alerts: 'rgb(239, 68, 68)',
+  }
+  const pieColors: Record<string, string> = {
+    Delivered: chartColors.delivered,
+    'In Transit': chartColors.inTransit,
+    Alerts: chartColors.alerts,
   }
 
   return (
@@ -160,7 +169,7 @@ export default function DashboardPage() {
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary px-3 py-2 text-xs font-semibold text-slate-900 shadow-sm hover:bg-primary-strong"
+              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-3 py-2 text-xs font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <span>Export CSV</span>
             </button>
@@ -171,11 +180,23 @@ export default function DashboardPage() {
         {/* KPIs */}
         <div className="lg:col-span-12">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {kpiCards.map((k) => {
-              const Icon = k.icon
-              return (
-                <Card key={k.label} className="relative overflow-hidden">
-                  <div className="absolute -right-10 -top-10 size-32 rounded-full bg-primary/10 blur-2xl" />
+            {kpis === null ? (
+              <>
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </>
+            ) : (
+              kpiCards.map((k, i) => {
+                const Icon = k.icon
+                return (
+                  <div
+                    key={k.label}
+                    className="animate-fade-in-up"
+                    style={{ animationDelay: `${i * 50}ms` }}
+                  >
+                  <Card className="relative overflow-hidden">
+                  <div className="absolute -right-10 -top-10 size-32 rounded-full bg-gradient-to-br from-primary/20 to-transparent blur-2xl" />
                   <CardBody className="relative">
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
@@ -187,15 +208,17 @@ export default function DashboardPage() {
                       </div>
                     </div>
                     <div className="mt-4 flex items-end justify-between gap-4">
-                      <div className="text-4xl font-semibold tracking-tight text-text">{k.value}</div>
+                      <div className="text-4xl font-extrabold tracking-tight text-text">{k.value}</div>
                       <div className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-text-muted">
                         Updated: mock
                       </div>
                     </div>
                   </CardBody>
                 </Card>
-              )
-            })}
+                  </div>
+                )
+              })
+            )}
           </div>
         </div>
 
@@ -213,6 +236,9 @@ export default function DashboardPage() {
               }
             />
             <CardBody className="h-80">
+              {regions.length === 0 ? (
+                <SkeletonChart className="h-full" />
+              ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
                   <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
@@ -237,11 +263,12 @@ export default function DashboardPage() {
                       background: 'rgba(255,255,255,0.95)',
                     }}
                   />
-                  <Bar dataKey="benzineM3" name="Benzine" fill="#27A2D8" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="dieselM3" name="Diesel" fill="#2563EB" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="jetFuelM3" name="Jet Fuel" fill="#B1BDD9" radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.benzine} radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.diesel} radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.jetFuel} radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+              )}
             </CardBody>
           </Card>
         </div>
@@ -298,7 +325,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : (
-                <div className="grid h-full place-items-center text-sm text-text-muted">Loading…</div>
+                <SkeletonChart className="h-full" />
               )}
             </CardBody>
           </Card>
@@ -317,17 +344,17 @@ export default function DashboardPage() {
                       {
                         name: 'Benzene',
                         volume: regions.reduce((sum, r) => sum + r.benzineM3, 0),
-                        color: '#27A2D8',
+                        color: chartColors.benzine,
                       },
                       {
                         name: 'Diesel',
                         volume: regions.reduce((sum, r) => sum + r.dieselM3, 0),
-                        color: '#2563EB',
+                        color: chartColors.diesel,
                       },
                       {
                         name: 'Jet Fuel',
                         volume: regions.reduce((sum, r) => sum + r.jetFuelM3, 0),
-                        color: '#B1BDD9',
+                        color: chartColors.jetFuel,
                       },
                     ]
                     const totalVolume = fuelData.reduce((sum, f) => sum + f.volume, 0)
@@ -356,7 +383,7 @@ export default function DashboardPage() {
                   })()}
                 </div>
               ) : (
-                <div className="grid h-full place-items-center text-sm text-text-muted">Loading…</div>
+                <SkeletonChart className="h-full" />
               )}
             </CardBody>
           </Card>
@@ -367,7 +394,7 @@ export default function DashboardPage() {
             <CardHeader title="Recent dispatches" subtitle="Latest dispatch tasks with ETA and status" />
             <div className="overflow-x-auto">
               <table className="min-w-190 w-full text-left text-sm">
-                <thead className="bg-muted/40 text-xs text-text-muted">
+                <thead className="sticky top-0 z-10 bg-muted/60 text-xs text-text-muted backdrop-blur-sm">
                   <tr>
                     {['Dispatch', 'Oil company', 'Transporter', 'ETA', 'Status'].map((h) => (
                       <th key={h} className="whitespace-nowrap px-5 py-3 font-semibold">
@@ -377,8 +404,8 @@ export default function DashboardPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {recentDispatches.map((r) => (
-                    <tr key={r.peaDispatchNo} className="hover:bg-muted/30">
+                  {recentDispatches.map((r, i) => (
+                    <tr key={r.peaDispatchNo} className={`hover:bg-muted/30 ${i % 2 === 1 ? 'bg-muted/20' : ''}`}>
                       <td className="whitespace-nowrap px-5 py-4 font-semibold text-text">{r.peaDispatchNo}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-text">{r.oilCompany}</td>
                       <td className="whitespace-nowrap px-5 py-4 text-text">{r.transporter}</td>

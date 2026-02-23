@@ -23,7 +23,7 @@ export default function OilCompaniesPage() {
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-primary-strong"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <PlusIcon className="size-4" />
             New Oil Company
@@ -189,7 +189,7 @@ function NewOilCompanyForm({
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-primary-strong"
+          className="rounded-lg bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Create Oil Company
         </button>

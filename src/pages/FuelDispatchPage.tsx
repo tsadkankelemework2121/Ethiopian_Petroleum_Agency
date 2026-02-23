@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { getDepots, getDispatchTasks, getOilCompanies, getTransporters, getVehiclesOnTransit } from '../data/mockApi'
+import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
 import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
@@ -55,7 +55,7 @@ export default function FuelDispatchPage() {
           <button
             type="button"
             onClick={() => setShowNewDispatchForm(!showNewDispatchForm)}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-primary-strong"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <PlusIcon className="size-4" />
             New Dispatch
@@ -498,7 +498,7 @@ function NewDispatchForm({
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-primary-strong"
+          className="rounded-lg bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Create Dispatch
         </button>

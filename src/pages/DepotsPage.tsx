@@ -4,14 +4,19 @@ import type { Depot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import MapView from '../components/map/MapView'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
-import { PlusIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon } from '@heroicons/react/24/outline'
+import EmptyState from '../components/ui/EmptyState'
+import { Skeleton } from '../components/ui/Skeleton'
 
 export default function DepotsPage() {
   const [items, setItems] = useState<Depot[]>([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
-    void getDepots().then(setItems)
+    void getDepots()
+      .then(setItems)
+      .finally(() => setLoading(false))
   }, [])
 
   return (
@@ -23,7 +28,7 @@ export default function DepotsPage() {
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm hover:bg-primary-strong"
+            className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <PlusIcon className="size-4" />
             New Depot
@@ -46,88 +51,132 @@ export default function DepotsPage() {
         </Card>
       )}
       <div className="grid gap-4 lg:grid-cols-3">
-        {items.map((d) => (
-          <div key={d.id} className="overflow-hidden rounded-xl border border-border bg-surface shadow-soft">
-            <div className="border-b border-border bg-muted/40 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-text">
-                    {d.name} <span className="text-text-muted">({d.id})</span>
-                  </div>
-                  <div className="mt-1 text-xs text-text-muted">
-                    {d.location.city} • {d.location.region}
-                  </div>
+        {loading ? (
+          <>
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <div className="border-b border-border bg-muted/40 p-4">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="mt-2 h-3 w-24" />
                 </div>
-                <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-strong">
-                  Map location
-                </span>
-              </div>
-            </div>
-
-            <div className="p-4">
-              <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Address</div>
-              <div className="mt-1 text-sm text-text">{d.location.address}</div>
-
-              <div className="mt-5 grid gap-4 sm:grid-cols-2">
-                <div>
-                  <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Contact Person</div>
-                  <div className="mt-1 text-sm font-medium text-text">{d.contacts.person1 ?? '—'}</div>
-                </div>
-                <div>
-                  <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Primary Contact</div>
-                  <div className="mt-1 text-sm text-text flex items-center gap-2">
-                    <span>📞</span>
-                    {d.contacts.phone1 ?? '—'}
+                <CardBody className="pt-0">
+                  <Skeleton className="h-3 w-20" />
+                  <Skeleton className="mt-2 h-4 w-full" />
+                  <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-full" />
                   </div>
-                </div>
-                {d.contacts.phone2 && (
-                  <div>
-                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Secondary Contact</div>
-                    <div className="mt-1 text-sm text-text flex items-center gap-2">
-                      <span>📞</span>
-                      {d.contacts.phone2}
-                    </div>
-                  </div>
-                )}
-                {d.contacts.email1 && (
-                  <div>
-                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Email</div>
-                    <div className="mt-1 text-sm text-text flex items-center gap-2">
-                      <span>✉️</span>
-                      <span className="truncate">{d.contacts.email1}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {d.mapLocation ? (
-                <div className="mt-4">
-                  <MapView
-                    compact
-                    center={d.mapLocation}
-                    zoom={11}
-                    markers={[
-                      {
-                        id: d.id,
-                        position: d.mapLocation,
-                        label: d.id,
-                        status: 'On transit',
-                        subtitle: d.name,
-                      },
-                    ]}
-                  />
-                  <div className="mt-2 text-xs text-text-muted">
-                    Map preview (abstract). Later this will render with the real map provider + coordinates from backend.
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3 text-xs text-text-muted">
-                  No map location in mock data.
-                </div>
-              )}
-            </div>
+                  <Skeleton className="mt-4 h-24 w-full rounded-lg" />
+                </CardBody>
+              </Card>
+            ))}
+          </>
+        ) : items.length === 0 ? (
+          <div className="lg:col-span-3">
+            <EmptyState
+              icon={<MapPinIcon className="size-8" />}
+              title="No depots yet"
+              description="Add your first depot to get started with contact details and map locations."
+              action={
+                <button
+                  type="button"
+                  onClick={() => setShowForm(true)}
+                  className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                >
+                  <PlusIcon className="size-4" />
+                  Add your first depot
+                </button>
+              }
+            />
           </div>
-        ))}
+        ) : (
+          items.map((d, i) => (
+            <div
+              key={d.id}
+              className="animate-fade-in-up"
+              style={{ animationDelay: `${i * 50}ms` }}
+            >
+            <Card className="overflow-hidden">
+              <div className="border-b border-border bg-muted/40 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="text-sm font-semibold text-text">
+                      {d.name} <span className="text-text-muted">({d.id})</span>
+                    </div>
+                    <div className="mt-1 text-xs text-text-muted">
+                      {d.location.city} • {d.location.region}
+                    </div>
+                  </div>
+                  <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-strong">
+                    Map location
+                  </span>
+                </div>
+              </div>
+
+              <CardBody className="pt-0">
+                <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Address</div>
+                <div className="mt-1 text-sm text-text">{d.location.address}</div>
+
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Contact Person</div>
+                    <div className="mt-1 text-sm font-medium text-text">{d.contacts.person1 ?? '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Primary Contact</div>
+                    <div className="mt-1 flex items-center gap-2 text-sm text-text">
+                      <PhoneIcon className="size-4 shrink-0 text-text-muted" />
+                      {d.contacts.phone1 ?? '—'}
+                    </div>
+                  </div>
+                  {d.contacts.phone2 && (
+                    <div>
+                      <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Secondary Contact</div>
+                      <div className="mt-1 flex items-center gap-2 text-sm text-text">
+                        <PhoneIcon className="size-4 shrink-0 text-text-muted" />
+                        {d.contacts.phone2}
+                      </div>
+                    </div>
+                  )}
+                  {d.contacts.email1 && (
+                    <div>
+                      <div className="text-xs font-semibold text-text-muted uppercase tracking-wide">Email</div>
+                      <div className="mt-1 flex items-center gap-2 text-sm text-text">
+                        <EnvelopeIcon className="size-4 shrink-0 text-text-muted" />
+                        <span className="truncate">{d.contacts.email1}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {d.mapLocation ? (
+                  <div className="mt-4">
+                    <MapView
+                      compact
+                      center={d.mapLocation}
+                      zoom={11}
+                      markers={[
+                        {
+                          id: d.id,
+                          position: d.mapLocation,
+                          label: d.id,
+                          status: 'On transit',
+                          subtitle: d.name,
+                        },
+                      ]}
+                    />
+                    <div className="mt-2 text-xs text-text-muted">Map preview</div>
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-lg border border-border bg-muted/40 p-3 text-xs text-text-muted">
+                    No map location available.
+                  </div>
+                )}
+              </CardBody>
+            </Card>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )
@@ -297,13 +346,13 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-muted/60"
+          className="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-semibold text-text hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Cancel
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-primary-strong"
+          className="rounded-lg bg-gradient-to-r from-primary to-primary-strong px-4 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Create Depot
         </button>

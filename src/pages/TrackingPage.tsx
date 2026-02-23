@@ -93,7 +93,7 @@ export default function TrackingPage() {
                 />
                 <button
                   type="button"
-                  className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-slate-900 hover:bg-primary-strong"
+                  className="rounded-lg bg-gradient-to-r from-primary to-primary-strong px-3 py-2 text-sm font-semibold text-slate-900 shadow-soft transition-shadow hover:shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                 >
                   {filtered.length}
                 </button>
