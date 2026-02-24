@@ -8,6 +8,7 @@ import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import TrackingPage from './pages/TrackingPage'
 import TransportersPage from './pages/TransportersPage'
+import ProfilePage from './pages/ProfilePage'
 
 export default function App() {
   return (
@@ -26,7 +27,7 @@ export default function App() {
         </Route>
 
         <Route path="/settings" element={<SettingsPage />} />
-       
+        <Route path="/profile" element={<ProfilePage />} />
       </Route>
     </Routes>
   )

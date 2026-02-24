@@ -4,12 +4,15 @@ import type { DispatchTask } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import MapView from '../components/map/MapView'
 import StatusPill from '../components/ui/StatusPill'
+import { ModalOverlay } from '../components/ui/ModelOverlay'
 
 export default function TrackingPage() {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [items, setItems] = useState<Awaited<ReturnType<typeof getVehiclesOnTransit>>>([])
   const [tasks, setTasks] = useState<DispatchTask[]>([])
+  const [detailItem, setDetailItem] =
+    useState<Awaited<ReturnType<typeof getVehiclesOnTransit>>[number] | null>(null)
 
   useEffect(() => {
     void Promise.all([getVehiclesOnTransit(), getDispatchTasks()]).then(([vt, t]) => {
@@ -104,13 +107,12 @@ export default function TrackingPage() {
               {filtered.map((t) => {
                 const task = tasksByDispatchNo.get(t.peaDispatchNo)
                 return (
-                  <button
+                  <div
                     key={t.peaDispatchNo}
-                    type="button"
-                    onClick={() => setSelectedId(t.peaDispatchNo)}
-                    className={`w-full p-4 text-left hover:bg-muted/60 ${
+                    className={`w-full p-4 text-left hover:bg-muted/60 cursor-pointer ${
                       selectedId === t.peaDispatchNo ? 'border-l-4 border-cyan-500 bg-cyan-50/30' : ''
                     }`}
+                    onClick={() => setSelectedId(t.peaDispatchNo)}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -125,15 +127,89 @@ export default function TrackingPage() {
                             : '—'}
                         </div>
                       </div>
-                      {task ? <StatusPill status={t.status} task={task} /> : <StatusPill status={t.status} />}
+                      <div className="flex flex-col items-end gap-2">
+                        {task ? (
+                          <StatusPill status={t.status} task={task} />
+                        ) : (
+                          <StatusPill status={t.status} />
+                        )}
+                        <button
+                          type="button"
+                          className="px-3 py-1 text-xs font-semibold rounded-lg border border-[#27A2D8] text-[#27A2D8] hover:bg-[#27A2D8]/10"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setSelectedId(t.peaDispatchNo)
+                            setDetailItem(t)
+                          }}
+                        >
+                          See detail
+                        </button>
+                      </div>
                     </div>
-                  </button>
+                  </div>
                 )
               })}
             </div>
           </div>
         </div>
       </div>
+
+      <ModalOverlay
+        isOpen={detailItem !== null}
+        onClose={() => setDetailItem(null)}
+        title={detailItem ? `${detailItem.vehiclePlate} - Details` : 'Vehicle Details'}
+      >
+        {detailItem && (
+          <div className="space-y-4 text-sm">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <div className="text-xs text-text-muted">Plate Number</div>
+                <div className="font-semibold">{detailItem.vehiclePlate}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-muted">Dispatch No.</div>
+                <div className="font-semibold">{detailItem.peaDispatchNo}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-muted">Oil Company</div>
+                <div className="font-semibold">{detailItem.oilCompanyName}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-muted">Transporter</div>
+                <div className="font-semibold">{detailItem.transporterName}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-muted">Destination Depot</div>
+                <div className="font-semibold">{detailItem.destinationDepotName}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-muted">Engine / Status</div>
+                <div className="font-semibold">{detailItem.status}</div>
+              </div>
+              <div>
+                <div className="text-xs text-text-muted">Last GPS Time (dt_tracker)</div>
+                <div className="font-semibold">
+                  {detailItem.lastGpsPoint ? detailItem.lastGpsPoint.timestamp : '—'}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-text-muted">Last GPS Position (lat, lng)</div>
+                <div className="font-semibold">
+                  {detailItem.lastGpsPoint
+                    ? `${detailItem.lastGpsPoint.position.lat}, ${detailItem.lastGpsPoint.position.lng}`
+                    : '—'}
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-gray-50 p-3 text-xs text-text-muted">
+              The other fields from your tracker payload (IMEI, odometer, fuel levels, etc.) can be
+              mapped here once the backend provides them; this layout is ready to display them per
+              vehicle.
+            </div>
+          </div>
+        )}
+      </ModalOverlay>
     </div>
   )
 }

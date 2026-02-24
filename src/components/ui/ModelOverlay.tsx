@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 export function ModalOverlay({ isOpen, onClose, children, title }: { isOpen: boolean; onClose: () => void; children: ReactNode; title: string }) {
   if (!isOpen) return null
