@@ -4,11 +4,11 @@ import DashboardPage from './pages/DashboardPage'
 import DepotsPage from './pages/DepotsPage'
 import FuelDispatchPage from './pages/FuelDispatchPage'
 import OilCompaniesPage from './pages/OilCompaniesPage'
+import ProfilePage from './pages/ProfilePage'
 import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import TrackingPage from './pages/TrackingPage'
 import TransportersPage from './pages/TransportersPage'
-import ProfilePage from './pages/ProfilePage'
 
 export default function App() {
   return (
@@ -28,6 +28,7 @@ export default function App() {
 
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+       
       </Route>
     </Routes>
   )

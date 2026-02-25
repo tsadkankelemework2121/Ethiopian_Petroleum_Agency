@@ -13,6 +13,7 @@ type MarkerType = {
   label?: string;
   subtitle?: string;
   status?: string;
+  color?: string;
 };
 
 type Props = {
@@ -62,7 +63,7 @@ export default function MapView({
         <div style="
           width:${isSelected ? 42 : 36}px;
           height:${isSelected ? 42 : 36}px;
-          background:white;
+          background:${m.color ?? "white"};
           border-radius:10px;
           display:flex;
           align-items:center;
@@ -76,7 +77,7 @@ export default function MapView({
         </div>
       `;
 
-      const marker = new maplibregl.Marker({
+      new maplibregl.Marker({
         element: el,
         anchor: "bottom",
       })
@@ -94,7 +95,7 @@ export default function MapView({
   return (
     <div
       ref={mapContainer}
-      className="w-full h-[500px] rounded-xl overflow-hidden border border-border bg-white"
+      className="w-full h-full min-h-[400px] rounded-xl overflow-hidden border border-border bg-white"
     />
   );
 }

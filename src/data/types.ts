@@ -96,3 +96,24 @@ export type RegionFuelSummary = {
   jetFuelM3: number
 }
 
+export type GpsVehicle = {
+  imei: string
+  name: string
+  group: string | null
+  odometer: string
+  engine: 'on' | 'off'
+  status: string
+  dt_server: string
+  dt_tracker: string
+  lat: string
+  lng: string
+  altitude: string
+  angle: string
+  speed: string
+  fuel_1: string
+  fuel_2: string
+  fuel_can_level_percent: number | null
+  fuel_can_level_value: number | null
+  custom_fields: unknown | null
+}
+
