@@ -4,7 +4,7 @@ import type { Depot, DispatchTask, OilCompany, Transporter } from '../data/types
 import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
 
-type TabId = 'dispatch' | 'vehicle' | 'depot'
+type FilterType = 'dispatch' | 'vehicle' | 'depot'
 
 function parseYmd(input: string): Date | null {
   const v = input.trim()
@@ -28,11 +28,12 @@ function formatDurationMs(ms: number) {
 }
 
 export default function ReportsPage() {
-  const [tab, setTab] = useState<TabId>('dispatch')
+  const [filterType, setFilterType] = useState<FilterType>('dispatch')
   const [tasks, setTasks] = useState<DispatchTask[]>([])
   const [companies, setCompanies] = useState<OilCompany[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
   const [depots, setDepots] = useState<Depot[]>([])
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const [query, setQuery] = useState('')
   const [from, setFrom] = useState('')
@@ -66,7 +67,7 @@ export default function ReportsPage() {
   }, [transporters])
 
   const title = useMemo(() => {
-    switch (tab) {
+    switch (filterType) {
       case 'dispatch':
         return 'Search by PEA Dispatch No. & Period'
       case 'vehicle':
@@ -74,7 +75,18 @@ export default function ReportsPage() {
       case 'depot':
         return 'Search by Depot'
     }
-  }, [tab])
+  }, [filterType])
+
+  const getSearchPlaceholder = () => {
+    switch (filterType) {
+      case 'dispatch':
+        return 'Dispatch No. (e.g., PEA001)'
+      case 'vehicle':
+        return 'Vehicle Plate (e.g., 3-11111 ET)'
+      case 'depot':
+        return 'Depot ID (e.g., ID8548)'
+    }
+  }
 
   const result = useMemo(() => {
     const q = applied.query.trim().toLowerCase()
@@ -95,12 +107,16 @@ export default function ReportsPage() {
 
     const filtered = tasks.filter((t) => inRange(t.dispatchDateTime))
 
-    if (tab === 'dispatch') {
+    if (filterType === 'dispatch') {
       const rows = filtered
-        .filter((t) => (q ? t.peaDispatchNo.toLowerCase().includes(q) : true))
+        .filter((t) => {
+          const match = t.peaDispatchNo.toLowerCase().includes(q)
+          return match
+        })
         .map((t) => {
           const oilCompany = companiesById.get(t.oilCompanyId)?.name ?? '—'
           const transporter = transportersById.get(t.transporterId)?.name ?? '—'
+          const plate = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
           const dispatchDt = t.dispatchDateTime.replace('T', ' ').replace('Z', '')
           const dropDt = t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'
           const duration =
@@ -108,36 +124,17 @@ export default function ReportsPage() {
 
           return {
             task: t,
-            cells: [
-              oilCompany,
-              transporter,
-              t.peaDispatchNo,
-              dispatchDt,
-              t.dispatchLocation,
-              t.dropOffLocation ?? '—',
-              dropDt,
-              duration,
-            ],
+            cells: [t.peaDispatchNo, plate, oilCompany, transporter, dispatchDt, dropDt, duration],
           }
         })
 
       return {
-        columns: [
-          'Oil Company',
-          'Transporter',
-          'Dispatch ID',
-          'Dispatch Date/Time',
-          'Dispatch Location',
-          'Drop Off Location',
-          'Drop Off Date/Time',
-          'Duration',
-          'Status',
-        ],
+        columns: ['Dispatch No.', 'Plate', 'Oil Company', 'Transporter', 'Dispatch Date/Time', 'Drop Off Date/Time', 'Duration', 'Status'],
         rows,
       }
     }
 
-    if (tab === 'vehicle') {
+    if (filterType === 'vehicle') {
       const rows = filtered
         .filter((t) => {
           if (!q) return true
@@ -209,7 +206,7 @@ export default function ReportsPage() {
       columns: ['Depot ID', 'Depot Name', 'Drop Off Date/Time', 'Vehicle', 'Oil Company', 'Transporter', 'Duration', 'Status'],
       rows,
     }
-  }, [applied.from, applied.query, applied.to, companiesById, depotsById, tab, tasks, transportersById, vehiclesById])
+  }, [applied.from, applied.query, applied.to, companiesById, depotsById, filterType, tasks, transportersById, vehiclesById])
 
   return (
     <div>
@@ -217,51 +214,85 @@ export default function ReportsPage() {
         title="Reports"
         subtitle="Generate report tables using period + identifiers (mock data for now)."
       />
-      <div className="flex flex-wrap gap-4 mt-6 border-b border-[#D1D5DB] pb-1">
-        {[
-          { id: 'dispatch' as const, label: 'By Dispatch' },
-          { id: 'vehicle' as const, label: 'By Vehicle' },
-          { id: 'depot' as const, label: 'By Depot' },
-        ].map((t) => (
+      
+      {/* Single Formal Tab with Dropdown */}
+      <div className="flex items-center gap-2 mt-6 relative">
+        <div 
+          className="relative"
+          onMouseEnter={() => setIsDropdownOpen(true)}
+          onMouseLeave={() => setIsDropdownOpen(false)}
+        >
           <button
-            key={t.id}
             type="button"
-            onClick={() => setTab(t.id)}
-            className={[
-              'px-1 py-2 text-sm font-semibold transition border-b-2',
-              tab === t.id
-                ? 'text-[#27A2D8] border-[#27A2D8]'
-                : 'text-text-muted border-transparent hover:text-[#27A2D8] hover:border-[#27A2D8]/40',
-            ].join(' ')}
+            className="rounded-lg px-4 py-2 text-sm font-semibold transition border-b-2 text-[#27A2D8] border-[#27A2D8] bg-primary/5 flex items-center gap-2"
           >
-            {t.label}
+            Formal
+            <svg 
+              className={`w-4 h-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </button>
-        ))}
+
+          {/* Dropdown Menu */}
+          {isDropdownOpen && (
+            <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 animate-fade-in">
+              {[
+                { id: 'dispatch' as const, label: 'By Dispatch' },
+                { id: 'vehicle' as const, label: 'By Vehicle' },
+                { id: 'depot' as const, label: 'By Depot' },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => {
+                    setFilterType(option.id)
+                    setIsDropdownOpen(false)
+                    // Clear query when switching filter type
+                    setQuery('')
+                    setApplied(prev => ({ ...prev, query: '' }))
+                  }}
+                  className={`
+                    w-full text-left px-4 py-2.5 text-sm transition-colors
+                    ${filterType === option.id 
+                      ? 'bg-primary/10 text-primary font-medium' 
+                      : 'text-gray-700 hover:bg-gray-50'
+                    }
+                  `}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Active Filter Indicator */}
+        <span className="text-sm text-gray-500">
+          Active filter: {filterType === 'dispatch' ? 'Dispatch' : filterType === 'vehicle' ? 'Vehicle' : 'Depot'}
+        </span>
       </div>
 
       <div className="mt-5 rounded-xl border border-[#D1D5DB] bg-white p-4">
         <div className="text-sm font-semibold text-text">{title}</div>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <input
-            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-            placeholder={
-              tab === 'dispatch'
-                ? 'Dispatch No. (e.g., PEA001)'
-                : tab === 'vehicle'
-                  ? 'Vehicle Plate (e.g., 3-11111 ET)'
-                  : 'Depot ID (e.g., ID8548)'
-            }
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            placeholder={getSearchPlaceholder()}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <input
-            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
             placeholder="From (YYYY-MM-DD)"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
           <input
-            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
             placeholder="To (YYYY-MM-DD)"
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -271,7 +302,8 @@ export default function ReportsPage() {
           <button
             type="button"
             onClick={() => setApplied({ query, from, to })}
-            className="rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-card hover:shadow-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
+            style={{ backgroundColor: '#27A2D8' }}
           >
             Run report
           </button>
@@ -279,7 +311,7 @@ export default function ReportsPage() {
       </div>
 
       <div className="mt-4 overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
-        <table className="min-w-245 w-full text-left text-sm">
+        <table className="min-w-[980px] w-full text-left text-sm">
           <thead className="bg-muted/50 text-xs text-text-muted">
             <tr>
               {result.columns.map((h) => (
@@ -313,7 +345,18 @@ export default function ReportsPage() {
           </tbody>
         </table>
       </div>
+
+      {/* Add custom animations */}
+      <style>{`
+        @keyframes fade-in {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fade-in {
+          animation: fade-in 0.2s ease-out;
+        }
+      `}</style>
     </div>
   )
 }
-
