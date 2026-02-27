@@ -198,7 +198,7 @@ export default function AppLayout() {
                     className="inline-flex items-center justify-center rounded-lg border border-[#D1D5DB] bg-white p-2.5 text-text hover:bg-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     aria-label="User profile"
                   >
-                    <div className="grid size-9 place-items-center rounded-lg bg-primary text-white font-bold text-sm">
+                    <div className="grid size-9 place-items-center rounded-lg bg-primary text-black font-bold text-sm">
                       PA
                     </div>
                   </button>
