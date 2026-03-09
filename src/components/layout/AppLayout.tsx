@@ -1,6 +1,6 @@
 import type { ComponentType, SVGProps } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import {
   AdjustmentsHorizontalIcon,
   BellIcon,
@@ -13,30 +13,28 @@ import {
 } from '@heroicons/react/24/outline'
 import { getDashboardKpis } from '../../data/mockApi'
 import { cn } from '../../lib/cn'
-import profileImage from '../../assets/profile.jpg'
 
 type NavItem = {
   to: string
   label: string
   icon: ComponentType<SVGProps<SVGSVGElement>>
   end?: boolean
-  headerTitle?: string
 }
 
 const primaryNav: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: Squares2X2Icon, end: true, headerTitle: 'Operations Overview' },
-  { to: '/tracking', label: 'GPS Tracking', icon: MapIcon, headerTitle: 'Operations Overview' },
-  { to: '/fuel-dispatch', label: 'Fuel Dispatch', icon: ClipboardDocumentListIcon, headerTitle: 'Operations Overview' },
-  { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon, headerTitle: 'Operations Overview' },
+  { to: '/', label: 'Dashboard', icon: Squares2X2Icon, end: true },
+  { to: '/tracking', label: 'GPS Tracking', icon: MapIcon },
+  { to: '/fuel-dispatch', label: 'Fuel Dispatch', icon: ClipboardDocumentListIcon },
+  { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
 ]
 
 const entitiesNav: NavItem[] = [
-  { to: '/entities/oil-companies', label: 'Oil Companies', icon: BuildingOffice2Icon, headerTitle: 'Operations Overview' },
-  { to: '/entities/transporters', label: 'Transporters', icon: TruckIcon, headerTitle: 'Operations Overview' },
-  { to: '/entities/depots', label: 'Depots', icon: MapIcon, headerTitle: 'Operations Overview' },
+  { to: '/entities/oil-companies', label: 'Oil Companies', icon: BuildingOffice2Icon },
+  { to: '/entities/transporters', label: 'Transporters', icon: TruckIcon },
+  { to: '/entities/depots', label: 'Depots', icon: MapIcon },
 ]
 
-const footerNav: NavItem[] = [{ to: '/settings', label: 'Settings', icon: AdjustmentsHorizontalIcon, headerTitle: 'Operations Overview' }]
+const footerNav: NavItem[] = [{ to: '/settings', label: 'Settings', icon: AdjustmentsHorizontalIcon }]
 
 function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const Icon = item.icon
@@ -47,10 +45,10 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0687d1]/40 relative',
+          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 relative',
           'text-text-muted hover:bg-muted hover:text-text',
           isActive &&
-            'font-semibold pl-2.5 bg-[#0687d1]/10 text-[#0687d1] border-l-4 border-[#0687d1]',
+            'font-semibold pl-2.5 bg-[#27A2D8]/10 text-[#27A2D8] border-l-4 border-[#27A2D8]',
         )
       }
     >
@@ -110,18 +108,11 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
   const [alertsCount, setAlertsCount] = useState(0)
 
-  // Get header title based on current route
-  const title = useMemo(() => {
-    const allNav = [...primaryNav, ...entitiesNav, ...footerNav]
-    const currentNav = allNav.find((nav) => {
-      if (nav.end) return location.pathname === nav.to
-      return location.pathname.startsWith(nav.to)
-    })
-    return currentNav?.headerTitle || 'Operations Overview'
-  }, [location.pathname])
+  // Keep the shell header consistent and avoid duplicating per-page titles.
+  // Detailed titles and subtitles are handled by each page via `PageHeader`.
+  const title = useMemo(() => 'EPA Dashboard', [])
 
   useEffect(() => {
     void getDashboardKpis().then((kpis) => {
@@ -155,9 +146,8 @@ export default function AppLayout() {
 
         {/* Main */}
         <div className="flex min-w-0 flex-1 flex-col bg-bg overflow-hidden">
-          <header className="sticky top-0 z-40 border-b border-[#E5E7EB] bg-white">
+          <header className="sticky top-0 z-40 border-b border-[#D1D5DB] bg-white blur-backdrop">
             <div className="flex items-center justify-between gap-4 px-6 py-4">
-              {/* Left: Menu button (mobile) + Title */}
               <div className="flex items-center gap-4 min-w-0">
                 <button
                   type="button"
@@ -167,58 +157,50 @@ export default function AppLayout() {
                 >
                   Menu
                 </button>
-                <h2 className="text-xl font-bold text-[#1F2937] truncate">{title}</h2>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-text truncate">{title}</h2>
+                  <p className="text-xs text-text-muted">Ethiopian Petroleum Agency</p>
+                </div>
               </div>
 
-              {/* Center: Search bar */}
-              <div className="hidden lg:flex flex-1 max-w-md items-center">
-                <input
-                  className="w-full rounded-lg border border-[#D1D5DB] bg-[#F3F4F6] px-4 py-2.5 text-sm outline-none placeholder:text-[#9CA3AF] focus:bg-white focus:ring-2 focus:ring-[#0687d1]/30 focus:border-[#0687d1] transition"
-                  placeholder="Search dispatches, vehicles, or depots..."
-                />
-              </div>
-
-              {/* Right: Notifications + User */}
-              <div className="flex items-center gap-3 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => {
-                    navigate('/fuel-dispatch')
-                    setTimeout(() => {
-                      const element = document.getElementById('problem-dispatches')
-                      if (element) {
-                        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                      }
-                    }, 100)
-                  }}
-                  className="relative inline-flex items-center justify-center rounded-lg border border-[#D1D5DB] bg-white p-2.5 text-text hover:bg-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0687d1]/40"
-                  aria-label={`${alertsCount} alerts`}
-                >
-                  <BellIcon className="size-5" />
-                  {alertsCount > 0 ? (
-                    <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                      {alertsCount > 99 ? '99+' : alertsCount}
-                    </span>
-                  ) : null}
-                </button>
-
-                {/* User section */}
-                <div className="flex items-center gap-3 pl-3 border-l border-[#E5E7EB]">
+              <div className="flex min-w-0 items-center gap-4">
+                <div className="hidden lg:block">
+                  <input
+                    className="w-80 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
+                    placeholder="Search dispatch, vehicle, transporter…"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate('/fuel-dispatch')
+                      setTimeout(() => {
+                        const element = document.getElementById('problem-dispatches')
+                        if (element) {
+                          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                        }
+                      }, 100)
+                    }}
+                    className="relative inline-flex items-center justify-center rounded-lg border border-[#D1D5DB] bg-white p-2.5 text-text hover:bg-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                    aria-label={`${alertsCount} alerts`}
+                  >
+                    <BellIcon className="size-5" />
+                    {alertsCount > 0 ? (
+                      <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                        {alertsCount > 99 ? '99+' : alertsCount}
+                      </span>
+                    ) : null}
+                  </button>
                   <button
                     type="button"
                     onClick={() => navigate('/profile')}
-                    className="flex items-center gap-3 rounded-lg hover:bg-muted/50 px-2 py-1 transition text-sm"
+                    className="inline-flex items-center justify-center rounded-lg border border-[#D1D5DB] bg-white p-2.5 text-text hover:bg-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                     aria-label="User profile"
                   >
-                    <div className="text-right">
-                      <div className="font-semibold text-[#1F2937]">Abebe B.</div>
-                      <div className="text-xs text-[#6B7280]">Ops Manager</div>
+                    <div className="grid size-9 place-items-center rounded-lg bg-primary text-black font-bold text-sm">
+                      PA
                     </div>
-                    <img
-                      src={profileImage}
-                      alt="Abebe B."
-                      className="size-10 rounded-full object-cover border-2 border-[#0687d1]"
-                    />
                   </button>
                 </div>
               </div>

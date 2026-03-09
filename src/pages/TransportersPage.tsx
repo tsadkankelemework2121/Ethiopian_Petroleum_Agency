@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getTransporters } from '../data/mockApi'
 import type { Transporter } from '../data/types'
+import PageHeader from '../components/layout/PageHeader'
 
 export default function TransportersPage() {
   const [items, setItems] = useState<Transporter[]>([])
@@ -10,7 +11,12 @@ export default function TransportersPage() {
   }, [])
 
   return (
-    <div className="grid gap-4 lg:grid-cols-2">
+    <div>
+      <PageHeader
+        title="Transporters"
+        subtitle="Transporters and their fleet details (read-only mock)."
+      />
+      <div className="grid gap-4 lg:grid-cols-2">
         {items.map((t) => (
           <div key={t.id} className="rounded-xl border border-[#D1D5DB] bg-white shadow-card">
             <div className="border-b border-[#D1D5DB] p-4">

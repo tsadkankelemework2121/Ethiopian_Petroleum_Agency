@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { GpsVehicle } from '../data/types'
+import PageHeader from '../components/layout/PageHeader'
 import MapView from '../components/map/MapView'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 
@@ -79,7 +80,12 @@ export default function TrackingPage() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-140px)]">
+    <div>
+      <PageHeader
+        title="GPS Tracking"
+        subtitle="Live GPS view of all vehicles."
+      />
+      <div className="relative mt-4 h-[calc(100vh-140px)]">
         <MapView
           center={center}
           zoom={zoom}
