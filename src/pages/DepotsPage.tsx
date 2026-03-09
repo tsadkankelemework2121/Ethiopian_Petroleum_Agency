@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getDepots } from '../data/mockApi'
 import type { Depot } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
+// import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline'
 import EmptyState from '../components/ui/EmptyState'
@@ -38,7 +38,7 @@ export default function DepotsPage() {
 
   return (
     <div>
-      <PageHeader
+      {/* <PageHeader
         title="Depots"
         subtitle="Depots with contact details and map location."
         right={
@@ -51,7 +51,7 @@ export default function DepotsPage() {
             New Depot
           </button>
         }
-      />
+      /> */}
 
       <ModalOverlay
         isOpen={showForm}

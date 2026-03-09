@@ -10,7 +10,7 @@ import {
   getRegionalFuelDispatchedThisWeek,
 } from '../data/mockApi'
 import type { DispatchTask, OilCompany, Transporter } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
+// import PageHeader from '../components/layout/PageHeader'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
@@ -155,7 +155,7 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <PageHeader
+      {/* <PageHeader
         title="Dashboard"
         subtitle="Real-time operations view for dispatch, GPS monitoring, and regional fuel movement."
         right={
@@ -166,7 +166,7 @@ export default function DashboardPage() {
             Export CSV
           </button>
         }
-      />
+      /> */}
       <div className="grid gap-4 lg:grid-cols-12">
         {/* KPIs */}
         <div className="lg:col-span-12">

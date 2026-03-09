@@ -7,10 +7,10 @@ export default function SettingsPage() {
 
   return (
     <div>
-      <PageHeader
+      {/* <PageHeader
         title="Settings"
         subtitle="Theme + map provider placeholders (frontend-only for now)."
-      />
+      /> */}
       <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-[#D1D5DB] bg-white p-4">
           <div className="text-sm font-semibold text-text">Theme</div>

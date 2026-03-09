@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
 import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
+// import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { PlusIcon } from '@heroicons/react/24/outline'
@@ -66,7 +66,7 @@ export default function FuelDispatchPage() {
 
   return (
     <div>
-      <PageHeader
+      {/* <PageHeader
         title="Fuel Dispatch & Transit"
         subtitle="Monitor dispatches, deliveries, and alerts."
         right={
@@ -79,7 +79,7 @@ export default function FuelDispatchPage() {
             New Dispatch
           </button>
         }
-      />
+      /> */}
 
       <ModalOverlay
         isOpen={showNewDispatchForm}
