@@ -10,7 +10,6 @@ import {
   getRegionalFuelDispatchedThisWeek,
 } from '../data/mockApi'
 import type { DispatchTask, OilCompany, Transporter } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
@@ -141,10 +140,10 @@ export default function DashboardPage() {
 
   const chartColors = {
     benzine: 'rgb(34, 211, 238)',
-    diesel: 'rgb(37, 99, 235)',
+    diesel: 'rgb(6, 135, 209)',
     jetFuel: 'rgb(177, 189, 217)',
-    delivered: 'rgb(16, 185, 129)',
-    inTransit: 'rgb(37, 99, 235)',
+    delivered: 'rgb(6, 135, 209)',
+    inTransit: 'rgb(217, 119, 6)',
     alerts: 'rgb(239, 68, 68)',
   }
   const pieColors: Record<string, string> = {
@@ -154,20 +153,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
-      <PageHeader
-        title="Dashboard"
-        subtitle="Real-time operations view for dispatch, GPS monitoring, and regional fuel movement."
-        right={
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            Export CSV
-          </button>
-        }
-      />
-      <div className="grid gap-4 lg:grid-cols-12">
+    <div className="grid gap-4 lg:grid-cols-12">
         {/* KPIs */}
         <div className="lg:col-span-12">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

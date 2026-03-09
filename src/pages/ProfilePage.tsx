@@ -132,7 +132,7 @@ export default function ProfilePage() {
         type="button"
         onClick={() => navigate(-1)}
         className="inline-flex items-center gap-2 font-medium transition group"
-        style={{ color: '#27A2D8' }}
+        style={{ color: '#0687d1' }}
       >
         <ArrowLeftIcon className="size-4 group-hover:-translate-x-1 transition-transform" />
         Back
@@ -169,7 +169,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-6">
                 {/* Profile Image with Upload Button */}
                 <div className="relative group">
-                  <div className="size-28 rounded-2xl overflow-hidden bg-gradient-to-br from-[#27A2D8]/10 to-[#27A2D8]/5 border-2 border-gray-200 shadow-sm">
+                  <div className="size-28 rounded-2xl overflow-hidden bg-gradient-to-br from-[#0687d1]/10 to-[#0687d1]/5 border-2 border-gray-200 shadow-sm">
                     {formData.image ? (
                       <img
                         src={formData.image}
@@ -186,7 +186,7 @@ export default function ProfilePage() {
                   {/* Image Upload Button - Always visible with hover effect */}
                   <label 
                     className="absolute -bottom-2 -right-2 text-white rounded-xl p-2.5 cursor-pointer transition-all hover:scale-110 border-2 border-white shadow-lg"
-                    style={{ backgroundColor: '#27A2D8' }}
+                    style={{ backgroundColor: '#0687d1' }}
                   >
                     <input
                       type="file"
@@ -207,7 +207,7 @@ export default function ProfilePage() {
                       value={formData.name}
                       onChange={handleInputChange}
                       className="text-2xl font-bold text-gray-900 border-b-2 outline-none pb-1 w-full bg-transparent"
-                      style={{ borderColor: '#27A2D8' }}
+                      style={{ borderColor: '#0687d1' }}
                       placeholder="Enter your name"
                       autoFocus
                     />
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                     </h1>
                   )}
                   <p className="text-sm text-gray-500 flex items-center gap-1">
-                    <span className="size-1.5 rounded-full" style={{ backgroundColor: '#27A2D8' }}></span>
+                    <span className="size-1.5 rounded-full" style={{ backgroundColor: '#0687d1' }}></span>
                     Administrator Account
                   </p>
                 </div>
@@ -246,7 +246,7 @@ export default function ProfilePage() {
                   type="button"
                   onClick={() => setIsEditing(true)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium transition-all hover:shadow-md"
-                  style={{ backgroundColor: '#27A2D8' }}
+                  style={{ backgroundColor: '#0687d1' }}
                 >
                   <PencilIcon className="size-4" />
                   Edit Profile
@@ -277,8 +277,8 @@ export default function ProfilePage() {
                     type="button"
                     onClick={() => setShowPasswordSection(!showPasswordSection)}
                     className="w-full flex items-center justify-between p-4 rounded-xl border-2 border-gray-200 transition-colors group"
-                    style={{ hover: { borderColor: '#27A2D8' } }}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#27A2D8'}
+                    style={{ hover: { borderColor: '#0687d1' } }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = '#0687d1'}
                     onMouseLeave={(e) => e.currentTarget.style.borderColor = '#e5e7eb'}
                   >
                     <span className="font-medium text-gray-900">Change Password</span>
@@ -311,10 +311,10 @@ export default function ProfilePage() {
                           value={formData.currentPassword}
                           onChange={handleInputChange}
                           className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:ring-1 outline-none transition"
-                          style={{ focus: { borderColor: '#27A2D8', ringColor: '#27A2D8' } }}
+                          style={{ focus: { borderColor: '#0687d1', ringColor: '#0687d1' } }}
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#27A2D8'
-                            e.target.style.boxShadow = `0 0 0 1px #27A2D8`
+                            e.target.style.borderColor = '#0687d1'
+                            e.target.style.boxShadow = `0 0 0 1px #0687d1`
                           }}
                           onBlur={(e) => {
                             e.target.style.borderColor = '#d1d5db'
@@ -335,8 +335,8 @@ export default function ProfilePage() {
                           onChange={handleInputChange}
                           className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition"
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#27A2D8'
-                            e.target.style.boxShadow = `0 0 0 1px #27A2D8`
+                            e.target.style.borderColor = '#0687d1'
+                            e.target.style.boxShadow = `0 0 0 1px #0687d1`
                           }}
                           onBlur={(e) => {
                             e.target.style.borderColor = '#d1d5db'
@@ -357,8 +357,8 @@ export default function ProfilePage() {
                           onChange={handleInputChange}
                           className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition"
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#27A2D8'
-                            e.target.style.boxShadow = `0 0 0 1px #27A2D8`
+                            e.target.style.borderColor = '#0687d1'
+                            e.target.style.boxShadow = `0 0 0 1px #0687d1`
                           }}
                           onBlur={(e) => {
                             e.target.style.borderColor = '#d1d5db'
@@ -383,7 +383,7 @@ export default function ProfilePage() {
                 <button
                   onClick={handleSave}
                   className="text-white px-6 py-2.5 rounded-xl font-medium transition-all hover:shadow-md"
-                  style={{ backgroundColor: '#27A2D8' }}
+                  style={{ backgroundColor: '#0687d1' }}
                 >
                   Save Changes
                 </button>
@@ -421,13 +421,13 @@ export default function ProfilePage() {
         
         /* Custom focus styles */
         input:focus {
-          border-color: #27A2D8 !important;
-          box-shadow: 0 0 0 1px #27A2D8 !important;
+          border-color: #0687d1 !important;
+          box-shadow: 0 0 0 1px #0687d1 !important;
         }
         
         /* Custom hover for password button */
-        .hover\\:border-\\[\\#27A2D8\\]:hover {
-          border-color: #27A2D8 !important;
+        .hover\\:border-\\[\\#0687d1\\]:hover {
+          border-color: #0687d1 !important;
         }
       `}</style>
     </div>

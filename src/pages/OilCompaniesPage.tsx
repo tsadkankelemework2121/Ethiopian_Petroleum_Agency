@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { OilCompany } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { getOilCompanies } from '../data/mockApi'
@@ -16,20 +15,16 @@ export default function OilCompaniesPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Oil Companies"
-        subtitle="Registered oil companies and contacts."
-        right={
-          <button
-            type="button"
-            onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
-          >
-            <PlusIcon className="size-4" />
-            New Oil Company
-          </button>
-        }
-      />
+      <div className="mb-6 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setShowForm(!showForm)}
+          className="inline-flex items-center gap-2 rounded-lg bg-[#0687d1] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#0a5fa8] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0687d1]/40"
+        >
+          <PlusIcon className="size-4" />
+          New Oil Company
+        </button>
+      </div>
 
       <ModalOverlay
         isOpen={showForm}
@@ -120,7 +115,7 @@ function NewOilCompanyForm({
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0687d1]/40"
           />
         </div>
         <div>
@@ -129,7 +124,7 @@ function NewOilCompanyForm({
             type="text"
             value={formData.person1}
             onChange={(e) => setFormData({ ...formData, person1: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0687d1]/40"
           />
         </div>
         <div>
@@ -138,7 +133,7 @@ function NewOilCompanyForm({
             type="text"
             value={formData.person2}
             onChange={(e) => setFormData({ ...formData, person2: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0687d1]/40"
           />
         </div>
         <div>
@@ -147,7 +142,7 @@ function NewOilCompanyForm({
             type="tel"
             value={formData.phone1}
             onChange={(e) => setFormData({ ...formData, phone1: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0687d1]/40"
           />
         </div>
         <div>
@@ -156,7 +151,7 @@ function NewOilCompanyForm({
             type="tel"
             value={formData.phone2}
             onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0687d1]/40"
           />
         </div>
         <div>
@@ -165,7 +160,7 @@ function NewOilCompanyForm({
             type="email"
             value={formData.email1}
             onChange={(e) => setFormData({ ...formData, email1: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0687d1]/40"
           />
         </div>
         <div>
@@ -174,7 +169,7 @@ function NewOilCompanyForm({
             type="email"
             value={formData.email2}
             onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#0687d1]/40"
           />
         </div>
       </div>
@@ -188,7 +183,7 @@ function NewOilCompanyForm({
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          className="rounded-lg bg-[#0687d1] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#0a5fa8] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0687d1]/40"
         >
           Create Oil Company
         </button>

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
 import type { Depot, DispatchTask, OilCompany, Transporter } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
 
 type FilterType = 'dispatch' | 'vehicle' | 'depot'
@@ -210,11 +209,6 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Reports"
-        subtitle="Generate report tables using period + identifiers (mock data for now)."
-      />
-      
       {/* Single Formal Tab with Dropdown */}
       <div className="flex items-center gap-2 mt-6 relative">
         <div 

@@ -1,17 +1,11 @@
 import { useState } from 'react'
-import PageHeader from '../components/layout/PageHeader'
 
 export default function SettingsPage() {
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')
   const [provider, setProvider] = useState<'abstract' | 'google' | 'mapbox'>('abstract')
 
   return (
-    <div>
-      <PageHeader
-        title="Settings"
-        subtitle="Theme + map provider placeholders (frontend-only for now)."
-      />
-      <div className="grid gap-4 lg:grid-cols-2">
+    <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-[#D1D5DB] bg-white p-4">
           <div className="text-sm font-semibold text-text">Theme</div>
           <div className="mt-2 text-sm text-text-muted">

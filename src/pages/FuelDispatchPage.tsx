@@ -2,7 +2,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
 import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { PlusIcon } from '@heroicons/react/24/outline'
@@ -66,21 +65,6 @@ export default function FuelDispatchPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Fuel Dispatch & Transit"
-        subtitle="Monitor dispatches, deliveries, and alerts."
-        right={
-          <button
-            type="button"
-            onClick={() => setShowNewDispatchForm(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition"
-          >
-            <PlusIcon className="size-4" />
-            New Dispatch
-          </button>
-        }
-      />
-
       <ModalOverlay
         isOpen={showNewDispatchForm}
         onClose={() => setShowNewDispatchForm(false)}
@@ -99,6 +83,16 @@ export default function FuelDispatchPage() {
       </ModalOverlay>
 
       <div className="space-y-6">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowNewDispatchForm(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#0687d1] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#0a5fa8] transition"
+          >
+            <PlusIcon className="size-4" />
+            New Dispatch
+          </button>
+        </div>
 
         <Card>
           <CardHeader
@@ -421,7 +415,7 @@ function NewDispatchForm({
 
         <button
           type="submit"
-          className="rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white"
+          className="rounded-lg bg-[#0687d1] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0a5fa8]"
         >
           Create Dispatch
         </button>
