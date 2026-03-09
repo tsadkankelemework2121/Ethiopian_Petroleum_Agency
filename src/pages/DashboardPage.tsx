@@ -157,7 +157,6 @@ export default function DashboardPage() {
     <div>
       <PageHeader
         title="Dashboard"
-        subtitle="Real-time operations view for dispatch, GPS monitoring, and regional fuel movement."
         right={
           <button
             type="button"

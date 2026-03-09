@@ -177,9 +177,11 @@ export default function ProfilePage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                        <CameraIcon className="size-8 text-gray-400" />
-                      </div>
+                      <img
+                        src="/profile-image.jpg"
+                        alt="profile"
+                        className="w-full h-full object-cover"
+                      />
                     )}
                   </div>
                   

@@ -40,7 +40,6 @@ export default function DepotsPage() {
     <div>
       <PageHeader
         title="Depots"
-        subtitle="Depots with contact details and map location."
         right={
           <button
             type="button"

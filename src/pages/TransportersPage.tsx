@@ -14,7 +14,6 @@ export default function TransportersPage() {
     <div>
       <PageHeader
         title="Transporters"
-        subtitle="Transporters and their fleet details (read-only mock)."
       />
       <div className="grid gap-4 lg:grid-cols-2">
         {items.map((t) => (

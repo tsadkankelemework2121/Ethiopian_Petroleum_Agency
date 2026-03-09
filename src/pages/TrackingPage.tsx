@@ -83,7 +83,6 @@ export default function TrackingPage() {
     <div>
       <PageHeader
         title="GPS Tracking"
-        subtitle="Live GPS view of all vehicles."
       />
       <div className="relative mt-4 h-[calc(100vh-140px)]">
         <MapView

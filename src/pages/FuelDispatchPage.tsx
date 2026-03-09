@@ -67,8 +67,7 @@ export default function FuelDispatchPage() {
   return (
     <div>
       <PageHeader
-        title="Fuel Dispatch & Transit"
-        subtitle="Monitor dispatches, deliveries, and alerts."
+        title="Fuel Dispatch"
         right={
           <button
             type="button"

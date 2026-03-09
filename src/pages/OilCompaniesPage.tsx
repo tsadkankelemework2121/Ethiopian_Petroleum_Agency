@@ -18,7 +18,6 @@ export default function OilCompaniesPage() {
     <div>
       <PageHeader
         title="Oil Companies"
-        subtitle="Registered oil companies and contacts."
         right={
           <button
             type="button"

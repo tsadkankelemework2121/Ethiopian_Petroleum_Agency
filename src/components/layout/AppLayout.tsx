@@ -1,6 +1,6 @@
 import type { ComponentType, SVGProps } from 'react'
 import { useEffect, useMemo, useState } from 'react'
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import {
   AdjustmentsHorizontalIcon,
   BellIcon,
@@ -108,11 +108,24 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const [alertsCount, setAlertsCount] = useState(0)
 
-  // Keep the shell header consistent and avoid duplicating per-page titles.
-  // Detailed titles and subtitles are handled by each page via `PageHeader`.
-  const title = useMemo(() => 'EPA Dashboard', [])
+  // Map routes to page titles
+  const getPageTitle = (pathname: string): string => {
+    if (pathname === '/' || pathname === '') return 'Dashboard'
+    if (pathname === '/tracking') return 'GPS Tracking'
+    if (pathname === '/fuel-dispatch') return 'Fuel Dispatch'
+    if (pathname === '/reports') return 'Reports'
+    if (pathname.includes('/entities/oil-companies')) return 'Oil Companies'
+    if (pathname.includes('/entities/transporters')) return 'Transporters'
+    if (pathname.includes('/entities/depots')) return 'Depots'
+    if (pathname === '/settings') return 'Settings'
+    if (pathname === '/profile') return 'Profile'
+    return 'EPA Dashboard'
+  }
+
+  const title = useMemo(() => getPageTitle(location.pathname), [location.pathname])
 
   useEffect(() => {
     void getDashboardKpis().then((kpis) => {
@@ -146,7 +159,7 @@ export default function AppLayout() {
 
         {/* Main */}
         <div className="flex min-w-0 flex-1 flex-col bg-bg overflow-hidden">
-          <header className="sticky top-0 z-40 border-b border-[#D1D5DB] bg-white blur-backdrop">
+          <header className="sticky top-0 z-40 border-b border-[#D1D5DB] bg-white">
             <div className="flex items-center justify-between gap-4 px-6 py-4">
               <div className="flex items-center gap-4 min-w-0">
                 <button
@@ -157,52 +170,57 @@ export default function AppLayout() {
                 >
                   Menu
                 </button>
-                <div className="min-w-0">
-                  <h2 className="text-lg font-bold text-text truncate">{title}</h2>
-                  <p className="text-xs text-text-muted">Ethiopian Petroleum Agency</p>
+                <h2 className="text-sm font-semibold text-text truncate">{title}</h2>
+              </div>
+
+              <div className="flex min-w-0 flex-1 items-center gap-4 px-4">
+                <div className="hidden lg:block flex-1 max-w-sm">
+                  <input
+                    className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
+                    placeholder="Search dispatches, vehicles, or doposts…"
+                  />
                 </div>
               </div>
 
-              <div className="flex min-w-0 items-center gap-4">
-                <div className="hidden lg:block">
-                  <input
-                    className="w-80 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
-                    placeholder="Search dispatch, vehicle, transporter…"
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigate('/fuel-dispatch')
+                    setTimeout(() => {
+                      const element = document.getElementById('problem-dispatches')
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                      }
+                    }, 100)
+                  }}
+                  className="relative inline-flex items-center justify-center rounded-lg border border-[#D1D5DB] bg-white p-2.5 text-text hover:bg-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                  aria-label={`${alertsCount} alerts`}
+                >
+                  <BellIcon className="size-5" />
+                  {alertsCount > 0 ? (
+                    <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                      {alertsCount > 99 ? '99+' : alertsCount}
+                    </span>
+                  ) : null}
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  className="inline-flex items-center gap-3 hover:opacity-80 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 rounded-lg p-1"
+                  aria-label="User profile"
+                >
+                  <div className="flex flex-col items-end">
+                    <div className="text-sm font-semibold text-text">Abebe B.</div>
+                    <div className="text-xs text-text-muted">Ops Manager</div>
+                  </div>
+                  <img 
+                    src="/profile-image.jpg" 
+                    alt="User profile"
+                    className="h-10 w-10 rounded-full object-cover border border-[#D1D5DB]"
                   />
-                </div>
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigate('/fuel-dispatch')
-                      setTimeout(() => {
-                        const element = document.getElementById('problem-dispatches')
-                        if (element) {
-                          element.scrollIntoView({ behavior: 'smooth', block: 'start' })
-                        }
-                      }, 100)
-                    }}
-                    className="relative inline-flex items-center justify-center rounded-lg border border-[#D1D5DB] bg-white p-2.5 text-text hover:bg-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    aria-label={`${alertsCount} alerts`}
-                  >
-                    <BellIcon className="size-5" />
-                    {alertsCount > 0 ? (
-                      <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                        {alertsCount > 99 ? '99+' : alertsCount}
-                      </span>
-                    ) : null}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigate('/profile')}
-                    className="inline-flex items-center justify-center rounded-lg border border-[#D1D5DB] bg-white p-2.5 text-text hover:bg-muted transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                    aria-label="User profile"
-                  >
-                    <div className="grid size-9 place-items-center rounded-lg bg-primary text-black font-bold text-sm">
-                      PA
-                    </div>
-                  </button>
-                </div>
+                </button>
               </div>
             </div>
           </header>

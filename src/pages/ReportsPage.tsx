@@ -212,7 +212,6 @@ export default function ReportsPage() {
     <div>
       <PageHeader
         title="Reports"
-        subtitle="Generate report tables using period + identifiers (mock data for now)."
       />
       
       {/* Single Formal Tab with Dropdown */}
