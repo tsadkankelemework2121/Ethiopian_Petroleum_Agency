@@ -1,7 +1,6 @@
 import type { GpsVehicle } from './types'
 
-const GPS_API_URL =
-  ''
+const GPS_API_URL = ''
 
 export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
   const res = await fetch(GPS_API_URL)

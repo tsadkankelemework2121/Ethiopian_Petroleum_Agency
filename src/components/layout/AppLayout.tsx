@@ -13,6 +13,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { getDashboardKpis } from '../../data/mockApi'
 import { cn } from '../../lib/cn'
+import profileImage from '../../assets/profile.jpg'
 
 type NavItem = {
   to: string
@@ -170,9 +171,9 @@ export default function AppLayout() {
               </div>
 
               {/* Center: Search bar */}
-              <div className="hidden lg:flex flex-1 max-w-xs items-center">
+              <div className="hidden lg:flex flex-1 max-w-md items-center">
                 <input
-                  className="w-full rounded-lg border border-[#D1D5DB] bg-white px-4 py-2.5 text-sm outline-none placeholder:text-[#9CA3AF] focus:ring-2 focus:ring-[#0687d1]/30 focus:border-[#0687d1] transition"
+                  className="w-full rounded-lg border border-[#D1D5DB] bg-[#F3F4F6] px-4 py-2.5 text-sm outline-none placeholder:text-[#9CA3AF] focus:bg-white focus:ring-2 focus:ring-[#0687d1]/30 focus:border-[#0687d1] transition"
                   placeholder="Search dispatches, vehicles, or depots..."
                 />
               </div>
@@ -213,9 +214,11 @@ export default function AppLayout() {
                       <div className="font-semibold text-[#1F2937]">Abebe B.</div>
                       <div className="text-xs text-[#6B7280]">Ops Manager</div>
                     </div>
-                    <div className="grid size-10 place-items-center rounded-full bg-[#0687d1] text-white font-bold text-sm">
-                      AB
-                    </div>
+                    <img
+                      src={profileImage}
+                      alt="Abebe B."
+                      className="size-10 rounded-full object-cover border-2 border-[#0687d1]"
+                    />
                   </button>
                 </div>
               </div>
