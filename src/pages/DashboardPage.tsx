@@ -155,18 +155,11 @@ export default function DashboardPage() {
 
   return (
     <div>
-      {/* <PageHeader
-        title="Dashboard"
-        subtitle="Real-time operations view for dispatch, GPS monitoring, and regional fuel movement."
-        right={
-          <button
-            type="button"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            Export CSV
-          </button>
-        }
-      /> */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-text">Operations Overview</h1>
+        </div>
+      </div>
       <div className="grid gap-4 lg:grid-cols-12">
         {/* KPIs */}
         <div className="lg:col-span-12">

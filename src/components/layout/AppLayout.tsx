@@ -27,7 +27,7 @@ const primaryNav: NavItem[] = [
   { to: '/', label: 'Dashboard', icon: Squares2X2Icon, end: true },
   { to: '/tracking', label: 'GPS Tracking', icon: MapIcon },
   { to: '/fuel-dispatch', label: 'Fuel Dispatch', icon: ClipboardDocumentListIcon },
-  { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
+  { to: '/reports', label: 'Analytics', icon: ChartBarSquareIcon },
 ]
 
 const entitiesNav: NavItem[] = [
@@ -90,7 +90,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
         <div className="mt-6 space-y-3">
           <div className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-            Entities
+            STAKEHOLDERS
           </div>
 
           <div className="space-y-1">
@@ -169,7 +169,7 @@ export default function AppLayout() {
           <header className="sticky top-0 z-40 border-b border-[#D1D5DB] bg-white">
             <div className="flex items-center justify-between gap-4 px-6 py-4">
 
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-1">
                 <button
                   className="md:hidden border px-3 py-2 rounded-lg"
                   onClick={() => setMobileOpen(true)}
@@ -177,7 +177,18 @@ export default function AppLayout() {
                   Menu
                 </button>
 
-                <h2 className="text-sm font-semibold text-text">{title}</h2>
+                <div className="flex-1">
+                  <h2 className="text-sm font-semibold text-text mb-3">{title}</h2>
+                  {title === 'Dashboard' && (
+                    <div className="relative">
+                      <input
+                        type="text"
+                        placeholder="Search dispatches, vehicles, or depots..."
+                        className="w-full max-w-md px-4 py-2 text-sm rounded-lg border border-[#D1D5DB] bg-white text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex items-center gap-4">
