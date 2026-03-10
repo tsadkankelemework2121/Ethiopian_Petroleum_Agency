@@ -206,36 +206,6 @@ export default function TrackingPage() {
                 </button>
               </div>
             </div>
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
-                  M
-                </div>
-                <div className="flex items-start justify-between flex-1">
-                  <div className="flex-1">
-                    <div className="text-xs font-semibold text-text">{t.name}</div>
-                    <div className="mt-1 text-xs text-text-muted">{t.group ?? 'No Group'}</div>
-                    <div className="mt-1 text-xs text-text-muted">{t.engine || 'Engine: —'}</div>
-                  </div>
-                  <span
-                    className="inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase whitespace-nowrap"
-                    style={{
-                      backgroundColor: `${statusCategory.color}26`,
-                      color: statusCategory.color,
-                    }}
-                  >
-                    {getDisplayStatus(t.status)}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-3 flex gap-2">
-                <button className="flex-1 rounded-lg border border-primary text-primary text-xs font-semibold py-2 hover:bg-primary/5 transition">
-                  📞
-                </button>
-                <button className="flex-1 rounded-lg border border-primary text-primary text-xs font-semibold py-2 hover:bg-primary/5 transition">
-                  💬
-                </button>
-              </div>
-            </div>
 
             {/* Cargo Details */}
             <div className="p-4">
