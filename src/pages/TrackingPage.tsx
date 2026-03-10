@@ -70,6 +70,7 @@ export default function TrackingPage() {
 
   const handleSelectVehicle = (vehicle: GpsVehicle) => {
     setSelectedId(vehicle.imei)
+    setDetailItem(vehicle)
 
     const lat = Number(vehicle.lat)
     const lng = Number(vehicle.lng)
@@ -136,8 +137,11 @@ export default function TrackingPage() {
             })}
         </div>
 
-        <div className="border-t border-[#D1D5DB] p-3 text-xs text-text-muted">
-          SHOWING {filtered.length} OF {items.length}
+        <div className="border-t border-[#D1D5DB] p-3 flex items-center justify-between text-xs">
+          <span className="text-text-muted">SHOWING {filtered.length} OF {items.length}</span>
+          <button className="text-primary hover:text-primary/80 transition font-semibold">
+            VIEW ALL
+          </button>
         </div>
       </div>
 
@@ -160,8 +164,15 @@ export default function TrackingPage() {
         <div className="w-96 border-l border-[#D1D5DB] bg-white overflow-hidden flex flex-col">
           <div className="border-b border-[#D1D5DB] p-4 bg-primary text-white flex items-center justify-between">
             <div>
-              <div className="text-sm font-semibold">{detailItem.name} | {detailItem.group}</div>
-              <div className="text-xs opacity-90 mt-1">Vehicle ID: {detailItem.imei}</div>
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded bg-white/30 flex items-center justify-center text-white font-bold text-sm">
+                  🚚
+                </div>
+                <div>
+                  <div className="text-sm font-semibold">{detailItem.name} | SCANIA</div>
+                  <div className="text-xs opacity-90">{getDisplayStatus(detailItem.status)}</div>
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setDetailItem(null)}
@@ -179,11 +190,41 @@ export default function TrackingPage() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
-                  M
+                  {(detailItem.group || 'M')[0]}
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-text">{detailItem.group}</div>
-                  <div className="text-xs text-text-muted">{detailItem.imei}</div>
+                  <div className="text-sm font-semibold text-text">{detailItem.group || 'Mudugueta Haile'}</div>
+                  <div className="text-xs text-text-muted">IP: {detailItem.imei || 'EP-D-98624'}</div>
+                </div>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <button className="flex-1 rounded-lg border border-primary text-primary text-xs font-semibold py-2 hover:bg-primary/5 transition">
+                  ☎
+                </button>
+                <button className="flex-1 rounded-lg border border-primary text-primary text-xs font-semibold py-2 hover:bg-primary/5 transition">
+                  💬
+                </button>
+              </div>
+            </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
+                  M
+                </div>
+                <div className="flex items-start justify-between flex-1">
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-text">{t.name}</div>
+                    <div className="mt-1 text-xs text-text-muted">{t.group ?? 'No Group'}</div>
+                    <div className="mt-1 text-xs text-text-muted">{t.engine || 'Engine: —'}</div>
+                  </div>
+                  <span
+                    className="inline-flex rounded-full px-2 py-1 text-[10px] font-semibold uppercase whitespace-nowrap"
+                    style={{
+                      backgroundColor: `${statusCategory.color}26`,
+                      color: statusCategory.color,
+                    }}
+                  >
+                    {getDisplayStatus(t.status)}
+                  </span>
                 </div>
               </div>
               <div className="mt-3 flex gap-2">
@@ -219,16 +260,16 @@ export default function TrackingPage() {
                 Route Schedule
               </div>
               <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-3">
-                66% Completed
+                98% Completed
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div>
                   <div className="text-xs font-semibold text-text mb-1">Origin</div>
                   <div className="text-xs text-text-muted">Horizon Djibouti Terminal</div>
-                  <div className="text-xs text-text-muted">Departure:00:24, 04:30 AM</div>
+                  <div className="text-xs text-text-muted">Departure: 00:24, 04:30 AM</div>
                 </div>
                 <div>
-                  <div className="text-xs font-semibold text-text mb-1">Next Stop</div>
+                  <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-1">Current Position</div>
                   <div className="text-xs text-text-muted">A1 Highway Near Nazret</div>
                   <div className="text-xs text-text-muted">Approx ETA 05:20 Hourly</div>
                 </div>
@@ -241,7 +282,7 @@ export default function TrackingPage() {
                 Destination
               </div>
               <div className="text-sm font-semibold text-text">Bole International Hub</div>
-              <div className="text-xs text-text-muted mt-1">ETD: 20+02m/10:20 PM</div>
+              <div className="text-xs text-primary mt-1">ETD: 20+43m/10:20 PM</div>
             </div>
           </div>
 
@@ -256,78 +297,16 @@ export default function TrackingPage() {
         </div>
       )}
     </div>
-
-      <ModalOverlay
-        isOpen={detailItem !== null}
-        onClose={() => setDetailItem(null)}
-        title={detailItem ? `${detailItem.name} - Details` : 'Vehicle Details'}
-      >
-        {detailItem && (
-          <div className="space-y-4 text-sm">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <div className="text-xs text-text-muted">Plate Number</div>
-                <div className="font-semibold">{detailItem.name}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">IMEI</div>
-                <div className="font-semibold">{detailItem.imei}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Group</div>
-                <div className="font-semibold">{detailItem.group ?? '—'}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Odometer</div>
-                <div className="font-semibold">{detailItem.odometer}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Engine</div>
-                <div className="font-semibold">{detailItem.engine}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Status</div>
-                <div className="font-semibold">{detailItem.status}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Last GPS Time (dt_tracker)</div>
-                <div className="font-semibold">{detailItem.dt_tracker}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Last GPS Position (lat, lng)</div>
-                <div className="font-semibold">
-                  {detailItem.lat}, {detailItem.lng}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Speed</div>
-                <div className="font-semibold">{detailItem.speed} km/h</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Fuel 1</div>
-                <div className="font-semibold">{detailItem.fuel_1}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Fuel 2</div>
-                <div className="font-semibold">{detailItem.fuel_2}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Fuel CAN Level %</div>
-                <div className="font-semibold">
-                  {detailItem.fuel_can_level_percent ?? '—'}
-                </div>
-              </div>
-            </div>
-
-            <div className="rounded-lg bg-gray-50 p-3 text-xs text-text-muted">
-              Server time: {detailItem.dt_server}. Altitude: {detailItem.altitude} m. Angle:{' '}
-              {detailItem.angle}°. Raw CAN value: {detailItem.fuel_can_level_value ?? '—'}.
-            </div>
-          </div>
-        )}
-      </ModalOverlay>
-    </div>
   )
+}
+
+function getDisplayStatus(status: string): string {
+  const lowerStatus = status.toLowerCase()
+  if (lowerStatus.includes('moving')) return 'MOVING'
+  if (lowerStatus.includes('idle')) return 'IDLE'
+  if (lowerStatus.includes('stopped') || lowerStatus.includes('offline')) return 'OFFLINE'
+  if (lowerStatus.includes('alert')) return 'ALERT'
+  return status.toUpperCase()
 }
 
 function getStatusCategory(v: GpsVehicle): { color: string } {
@@ -337,6 +316,22 @@ function getStatusCategory(v: GpsVehicle): { color: string } {
   if (status.includes('moving') || Number.isFinite(speed) && speed > 0) {
     return { color: '#16a34a' } // green
   }
+
+  if (status.includes('engine idle')) {
+    return { color: '#eab308' } // yellow
+  }
+
+  if (status.includes('stopped') || status.includes('offline')) {
+    return { color: '#dc2626' } // red
+  }
+
+  if (status.includes('alert')) {
+    return { color: '#dc2626' } // red for alerts
+  }
+
+  // Fallback neutral cyan
+  return { color: '#06b6d4' } // cyan
+}
 
   if (status.includes('engine idle')) {
     return { color: '#eab308' } // yellow
