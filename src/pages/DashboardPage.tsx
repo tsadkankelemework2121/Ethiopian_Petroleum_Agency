@@ -140,12 +140,12 @@ export default function DashboardPage() {
   }, [charts])
 
   const chartColors = {
-    benzine: '#21d2ed', // Light blue
+    benzine: '#067dc2', // Primary blue
     diesel: '#067dc2', // Primary blue
-    jetFuel: '#cad4e0', // Light gray
+    jetFuel: '#cbd5e1', // Light gray
     delivered: '#067dc2', // Primary blue
-    inTransit: '#21d2ed', // Light blue
-    alerts: '#f59e0b', // Golden
+    inTransit: '#cbd5e1', // Light blue/gray
+    alerts: '#f59f0a', // Golden
   }
   const pieColors: Record<string, string> = {
     Delivered: chartColors.delivered,
@@ -310,10 +310,10 @@ export default function DashboardPage() {
         </div>
 
         {/* Fuel Type Dispatch Summary */}
-        <div className="lg:col-span-12">
+        <div className="lg:col-span-6">
           <Card>
-            <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
-            <CardBody className="h-48">
+            <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume" />
+            <CardBody className="h-64">
               {charts ? (
                 <div className="space-y-4 h-full flex flex-col justify-center">
                   {/* Calculate totals for each fuel type */}
@@ -360,6 +360,65 @@ export default function DashboardPage() {
                     })
                   })()}
                 </div>
+              ) : (
+                <SkeletonChart className="h-full" />
+              )}
+            </CardBody>
+          </Card>
+        </div>
+
+        {/* Fuel Summary Table */}
+        <div className="lg:col-span-6">
+          <Card>
+            <CardHeader title="Fuel summary" subtitle="Summary by fuel type" />
+            <CardBody className="h-64 overflow-y-auto">
+              {charts ? (
+                <table className="w-full text-left text-sm">
+                  <tbody className="divide-y divide-[#D1D5DB]">
+                    {(() => {
+                      const fuelData = [
+                        {
+                          name: 'Benzene',
+                          volume: regions.reduce((sum, r) => sum + r.benzineM3, 0),
+                          color: chartColors.benzine,
+                        },
+                        {
+                          name: 'Diesel',
+                          volume: regions.reduce((sum, r) => sum + r.dieselM3, 0),
+                          color: chartColors.diesel,
+                        },
+                        {
+                          name: 'Jet Fuel',
+                          volume: regions.reduce((sum, r) => sum + r.jetFuelM3, 0),
+                          color: chartColors.jetFuel,
+                        },
+                      ]
+                      const totalVolume = fuelData.reduce((sum, f) => sum + f.volume, 0)
+                      return fuelData.map((fuel) => {
+                        const percentage = totalVolume > 0 ? (fuel.volume / totalVolume) * 100 : 0
+                        return (
+                          <tr key={fuel.name} className="hover:bg-muted/50 transition">
+                            <td className="px-5 py-4">
+                              <div className="flex items-center gap-3">
+                                <div
+                                  className="h-3 w-3 rounded-full"
+                                  style={{ backgroundColor: fuel.color }}
+                                />
+                                <span className="font-medium text-text">{fuel.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-5 py-4 text-right font-semibold text-primary">
+                              {fuel.volume.toLocaleString()}L
+                            </td>
+                            <td className="px-5 py-4 text-right text-text-muted">
+                              {percentage.toFixed(1)}%
+                            </td>
+                          </tr>
+                        )
+                      })
+                    })()}
+                  </tbody>
+                </table>
               ) : (
                 <SkeletonChart className="h-full" />
               )}
