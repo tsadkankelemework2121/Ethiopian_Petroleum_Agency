@@ -253,11 +253,11 @@ export default function DashboardPage() {
 
         <div className="lg:col-span-4">
           <Card>
-            <CardHeader title="Dispatch status" subtitle="Distribution of current dispatch tasks" />
+            <CardHeader title="Dispatch Status" subtitle="Distribution" />
             <CardBody className="h-80">
               {charts ? (
                 <div className="grid h-full grid-rows-[1fr_auto] gap-3">
-                  <div className="h-full">
+                  <div className="h-full relative">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
                         <Tooltip
@@ -272,7 +272,7 @@ export default function DashboardPage() {
                           dataKey="value"
                           nameKey="name"
                           cx="50%"
-                          cy="50%"
+                          cy="45%"
                           innerRadius={60}
                           outerRadius={95}
                           paddingAngle={3}
@@ -283,6 +283,14 @@ export default function DashboardPage() {
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                      <div className="text-3xl font-bold text-text">
+                        {statusPie.reduce((sum, s) => sum + s.value, 0)}
+                      </div>
+                      <div className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                        Total Dispatches
+                      </div>
+                    </div>
                   </div>
 
                   <div className="grid gap-2">
@@ -309,72 +317,15 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Fuel Type Dispatch Summary */}
-        <div className="lg:col-span-6">
+        {/* Fuel Summary - Graph and Table Side by Side */}
+        <div className="lg:col-span-12">
           <Card>
-            <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume" />
-            <CardBody className="h-64">
+            <CardHeader title="Fuel summary" subtitle="Dispatch volume by fuel type" />
+            <CardBody className="h-72">
               {charts ? (
-                <div className="space-y-4 h-full flex flex-col justify-center">
-                  {/* Calculate totals for each fuel type */}
-                  {(() => {
-                    const fuelData = [
-                      {
-                        name: 'Benzene',
-                        volume: regions.reduce((sum, r) => sum + r.benzineM3, 0),
-                        color: chartColors.benzine,
-                      },
-                      {
-                        name: 'Diesel',
-                        volume: regions.reduce((sum, r) => sum + r.dieselM3, 0),
-                        color: chartColors.diesel,
-                      },
-                      {
-                        name: 'Jet Fuel',
-                        volume: regions.reduce((sum, r) => sum + r.jetFuelM3, 0),
-                        color: chartColors.jetFuel,
-                      },
-                    ]
-                    const totalVolume = fuelData.reduce((sum, f) => sum + f.volume, 0)
-                    return fuelData.map((fuel) => {
-                      const percentage = totalVolume > 0 ? (fuel.volume / totalVolume) * 100 : 0
-                      return (
-                        <div key={fuel.name} className="space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-text">{fuel.name}</span>
-                            <span className="text-sm font-semibold text-primary">
-                              {fuel.volume.toLocaleString()}L ({percentage.toFixed(0)}%)
-                            </span>
-                          </div>
-                          <div className="w-full h-4 bg-muted rounded-lg overflow-hidden">
-                            <div
-                              className="h-full transition-all duration-300 rounded-lg"
-                              style={{
-                                width: `${percentage}%`,
-                                backgroundColor: fuel.color,
-                              }}
-                            />
-                          </div>
-                        </div>
-                      )
-                    })
-                  })()}
-                </div>
-              ) : (
-                <SkeletonChart className="h-full" />
-              )}
-            </CardBody>
-          </Card>
-        </div>
-
-        {/* Fuel Summary Table */}
-        <div className="lg:col-span-6">
-          <Card>
-            <CardHeader title="Fuel summary" subtitle="Summary by fuel type" />
-            <CardBody className="h-64 overflow-y-auto">
-              {charts ? (
-                <table className="w-full text-left text-sm">
-                  <tbody className="divide-y divide-[#D1D5DB]">
+                <div className="flex gap-8 h-full">
+                  {/* Graph Section */}
+                  <div className="flex-1 space-y-4 flex flex-col justify-center">
                     {(() => {
                       const fuelData = [
                         {
@@ -397,28 +348,78 @@ export default function DashboardPage() {
                       return fuelData.map((fuel) => {
                         const percentage = totalVolume > 0 ? (fuel.volume / totalVolume) * 100 : 0
                         return (
-                          <tr key={fuel.name} className="hover:bg-muted/50 transition">
-                            <td className="px-5 py-4">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className="h-3 w-3 rounded-full"
-                                  style={{ backgroundColor: fuel.color }}
-                                />
-                                <span className="font-medium text-text">{fuel.name}</span>
-                              </div>
-                            </td>
-                            <td className="px-5 py-4 text-right font-semibold text-primary">
-                              {fuel.volume.toLocaleString()}L
-                            </td>
-                            <td className="px-5 py-4 text-right text-text-muted">
-                              {percentage.toFixed(1)}%
-                            </td>
-                          </tr>
+                          <div key={fuel.name} className="space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-medium text-text">{fuel.name}</span>
+                              <span className="text-sm font-semibold text-primary">
+                                {fuel.volume.toLocaleString()}L ({percentage.toFixed(0)}%)
+                              </span>
+                            </div>
+                            <div className="w-full h-4 bg-muted rounded-lg overflow-hidden">
+                              <div
+                                className="h-full transition-all duration-300 rounded-lg"
+                                style={{
+                                  width: `${percentage}%`,
+                                  backgroundColor: fuel.color,
+                                }}
+                              />
+                            </div>
+                          </div>
                         )
                       })
                     })()}
-                  </tbody>
-                </table>
+                  </div>
+
+                  {/* Table Section */}
+                  <div className="flex-1 overflow-y-auto">
+                    <table className="w-full text-left text-sm">
+                      <tbody className="divide-y divide-[#D1D5DB]">
+                        {(() => {
+                          const fuelData = [
+                            {
+                              name: 'Benzene',
+                              volume: regions.reduce((sum, r) => sum + r.benzineM3, 0),
+                              color: chartColors.benzine,
+                            },
+                            {
+                              name: 'Diesel',
+                              volume: regions.reduce((sum, r) => sum + r.dieselM3, 0),
+                              color: chartColors.diesel,
+                            },
+                            {
+                              name: 'Jet Fuel',
+                              volume: regions.reduce((sum, r) => sum + r.jetFuelM3, 0),
+                              color: chartColors.jetFuel,
+                            },
+                          ]
+                          const totalVolume = fuelData.reduce((sum, f) => sum + f.volume, 0)
+                          return fuelData.map((fuel) => {
+                            const percentage = totalVolume > 0 ? (fuel.volume / totalVolume) * 100 : 0
+                            return (
+                              <tr key={fuel.name} className="hover:bg-muted/50 transition">
+                                <td className="px-5 py-4">
+                                  <div className="flex items-center gap-3">
+                                    <div
+                                      className="h-3 w-3 rounded-full"
+                                      style={{ backgroundColor: fuel.color }}
+                                    />
+                                    <span className="font-medium text-text">{fuel.name}</span>
+                                  </div>
+                                </td>
+                                <td className="px-5 py-4 text-right font-semibold text-primary">
+                                  {fuel.volume.toLocaleString()}L
+                                </td>
+                                <td className="px-5 py-4 text-right text-text-muted">
+                                  {percentage.toFixed(1)}%
+                                </td>
+                              </tr>
+                            )
+                          })
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               ) : (
                 <SkeletonChart className="h-full" />
               )}

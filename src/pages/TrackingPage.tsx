@@ -80,12 +80,69 @@ export default function TrackingPage() {
   }
 
   return (
-    <div>
-      {/* <PageHeader
-        title="GPS Tracking"
-        subtitle="Live GPS view of all vehicles."
-      /> */}
-      <div className="relative mt-4 h-[calc(100vh-140px)]">
+    <div className="flex h-[calc(100vh-80px)]">
+      {/* Left Panel - Fleet List */}
+      <div className="w-48 border-r border-[#D1D5DB] bg-white overflow-hidden flex flex-col">
+        <div className="border-b border-[#D1D5DB] p-3">
+          <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-2">Fleet List</div>
+          <input
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-primary/40"
+            placeholder="Search Fleet…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto divide-y divide-[#D1D5DB]">
+          {loading && (
+            <div className="p-4 text-sm text-text-muted">Loading…</div>
+          )}
+          {error && !loading && (
+            <div className="p-4 text-sm text-red-600">Error: {error}</div>
+          )}
+          {!loading && !error && filtered.length === 0 && (
+            <div className="p-4 text-sm text-text-muted">No vehicles.</div>
+          )}
+
+          {!loading &&
+            !error &&
+            filtered.map((t) => {
+              const statusCategory = getStatusCategory(t)
+              const isSelected = selectedId === t.imei
+
+              return (
+                <div
+                  key={t.imei}
+                  className={`p-3 text-left hover:bg-muted cursor-pointer transition ${
+                    isSelected ? 'border-l-4 border-primary bg-primary/5' : ''
+                  }`}
+                  onClick={() => handleSelectVehicle(t)}
+                >
+                  <div className="text-xs font-semibold text-text">{t.name}</div>
+                  <div className="mt-1 text-xs text-text-muted">{t.group ?? 'No Group'}</div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span
+                      className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                      style={{
+                        backgroundColor: `${statusCategory.color}1A`,
+                        color: statusCategory.color,
+                      }}
+                    >
+                      {t.status}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+        </div>
+
+        <div className="border-t border-[#D1D5DB] p-3 text-xs text-text-muted">
+          SHOWING {filtered.length} OF {items.length}
+        </div>
+      </div>
+
+      {/* Center Panel - Map */}
+      <div className="flex-1 relative">
         <MapView
           center={center}
           zoom={zoom}
@@ -96,112 +153,109 @@ export default function TrackingPage() {
             setZoom(15)
           }}
         />
+      </div>
 
-        <div className="absolute right-4 top-4 bottom-4 w-full max-w-md">
-          <div className="flex h-full flex-col rounded-xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm">
-            <div className="border-b border-[#D1D5DB] p-4">
-              <div className="text-sm font-semibold text-text">Vehicles</div>
-              <div className="mt-1 text-xs text-text-muted">
-                Live data from GPS provider.
+      {/* Right Panel - Vehicle Details */}
+      {detailItem && (
+        <div className="w-96 border-l border-[#D1D5DB] bg-white overflow-hidden flex flex-col">
+          <div className="border-b border-[#D1D5DB] p-4 bg-primary text-white flex items-center justify-between">
+            <div>
+              <div className="text-sm font-semibold">{detailItem.name} | {detailItem.group}</div>
+              <div className="text-xs opacity-90 mt-1">Vehicle ID: {detailItem.imei}</div>
+            </div>
+            <button
+              onClick={() => setDetailItem(null)}
+              className="text-white hover:opacity-80 transition text-xl leading-none"
+            >
+              ×
+            </button>
+          </div>
+
+          <div className="flex-1 overflow-y-auto divide-y divide-[#D1D5DB]">
+            {/* Driver Section */}
+            <div className="p-4">
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
+                Senior Captain
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm">
+                  M
+                </div>
+                <div>
+                  <div className="text-sm font-semibold text-text">{detailItem.group}</div>
+                  <div className="text-xs text-text-muted">{detailItem.imei}</div>
+                </div>
               </div>
               <div className="mt-3 flex gap-2">
-                <input
-                  className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-                  placeholder="Search plate, IMEI, status…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <button
-                  type="button"
-                  className="rounded-lg bg-[#27A2D8] px-3 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition"
-                >
-                  {filtered.length}
+                <button className="flex-1 rounded-lg border border-primary text-primary text-xs font-semibold py-2 hover:bg-primary/5 transition">
+                  📞
+                </button>
+                <button className="flex-1 rounded-lg border border-primary text-primary text-xs font-semibold py-2 hover:bg-primary/5 transition">
+                  💬
                 </button>
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto divide-y divide-[#D1D5DB]">
-              {loading && (
-                <div className="p-4 text-sm text-text-muted">Loading GPS data…</div>
-              )}
-              {error && !loading && (
-                <div className="p-4 text-sm text-red-600">
-                  Failed to load GPS data: {error}
+            {/* Cargo Details */}
+            <div className="p-4">
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
+                Cargo Details
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-text-muted">Fuel Type</span>
+                  <span className="text-sm font-semibold text-text">Jet Fuel</span>
                 </div>
-              )}
-              {!loading && !error && filtered.length === 0 && (
-                <div className="p-4 text-sm text-text-muted">No vehicles found.</div>
-              )}
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-text-muted">Volume</span>
+                  <span className="text-sm font-semibold text-text">45,000 Liters</span>
+                </div>
+              </div>
+            </div>
 
-              {!loading &&
-                !error &&
-                filtered.map((t) => {
-                  const statusCategory = getStatusCategory(t)
-                  const lat = Number(t.lat)
-                  const lng = Number(t.lng)
-                  const hasPosition = Number.isFinite(lat) && Number.isFinite(lng)
+            {/* Route Schedule */}
+            <div className="p-4">
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
+                Route Schedule
+              </div>
+              <div className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-3">
+                66% Completed
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <div className="text-xs font-semibold text-text mb-1">Origin</div>
+                  <div className="text-xs text-text-muted">Horizon Djibouti Terminal</div>
+                  <div className="text-xs text-text-muted">Departure:00:24, 04:30 AM</div>
+                </div>
+                <div>
+                  <div className="text-xs font-semibold text-text mb-1">Next Stop</div>
+                  <div className="text-xs text-text-muted">A1 Highway Near Nazret</div>
+                  <div className="text-xs text-text-muted">Approx ETA 05:20 Hourly</div>
+                </div>
+              </div>
+            </div>
 
-                  return (
-                    <div
-                      key={t.imei}
-                      className={`w-full p-4 text-left hover:bg-muted/60 cursor-pointer ${selectedId === t.imei ? 'border-l-4 border-cyan-500 bg-cyan-50/30' : ''
-                        }`}
-                      onClick={() => handleSelectVehicle(t)}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className="flex h-9 w-9 items-center justify-center rounded-lg text-white text-xs font-semibold"
-                            style={{ backgroundColor: statusCategory.color }}
-                          >
-                            {t.name.split(' ')[0]}
-                          </div>
-                          <div>
-                            <div className="text-sm font-semibold text-text">{t.name}</div>
-                            <div className="mt-1 text-xs text-text-muted">
-                              IMEI: {t.imei}
-                              {t.group ? ` • ${t.group}` : ''}
-                            </div>
-                            <div className="mt-1 text-xs text-text-muted">
-                              Last GPS:{' '}
-                              {hasPosition
-                                ? `${lat.toFixed(3)}, ${lng.toFixed(3)}`
-                                : '—'}{' '}
-                              • {t.dt_tracker}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-2">
-                          <span
-                            className="inline-flex rounded-full px-2 py-1 text-[11px] font-semibold"
-                            style={{
-                              backgroundColor: `${statusCategory.color}1A`,
-                              color: statusCategory.color,
-                            }}
-                          >
-                            {t.status}
-                          </span>
-                          <button
-                            type="button"
-                            className="px-3 py-1 text-xs font-semibold rounded-lg border border-[#27A2D8] text-[#27A2D8] hover:bg-[#27A2D8]/10"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleSelectVehicle(t)
-                              setDetailItem(t)
-                            }}
-                          >
-                            See detail
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
+            {/* Destination */}
+            <div className="p-4">
+              <div className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
+                Destination
+              </div>
+              <div className="text-sm font-semibold text-text">Bole International Hub</div>
+              <div className="text-xs text-text-muted mt-1">ETD: 20+02m/10:20 PM</div>
             </div>
           </div>
+
+          <div className="border-t border-[#D1D5DB] p-3 flex gap-2">
+            <button className="flex-1 rounded-lg bg-primary text-white text-xs font-semibold py-2.5 hover:bg-primary/90 transition">
+              Open Telemetry
+            </button>
+            <button className="flex-1 rounded-lg border border-primary text-primary text-xs font-semibold py-2.5 hover:bg-primary/5 transition">
+              Fuel Logs
+            </button>
+          </div>
         </div>
-      </div>
+      )}
+    </div>
 
       <ModalOverlay
         isOpen={detailItem !== null}
