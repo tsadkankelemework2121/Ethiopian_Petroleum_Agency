@@ -121,7 +121,7 @@ export default function ProfilePage() {
       <button
         type="button"
         onClick={() => navigate(-1)}
-        className="inline-flex items-center gap-2 font-medium transition group text-[#27A2D8]"
+        className="inline-flex items-center gap-2 font-medium transition group text-primary"
       >
         <ArrowLeftIcon className="size-4 group-hover:-translate-x-1 transition-transform" />
         Back
@@ -157,7 +157,7 @@ export default function ProfilePage() {
                     />
                   </div>
 
-                  <label className="absolute -bottom-2 -right-2 bg-[#27A2D8] text-white rounded-xl p-2.5 cursor-pointer border-2 border-white shadow-lg">
+                  <label className="absolute -bottom-2 -right-2 bg-primary text-white rounded-xl p-2.5 cursor-pointer border-2 border-white shadow-lg">
                     <input
                       type="file"
                       accept="image/*"
@@ -176,8 +176,7 @@ export default function ProfilePage() {
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
-                      className="text-2xl font-bold border-b-2 outline-none pb-1"
-                      style={{ borderColor: '#27A2D8' }}
+                      className="text-2xl font-bold border-b-2 outline-none pb-1 border-primary"
                     />
                   ) : (
                     <h1 className="text-2xl font-bold text-gray-900">
@@ -207,8 +206,7 @@ export default function ProfilePage() {
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium"
-                  style={{ backgroundColor: '#27A2D8' }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white font-medium bg-primary hover:bg-primary-strong"
                 >
                   <PencilIcon className="size-4" />
                   Edit Profile
@@ -282,8 +280,7 @@ export default function ProfilePage() {
               <div className="pt-8 border-t flex gap-3">
                 <button
                   onClick={handleSave}
-                  className="text-white px-6 py-2.5 rounded-xl"
-                  style={{ backgroundColor: '#27A2D8' }}
+                  className="text-white px-6 py-2.5 rounded-xl bg-primary hover:bg-primary-strong"
                 >
                   Save Changes
                 </button>

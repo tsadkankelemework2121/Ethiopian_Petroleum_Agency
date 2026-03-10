@@ -29,7 +29,7 @@ type Props = {
   onClose: () => void
 }
 
-function getStatusColor(status: string, speed: string, engine: string) {
+function getStatusColor(speed: string, engine: string) {
   const speedNum = parseFloat(speed)
   const isMoving = speedNum > 0
   const engineOn = engine === 'on'
@@ -84,7 +84,7 @@ export default function VehicleCard({ vehicles, selectedVehicle, onVehicleSelect
           </div>
         ) : (
           filteredVehicles.map((vehicle) => {
-          const statusInfo = getStatusColor(vehicle.status, vehicle.speed, vehicle.engine)
+          const statusInfo = getStatusColor(vehicle.speed, vehicle.engine)
           const isSelected = selectedVehicle?.imei === vehicle.imei
 
           return (

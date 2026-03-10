@@ -224,7 +224,7 @@ export default function ReportsPage() {
         >
           <button
             type="button"
-            className="rounded-lg px-4 py-2 text-sm font-semibold transition border-b-2 text-[#27A2D8] border-[#27A2D8] bg-primary/5 flex items-center gap-2"
+            className="rounded-lg px-4 py-2 text-sm font-semibold transition border-b-2 text-primary border-primary bg-primary/5 flex items-center gap-2"
           >
             Formal
             <svg 
@@ -280,19 +280,19 @@ export default function ReportsPage() {
         <div className="text-sm font-semibold text-text">{title}</div>
         <div className="mt-3 grid gap-3 md:grid-cols-3">
           <input
-            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             placeholder={getSearchPlaceholder()}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
           />
           <input
-            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="From (YYYY-MM-DD)"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
           <input
-            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
             placeholder="To (YYYY-MM-DD)"
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -302,8 +302,7 @@ export default function ReportsPage() {
           <button
             type="button"
             onClick={() => setApplied({ query, from, to })}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-card hover:shadow-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
-            style={{ backgroundColor: '#27A2D8' }}
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-card hover:shadow-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 bg-primary hover:bg-primary-strong"
           >
             Run report
           </button>

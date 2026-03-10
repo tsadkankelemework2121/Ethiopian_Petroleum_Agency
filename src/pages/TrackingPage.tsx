@@ -1,31 +1,62 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { GpsVehicle } from '../data/types'
-import PageHeader from '../components/layout/PageHeader'
 import MapView from '../components/map/MapView'
-import { ModalOverlay } from '../components/ui/ModelOverlay'
+
+const COLORS = {
+  blue: '#067cc1',
+  gold: '#f59f0a',
+  gray: '#cbd5e1',
+  bg: '#f3f4f6',
+} as const
 
 export default function TrackingPage() {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [items, setItems] = useState<GpsVehicle[]>([])
-  const [detailItem, setDetailItem] = useState<GpsVehicle | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [zoom, setZoom] = useState(9)
+  const mapApiRef = useRef<import('../components/map/MapView').MapApi | null>(null)
+  const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false)
+
+  // Define statusTag function first (hoisted with function declaration)
+  const statusTag = (v: GpsVehicle): { label: string; color: string } => {
+    const status = v.status.toLowerCase()
+    const speed = Number(v.speed)
+    if (status.includes('offline')) return { label: 'OFFLINE', color: COLORS.gray }
+    if (status.includes('alert')) return { label: 'ALERT', color: '#ef4444' }
+    if (status.includes('idle') || (Number.isFinite(speed) && speed === 0 && v.engine === 'on')) {
+      return { label: 'IDLE', color: COLORS.gold }
+    }
+    if (status.includes('moving') || (Number.isFinite(speed) && speed > 0)) {
+      return { label: 'MOVING', color: '#22c55e' }
+    }
+    return { label: 'MOVING', color: '#22c55e' }
+  }
+
+  const plateFromName = (name: string) => name.trim().split(/\s+/)[0] ?? name
 
   useEffect(() => {
-    setLoading(true)
-    setError(null)
+    let cancelled = false
+    ;(async () => {
+      try {
+        if (!cancelled) {
+          setLoading(true)
+          setError(null)
+        }
+        const data = await fetchGpsVehicles()
+        if (!cancelled) setItems(data)
+      } catch (err: unknown) {
+        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load GPS data')
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    })()
 
-    void fetchGpsVehicles()
-      .then((data) => {
-        setItems(data)
-      })
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : 'Failed to load GPS data')
-      })
-      .finally(() => setLoading(false))
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const filtered = useMemo(() => {
@@ -37,6 +68,8 @@ export default function TrackingPage() {
     })
   }, [items, search])
 
+  const fleetListItems = useMemo(() => filtered.slice(0, 5), [filtered])
+
   const markers = useMemo(() => {
     return items
       .filter((t) => t.lat && t.lng)
@@ -45,7 +78,15 @@ export default function TrackingPage() {
         const lng = Number(t.lng)
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
 
-        const statusCategory = getStatusCategory(t)
+        const tag = statusTag(t)
+        const markerColor =
+          tag.label === 'MOVING'
+            ? '#22c55e'
+            : tag.label === 'IDLE'
+              ? COLORS.gold
+              : tag.label === 'OFFLINE'
+                ? COLORS.gray
+                : '#ef4444'
 
         return {
           id: t.imei,
@@ -53,7 +94,7 @@ export default function TrackingPage() {
           label: t.name,
           subtitle: t.status,
           status: t.status,
-          color: statusCategory.color,
+          color: markerColor,
         }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
@@ -68,6 +109,19 @@ export default function TrackingPage() {
     return { lat: avgLat, lng: avgLng }
   }, [markers, selectedId])
 
+  const selectedVehicle = useMemo(() => {
+    if (selectedId) return items.find((v) => v.imei === selectedId) ?? null
+    return items[0] ?? null
+  }, [items, selectedId])
+
+  const selectedPosition = useMemo(() => {
+    if (!selectedVehicle) return null
+    const lat = Number(selectedVehicle.lat)
+    const lng = Number(selectedVehicle.lng)
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+    return { lat, lng }
+  }, [selectedVehicle])
+
   const handleSelectVehicle = (vehicle: GpsVehicle) => {
     setSelectedId(vehicle.imei)
 
@@ -76,222 +130,272 @@ export default function TrackingPage() {
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
       // Zoom in to show roads clearly
       setZoom(15)
+      mapApiRef.current?.flyTo({ lat, lng }, 15)
+    }
+
+    if (window.matchMedia('(max-width: 1279px)').matches) {
+      setMobileDetailsOpen(true)
     }
   }
 
   return (
-    <div>
-      {/* <PageHeader
-        title="GPS Tracking"
-        subtitle="Live GPS view of all vehicles."
-      /> */}
-      <div className="relative mt-4 h-[calc(100vh-140px)]">
-        <MapView
-          center={center}
-          zoom={zoom}
-          markers={markers}
-          selectedMarkerId={selectedId}
-          onMarkerSelect={(id) => {
-            setSelectedId(id)
-            setZoom(15)
-          }}
-        />
+    <div className="relative mt-4 h-[calc(100vh-140px)]">
+      {/* Map background */}
+      <MapView
+        className="absolute inset-0 h-full w-full rounded-2xl"
+        center={center}
+        zoom={zoom}
+        markers={markers}
+        selectedMarkerId={selectedId}
+        onMarkerSelect={(id) => {
+          setSelectedId(id)
+          setZoom(15)
+          const v = items.find((x) => x.imei === id)
+          if (v) handleSelectVehicle(v)
+        }}
+        onMapReady={(api) => {
+          mapApiRef.current = api
+        }}
+      />
 
-        <div className="absolute right-4 top-4 bottom-4 w-full max-w-md">
-          <div className="flex h-full flex-col rounded-xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm">
-            <div className="border-b border-[#D1D5DB] p-4">
-              <div className="text-sm font-semibold text-text">Vehicles</div>
-              <div className="mt-1 text-xs text-text-muted">
-                Live data from GPS provider.
-              </div>
-              <div className="mt-3 flex gap-2">
-                <input
-                  className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-                  placeholder="Search plate, IMEI, status…"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
+      {/* Left overlay: fleet list */}
+      <div className="absolute left-4 top-4 bottom-4 w-[320px] rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden">
+        <div className="px-5 py-4 border-b border-[#E5E7EB]">
+          <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: '#64748b' }}>
+            Fleet list
+          </div>
+          <div className="mt-3 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 flex items-center gap-2">
+            <div className="size-4 rounded-full" style={{ backgroundColor: COLORS.gray }} />
+            <input
+              className="w-full bg-transparent text-sm outline-none"
+              placeholder="Search fleet..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {loading ? (
+            <div className="p-4 text-sm text-slate-600">Loading…</div>
+          ) : error ? (
+            <div className="p-4 text-sm text-red-600">{error}</div>
+          ) : (
+            fleetListItems.map((v) => {
+              const tag = statusTag(v)
+              const plate = plateFromName(v.name)
+              const isSelected = v.imei === selectedId
+
+              return (
                 <button
+                  key={v.imei}
                   type="button"
-                  className="rounded-lg bg-[#27A2D8] px-3 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition"
+                  onClick={() => handleSelectVehicle(v)}
+                  className="w-full px-5 py-4 text-left border-b border-[#EEF2F7] hover:bg-slate-50 transition"
+                  style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
                 >
-                  {filtered.length}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 overflow-y-auto divide-y divide-[#D1D5DB]">
-              {loading && (
-                <div className="p-4 text-sm text-text-muted">Loading GPS data…</div>
-              )}
-              {error && !loading && (
-                <div className="p-4 text-sm text-red-600">
-                  Failed to load GPS data: {error}
-                </div>
-              )}
-              {!loading && !error && filtered.length === 0 && (
-                <div className="p-4 text-sm text-text-muted">No vehicles found.</div>
-              )}
-
-              {!loading &&
-                !error &&
-                filtered.map((t) => {
-                  const statusCategory = getStatusCategory(t)
-                  const lat = Number(t.lat)
-                  const lng = Number(t.lng)
-                  const hasPosition = Number.isFinite(lat) && Number.isFinite(lng)
-
-                  return (
-                    <div
-                      key={t.imei}
-                      className={`w-full p-4 text-left hover:bg-muted/60 cursor-pointer ${selectedId === t.imei ? 'border-l-4 border-cyan-500 bg-cyan-50/30' : ''
-                        }`}
-                      onClick={() => handleSelectVehicle(t)}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <div
-                            className="flex h-9 w-9 items-center justify-center rounded-lg text-white text-xs font-semibold"
-                            style={{ backgroundColor: statusCategory.color }}
-                          >
-                            {t.name.split(' ')[0]}
-                          </div>
-                          <div>
-                            <div className="text-sm font-semibold text-text">{t.name}</div>
-                            <div className="mt-1 text-xs text-text-muted">
-                              IMEI: {t.imei}
-                              {t.group ? ` • ${t.group}` : ''}
-                            </div>
-                            <div className="mt-1 text-xs text-text-muted">
-                              Last GPS:{' '}
-                              {hasPosition
-                                ? `${lat.toFixed(3)}, ${lng.toFixed(3)}`
-                                : '—'}{' '}
-                              • {t.dt_tracker}
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-col items-end gap-2">
-                          <span
-                            className="inline-flex rounded-full px-2 py-1 text-[11px] font-semibold"
-                            style={{
-                              backgroundColor: `${statusCategory.color}1A`,
-                              color: statusCategory.color,
-                            }}
-                          >
-                            {t.status}
-                          </span>
-                          <button
-                            type="button"
-                            className="px-3 py-1 text-xs font-semibold rounded-lg border border-[#27A2D8] text-[#27A2D8] hover:bg-[#27A2D8]/10"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleSelectVehicle(t)
-                              setDetailItem(t)
-                            }}
-                          >
-                            See detail
-                          </button>
-                        </div>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+                        {plate}
                       </div>
+                      <div className="mt-1 text-[11px] text-slate-500 truncate">{v.name}</div>
                     </div>
-                  )
-                })}
-            </div>
+                    <span
+                      className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold"
+                      style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
+                    >
+                      {tag.label}
+                    </span>
+                  </div>
+                </button>
+              )
+            })
+          )}
+        </div>
+
+        <div className="px-5 py-3 border-t border-[#EEF2F7] flex items-center justify-between text-[11px] text-slate-500">
+          <span>
+            SHOWING {fleetListItems.length} OF {items.length}
+          </span>
+          <button type="button" className="font-semibold" style={{ color: COLORS.blue }}>
+            VIEW ALL
+          </button>
+        </div>
+      </div>
+
+      {/* Bottom controls - Simplified */}
+      <div className="absolute inset-x-0 bottom-4 flex justify-center pointer-events-none">
+        <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-[#D1D5DB] bg-white/95 px-4 py-2 shadow-card">
+          <button 
+            type="button" 
+            className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 border border-[#E5E7EB] hover:bg-slate-50 transition"
+          >
+            LAYERS
+          </button>
+          <button 
+            type="button" 
+            className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 border border-[#E5E7EB] hover:bg-slate-50 transition"
+          >
+            TRAFFIC
+          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => mapApiRef.current?.zoomOut()}
+              className="grid size-9 place-items-center rounded-full bg-white border border-[#D1D5DB] text-slate-700 hover:bg-slate-50 transition"
+              aria-label="Zoom out"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedPosition) mapApiRef.current?.flyTo(selectedPosition, 15)
+                else mapApiRef.current?.flyTo(center, zoom)
+              }}
+              className="grid size-10 place-items-center rounded-full text-white font-semibold hover:opacity-90 transition"
+              style={{ backgroundColor: COLORS.blue }}
+              aria-label="Center map"
+            >
+              CENTER
+            </button>
+            <button
+              type="button"
+              onClick={() => mapApiRef.current?.zoomIn()}
+              className="grid size-9 place-items-center rounded-full bg-white border border-[#D1D5DB] text-slate-700 hover:bg-slate-50 transition"
+              aria-label="Zoom in"
+            >
+              +
+            </button>
           </div>
         </div>
       </div>
 
-      <ModalOverlay
-        isOpen={detailItem !== null}
-        onClose={() => setDetailItem(null)}
-        title={detailItem ? `${detailItem.name} - Details` : 'Vehicle Details'}
-      >
-        {detailItem && (
-          <div className="space-y-4 text-sm">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <div className="text-xs text-text-muted">Plate Number</div>
-                <div className="font-semibold">{detailItem.name}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">IMEI</div>
-                <div className="font-semibold">{detailItem.imei}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Group</div>
-                <div className="font-semibold">{detailItem.group ?? '—'}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Odometer</div>
-                <div className="font-semibold">{detailItem.odometer}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Engine</div>
-                <div className="font-semibold">{detailItem.engine}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Status</div>
-                <div className="font-semibold">{detailItem.status}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Last GPS Time (dt_tracker)</div>
-                <div className="font-semibold">{detailItem.dt_tracker}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Last GPS Position (lat, lng)</div>
-                <div className="font-semibold">
-                  {detailItem.lat}, {detailItem.lng}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Speed</div>
-                <div className="font-semibold">{detailItem.speed} km/h</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Fuel 1</div>
-                <div className="font-semibold">{detailItem.fuel_1}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Fuel 2</div>
-                <div className="font-semibold">{detailItem.fuel_2}</div>
-              </div>
-              <div>
-                <div className="text-xs text-text-muted">Fuel CAN Level %</div>
-                <div className="font-semibold">
-                  {detailItem.fuel_can_level_percent ?? '—'}
-                </div>
-              </div>
+      {/* Right overlay: details (desktop) */}
+      <div className="hidden xl:block absolute right-4 top-4 bottom-4 w-90 rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated overflow-hidden">
+        <div className="h-full flex flex-col">
+          <div className="px-5 py-4 text-white" style={{ background: `linear-gradient(180deg, ${COLORS.blue}, #0b2a3a)` }}>
+            <div className="flex items-center justify-between">
+              <div className="text-sm font-bold">{selectedVehicle ? plateFromName(selectedVehicle.name) : '—'}</div>
+              <button 
+                type="button" 
+                className="text-white/80 hover:text-white transition"
+                onClick={() => setSelectedId(undefined)}
+                aria-label="Close details"
+              >
+                ×
+              </button>
             </div>
+            {selectedVehicle ? (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 text-[10px] font-semibold">
+                <span>{statusTag(selectedVehicle).label}</span>
+                <span className="h-1 w-1 rounded-full bg-white/60" />
+                <span>{Number(selectedVehicle.speed) || 0} KM/H</span>
+              </div>
+            ) : null}
+          </div>
 
-            <div className="rounded-lg bg-gray-50 p-3 text-xs text-text-muted">
-              Server time: {detailItem.dt_server}. Altitude: {detailItem.altitude} m. Angle:{' '}
-              {detailItem.angle}°. Raw CAN value: {detailItem.fuel_can_level_value ?? '—'}.
+          <div className="flex-1 overflow-y-auto px-5 py-4 text-sm">
+            {selectedVehicle ? (
+              <div className="space-y-5">
+                <div className="rounded-xl border border-[#EEF2F7] bg-white p-4">
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                    Vehicle
+                  </div>
+                  <div className="mt-2 text-sm font-semibold text-slate-900">{selectedVehicle.name}</div>
+                  <div className="mt-1 text-[11px] text-slate-500">IMEI: {selectedVehicle.imei}</div>
+                </div>
+
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                    Cargo details
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
+                      <div className="text-[11px] text-slate-500">Odometer</div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.odometer}</div>
+                    </div>
+                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
+                      <div className="text-[11px] text-slate-500">Engine</div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.engine}</div>
+                    </div>
+                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
+                      <div className="text-[11px] text-slate-500">Fuel 1</div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.fuel_1}</div>
+                    </div>
+                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
+                      <div className="text-[11px] text-slate-500">Fuel 2</div>
+                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.fuel_2}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between">
+                    <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
+                      Route schedule
+                    </div>
+                    <div className="text-[11px] font-semibold" style={{ color: COLORS.blue }}>
+                      68% Completed
+                    </div>
+                  </div>
+                  <div className="mt-3 rounded-xl border border-[#EEF2F7] bg-white p-4 text-[11px] text-slate-600 space-y-2">
+                    <div><span className="font-semibold text-slate-900">Last tracker</span>: {selectedVehicle.dt_tracker}</div>
+                    <div><span className="font-semibold text-slate-900">Last GPS</span>: {selectedVehicle.lat}, {selectedVehicle.lng}</div>
+                    <div><span className="font-semibold text-slate-900">Status</span>: {selectedVehicle.status}</div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-slate-600">Select a vehicle to view details.</div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile slide-over details */}
+      {mobileDetailsOpen ? (
+        <div className="xl:hidden fixed inset-0 z-50">
+          <button
+            type="button"
+            className="absolute inset-0"
+            style={{ background: 'rgba(2,6,23,0.55)' }}
+            onClick={() => setMobileDetailsOpen(false)}
+            aria-label="Close mobile details"
+          />
+          <div className="absolute right-0 top-0 h-full w-[88vw] max-w-md bg-white shadow-elevated">
+            <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-4">
+              <div className="text-sm font-semibold text-slate-900">Vehicle details</div>
+              <button 
+                type="button" 
+                onClick={() => setMobileDetailsOpen(false)} 
+                className="text-slate-500 hover:text-slate-700 transition"
+                aria-label="Close"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-5 text-sm text-slate-700">
+              {selectedVehicle ? (
+                <div className="space-y-3">
+                  <div className="text-lg font-bold" style={{ color: COLORS.blue }}>
+                    {plateFromName(selectedVehicle.name)}
+                  </div>
+                  <div className="text-[11px] text-slate-500">IMEI: {selectedVehicle.imei}</div>
+                  <div className="text-[11px] text-slate-500">Status: {selectedVehicle.status}</div>
+                  <div className="text-[11px] text-slate-500">Speed: {selectedVehicle.speed}</div>
+                  <div className="text-[11px] text-slate-500">
+                    GPS: {selectedVehicle.lat}, {selectedVehicle.lng}
+                  </div>
+                </div>
+              ) : (
+                <div>Select a vehicle.</div>
+              )}
             </div>
           </div>
-        )}
-      </ModalOverlay>
+        </div>
+      ) : null}
     </div>
   )
-}
-
-function getStatusCategory(v: GpsVehicle): { color: string } {
-  const status = v.status.toLowerCase()
-  const speed = Number(v.speed)
-
-  if (status.includes('moving') || Number.isFinite(speed) && speed > 0) {
-    return { color: '#16a34a' } // green
-  }
-
-  if (status.includes('engine idle')) {
-    return { color: '#eab308' } // yellow
-  }
-
-  if (status.includes('stopped') || status.includes('offline')) {
-    return { color: '#dc2626' } // red
-  }
-
-  // Fallback neutral cyan
-  return { color: '#27A2D8' }
 }

@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import PageHeader from '../components/layout/PageHeader'
 
 export default function SettingsPage() {
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable')

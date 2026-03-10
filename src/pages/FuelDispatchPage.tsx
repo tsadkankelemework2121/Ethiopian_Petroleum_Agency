@@ -5,7 +5,6 @@ import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../
 // import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
-import { PlusIcon } from '@heroicons/react/24/outline'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 
 export default function FuelDispatchPage() {
@@ -73,7 +72,7 @@ export default function FuelDispatchPage() {
           <button
             type="button"
             onClick={() => setShowNewDispatchForm(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <PlusIcon className="size-4" />
             New Dispatch
@@ -421,7 +420,7 @@ function NewDispatchForm({
 
         <button
           type="submit"
-          className="rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition"
         >
           Create Dispatch
         </button>

@@ -45,7 +45,7 @@ export default function DepotsPage() {
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
           >
             <PlusIcon className="size-4" />
             New Depot
@@ -91,7 +91,7 @@ export default function DepotsPage() {
                   <button
                     type="button"
                     onClick={() => openGoogleMaps(selectedDepot)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d7fb0] transition"
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition"
                   >
                     <MapPinIcon className="size-4" />
                     Open in Google Maps
@@ -108,7 +108,7 @@ export default function DepotsPage() {
                 <button
                   type="button"
                   onClick={() => openGoogleMaps(selectedDepot)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white hover:bg-[#1d7fb0] transition"
+                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition"
                 >
                   <MapPinIcon className="size-4" />
                   Search by Address
@@ -248,7 +248,7 @@ export default function DepotsPage() {
                       <button
                         type="button"
                         onClick={() => viewOnMap(depot)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-[#27A2D8]/10 px-3 py-1.5 text-sm font-medium text-[#27A2D8] hover:bg-[#27A2D8]/20 transition"
+                        className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20 transition"
                       >
                         <EyeIcon className="size-4" />
                         View Map
@@ -346,7 +346,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -356,7 +356,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.region}
             onChange={(e) => setFormData({ ...formData, region: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -366,7 +366,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.city}
             onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div className="sm:col-span-2">
@@ -376,7 +376,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             required
             value={formData.address}
             onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -385,7 +385,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="text"
             value={formData.person1}
             onChange={(e) => setFormData({ ...formData, person1: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -394,7 +394,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="text"
             value={formData.person2}
             onChange={(e) => setFormData({ ...formData, person2: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -403,7 +403,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="tel"
             value={formData.phone1}
             onChange={(e) => setFormData({ ...formData, phone1: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -412,7 +412,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="tel"
             value={formData.phone2}
             onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -421,7 +421,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="email"
             value={formData.email1}
             onChange={(e) => setFormData({ ...formData, email1: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -430,7 +430,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             type="email"
             value={formData.email2}
             onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -440,7 +440,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             step="any"
             value={formData.lat}
             onChange={(e) => setFormData({ ...formData, lat: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
@@ -450,7 +450,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
             step="any"
             value={formData.lng}
             onChange={(e) => setFormData({ ...formData, lng: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-[#27A2D8]/40"
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
       </div>
@@ -464,7 +464,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
         </button>
         <button
           type="submit"
-          className="rounded-lg bg-[#27A2D8] px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-[#1d7fb0] transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#27A2D8]/40"
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
           Create Depot
         </button>

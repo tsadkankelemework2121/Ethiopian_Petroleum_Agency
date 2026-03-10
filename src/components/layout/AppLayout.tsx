@@ -50,10 +50,9 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
       onClick={onNavigate}
       className={({ isActive }) =>
         cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 relative',
-          'text-text-muted hover:bg-muted hover:text-text',
-          isActive &&
-            'font-semibold pl-2.5 bg-primary/10 text-primary border-l-4 border-primary',
+          'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 relative',
+          'text-text-muted hover:bg-muted hover:text-text focus-visible:ring-[rgba(6,124,193,0.35)]',
+          isActive && 'bg-[#067cc1] text-white shadow-card',
         )
       }
     >
@@ -133,6 +132,7 @@ export default function AppLayout() {
   }
 
   const title = useMemo(() => getPageTitle(location.pathname), [location.pathname])
+  const isTracking = location.pathname === '/tracking'
 
   useEffect(() => {
     void getDashboardKpis().then((kpis) => {
@@ -146,13 +146,26 @@ export default function AppLayout() {
       <div className="flex h-full">
 
         {/* Desktop Sidebar */}
-        <aside className="hidden w-70 shrink-0 border-r border-[#D1D5DB] bg-white shadow-[2px_0_12px_rgba(0,0,0,0.04)] md:block">
-          <Sidebar />
-        </aside>
+        {!isTracking && (
+          <aside className="hidden w-70 shrink-0 border-r border-[#D1D5DB] bg-white shadow-[2px_0_12px_rgba(0,0,0,0.04)] md:block">
+            <Sidebar />
+          </aside>
+        )}
 
-        {/* Mobile Sidebar */}
+        {/* Toggle button when sidebar is hidden (e.g. GPS Tracking) */}
+        {isTracking && (
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="hidden md:flex fixed left-4 top-20 z-40 h-10 w-10 items-center justify-center rounded-full border border-[#D1D5DB] bg-white shadow-card text-text"
+          >
+            ☰
+          </button>
+        )}
+
+        {/* Slide-in Sidebar (all screen sizes when open) */}
         {mobileOpen && (
-          <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 z-50">
             <button
               className="absolute inset-0 bg-text/50"
               onClick={() => setMobileOpen(false)}
