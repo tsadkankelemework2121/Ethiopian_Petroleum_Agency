@@ -140,17 +140,14 @@ export default function DashboardPage() {
   }, [charts])
 
   const chartColors = {
-    benzine: 'rgb(34, 211, 238)',
-    diesel: 'rgb(37, 99, 235)',
-    jetFuel: 'rgb(177, 189, 217)',
-    delivered: 'rgb(16, 185, 129)',
-    inTransit: 'rgb(37, 99, 235)',
-    alerts: 'rgb(239, 68, 68)',
+    blue: '#067cc1',
+    gray: '#cbd5e1',
+    gold: '#f59e0b',
   }
   const pieColors: Record<string, string> = {
-    Delivered: chartColors.delivered,
-    'In Transit': chartColors.inTransit,
-    Alerts: chartColors.alerts,
+    Delivered: chartColors.blue,
+    'In Transit': chartColors.gray,
+    Alerts: chartColors.gold,
   }
 
   return (
@@ -253,9 +250,9 @@ export default function DashboardPage() {
                       background: 'rgba(255,255,255,0.95)',
                     }}
                   />
-                  <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.benzine} radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.diesel} radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.jetFuel} radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.blue} radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.gold} radius={[8, 8, 0, 0]} />
+                  <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.gray} radius={[8, 8, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
               )}
@@ -279,15 +276,33 @@ export default function DashboardPage() {
                             background: 'rgba(255,255,255,0.95)',
                           }}
                         />
+                        <text
+                          x="50%"
+                          y="46%"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className="fill-text text-2xl font-bold"
+                        >
+                          {statusPie.reduce((sum, s) => sum + s.value, 0).toLocaleString()}
+                        </text>
+                        <text
+                          x="50%"
+                          y="58%"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className="fill-text-muted text-[10px] font-semibold tracking-wide"
+                        >
+                          TOTAL DISPATCHES
+                        </text>
                         <Pie
                           data={statusPie}
                           dataKey="value"
                           nameKey="name"
                           cx="50%"
                           cy="50%"
-                          innerRadius={60}
-                          outerRadius={95}
-                          paddingAngle={3}
+                          innerRadius={62}
+                          outerRadius={96}
+                          paddingAngle={2}
                         >
                           {statusPie.map((entry) => (
                             <Cell key={entry.name} fill={pieColors[entry.name as keyof typeof pieColors]} />
@@ -307,9 +322,7 @@ export default function DashboardPage() {
                           />
                           <div className="text-xs font-medium text-text-muted">{s.name}</div>
                         </div>
-                        <div className="rounded-md bg-muted px-2 py-1 text-xs font-semibold text-text">
-                          {s.value}
-                        </div>
+                        <div className="text-xs font-semibold text-text">{s.value.toLocaleString()}</div>
                       </div>
                     ))}
                   </div>
@@ -332,19 +345,19 @@ export default function DashboardPage() {
                   {(() => {
                     const fuelData = [
                       {
-                        name: 'Benzene',
+                        name: 'Benzine',
                         volume: regions.reduce((sum, r) => sum + r.benzineM3, 0),
-                        color: chartColors.benzine,
+                        color: chartColors.blue,
                       },
                       {
                         name: 'Diesel',
                         volume: regions.reduce((sum, r) => sum + r.dieselM3, 0),
-                        color: chartColors.diesel,
+                        color: chartColors.gold,
                       },
                       {
                         name: 'Jet Fuel',
                         volume: regions.reduce((sum, r) => sum + r.jetFuelM3, 0),
-                        color: chartColors.jetFuel,
+                        color: chartColors.gray,
                       },
                     ]
                     const totalVolume = fuelData.reduce((sum, f) => sum + f.volume, 0)
@@ -354,11 +367,12 @@ export default function DashboardPage() {
                         <div key={fuel.name} className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-sm font-medium text-text">{fuel.name}</span>
-                            <span className="text-sm font-semibold text-primary">
-                              {fuel.volume.toLocaleString()}L ({percentage.toFixed(0)}%)
+                            <span className="text-sm font-semibold text-text">
+                              {fuel.volume.toLocaleString()}L
+                              <span className="text-text-muted"> ({percentage.toFixed(0)}%)</span>
                             </span>
                           </div>
-                          <div className="w-full h-4 bg-muted rounded-lg overflow-hidden">
+                          <div className="w-full h-3 rounded-lg overflow-hidden" style={{ backgroundColor: chartColors.gray }}>
                             <div
                               className="h-full transition-all duration-300 rounded-lg"
                               style={{

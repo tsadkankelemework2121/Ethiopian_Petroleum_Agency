@@ -53,7 +53,7 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 relative',
           'text-text-muted hover:bg-muted hover:text-text',
           isActive &&
-            'font-semibold pl-2.5 bg-[#27A2D8]/10 text-[#27A2D8] border-l-4 border-[#27A2D8]',
+            'font-semibold pl-2.5 bg-primary/10 text-primary border-l-4 border-primary',
         )
       }
     >
@@ -76,8 +76,8 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
 
         <div className="min-w-0">
-          <div className="truncate text-sm font-bold text-text">EPA</div>
-          <div className="truncate text-xs text-text-muted">Fuel Tracking</div>
+          <div className="truncate text-sm font-bold text-text">EPA ETHIOPIA</div>
+          <div className="truncate text-xs text-text-muted">Ops Command Center</div>
         </div>
       </div>
 
@@ -90,7 +90,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
         <div className="mt-6 space-y-3">
           <div className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-            Entities
+            Stakeholders
           </div>
 
           <div className="space-y-1">
@@ -117,10 +117,11 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const [alertsCount, setAlertsCount] = useState(0)
+  const [globalSearch, setGlobalSearch] = useState('')
 
   const getPageTitle = (pathname: string): string => {
-    if (pathname === '/' || pathname === '') return 'Dashboard'
-    if (pathname === '/tracking') return 'GPS Tracking'
+    if (pathname === '/' || pathname === '') return 'Operations Overview'
+    if (pathname === '/tracking') return 'GPS Real-time Tracking'
     if (pathname === '/fuel-dispatch') return 'Fuel Dispatch'
     if (pathname === '/reports') return 'Reports'
     if (pathname.includes('/entities/oil-companies')) return 'Oil Companies'
@@ -178,6 +179,17 @@ export default function AppLayout() {
                 </button>
 
                 <h2 className="text-sm font-semibold text-text">{title}</h2>
+              </div>
+
+              <div className="hidden flex-1 px-6 lg:block">
+                <div className="relative max-w-xl mx-auto">
+                  <input
+                    value={globalSearch}
+                    onChange={(e) => setGlobalSearch(e.target.value)}
+                    placeholder="Search dispatches, vehicles, or depots..."
+                    className="w-full rounded-xl border border-[#D1D5DB] bg-muted/40 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                </div>
               </div>
 
               <div className="flex items-center gap-4">

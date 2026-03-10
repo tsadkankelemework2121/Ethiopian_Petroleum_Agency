@@ -7,10 +7,10 @@
   --border: 209 213 219;
   --text: 15 23 42;
   --text-muted: 100 116 139;
-  --primary: 39 162 216; /* #27A2D8 - company color */
-  --primary-strong: 25 130 180; /* darker shade */
-  --primary-hex: #27A2D8;
-  --chart-1: 39 162 216;
+  --primary: 6 124 193; /* #067cc1 */
+  --primary-strong: 5 97 150; /* #056196 */
+  --primary-hex: #067cc1;
+  --chart-1: 6 124 193;
   --chart-2: 59 130 246;
   --chart-3: 148 163 184;
   --chart-success: 34 197 94;
@@ -38,7 +38,7 @@ body {
 }
 
 ::selection {
-  background: rgba(39, 162, 216, 0.2);
+  background: rgba(6, 124, 193, 0.2);
   color: rgb(var(--text));
 }
 
