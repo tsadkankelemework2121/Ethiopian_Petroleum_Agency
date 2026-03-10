@@ -53,7 +53,7 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 relative',
           'text-text-muted hover:bg-muted hover:text-text',
           isActive &&
-            'font-semibold pl-2.5 bg-[#27A2D8]/10 text-[#27A2D8] border-l-4 border-[#27A2D8]',
+            'font-semibold pl-2.5 bg-[#067dc2]/10 text-[#067dc2] border-l-4 border-[#067dc2]',
         )
       }
     >
@@ -177,18 +177,17 @@ export default function AppLayout() {
                   Menu
                 </button>
 
-                <div className="flex-1">
-                  <h2 className="text-sm font-semibold text-text mb-3">{title}</h2>
-                  {title === 'Dashboard' && (
-                    <div className="relative">
-                      <input
-                        type="text"
-                        placeholder="Search dispatches, vehicles, or depots..."
-                        className="w-full max-w-md px-4 py-2 text-sm rounded-lg border border-[#D1D5DB] bg-white text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
-                      />
-                    </div>
-                  )}
-                </div>
+                <h2 className="text-xl font-bold text-text whitespace-nowrap">{title === 'Dashboard' ? 'Operations Overview' : title}</h2>
+                
+                {title === 'Dashboard' && (
+                  <div className="relative flex-1 max-w-md">
+                    <input
+                      type="text"
+                      placeholder="Search dispatches, vehicles, or depots..."
+                      className="w-full px-4 py-2 text-sm rounded-lg border border-[#D1D5DB] bg-[#f3f4f6] text-text placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-4">

@@ -7,14 +7,15 @@
   --border: 209 213 219;
   --text: 15 23 42;
   --text-muted: 100 116 139;
-  --primary: 39 162 216; /* #27A2D8 - company color */
-  --primary-strong: 25 130 180; /* darker shade */
-  --primary-hex: #27A2D8;
-  --chart-1: 39 162 216;
-  --chart-2: 59 130 246;
-  --chart-3: 148 163 184;
+  --primary: 6 125 194; /* #067dc2 - primary blue */
+  --primary-strong: 5 100 155; /* darker shade */
+  --primary-hex: #067dc2;
+  --chart-1: 33 210 237; /* #21d2ed - light blue */
+  --chart-2: 202 212 224; /* #cad4e0 - light gray */
+  --chart-3: 202 212 224; /* #cad4e0 - light gray */
   --chart-success: 34 197 94;
   --chart-alert: 239 68 68;
+  --chart-gold: 245 158 11; /* #f59e0b - golden */
   --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.08);
   --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);

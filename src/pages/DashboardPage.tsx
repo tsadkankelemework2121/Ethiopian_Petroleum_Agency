@@ -140,12 +140,12 @@ export default function DashboardPage() {
   }, [charts])
 
   const chartColors = {
-    benzine: 'rgb(34, 211, 238)',
-    diesel: 'rgb(37, 99, 235)',
-    jetFuel: 'rgb(177, 189, 217)',
-    delivered: 'rgb(16, 185, 129)',
-    inTransit: 'rgb(37, 99, 235)',
-    alerts: 'rgb(239, 68, 68)',
+    benzine: '#21d2ed', // Light blue
+    diesel: '#067dc2', // Primary blue
+    jetFuel: '#cad4e0', // Light gray
+    delivered: '#067dc2', // Primary blue
+    inTransit: '#21d2ed', // Light blue
+    alerts: '#f59e0b', // Golden
   }
   const pieColors: Record<string, string> = {
     Delivered: chartColors.delivered,
@@ -155,11 +155,6 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-text">Operations Overview</h1>
-        </div>
-      </div>
       <div className="grid gap-4 lg:grid-cols-12">
         {/* KPIs */}
         <div className="lg:col-span-12">
