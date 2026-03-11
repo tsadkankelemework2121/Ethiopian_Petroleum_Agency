@@ -1,47 +1,56 @@
 @import "tailwindcss";
 
-:root {
-  --bg: 243 244 246;
-  --surface: 255 255 255;
-  --muted: 247 248 250;
-  --border: 209 213 219;
-  --text: 15 23 42;
-  --text-muted: 100 116 139;
-  --primary: 6 124 193; /* #067cc1 */
-  --primary-strong: 5 97 150; /* #056196 */
-  --primary-hex: #067cc1;
-  --chart-1: 6 124 193;
-  --chart-2: 59 130 246;
-  --chart-3: 148 163 184;
-  --chart-success: 34 197 94;
-  --chart-alert: 239 68 68;
-  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.08);
+/* Tailwind v4 design tokens */
+@theme {
+  /* Colors */
+  --color-bg: rgb(243 244 246);
+  --color-surface: rgb(255 255 255);
+  --color-muted: rgb(247 248 250);
+  --color-border: rgb(209 213 219);
+  --color-text: rgb(15 23 42);
+  --color-text-muted: rgb(100 116 139);
+
+  --color-primary: rgb(6 124 193);
+  --color-primary-strong: rgb(5 97 150);
+
+  --color-chart-1: rgb(6 124 193);
+  --color-chart-2: rgb(59 130 246);
+  --color-chart-3: rgb(148 163 184);
+  --color-chart-success: rgb(34 197 94);
+  --color-chart-alert: rgb(239 68 68);
+
+  /* Shadows */
+  --shadow-soft: 0 1px 3px rgba(0,0,0,0.08);
+  --shadow-card: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.08);
 }
 
+/* Layout */
 html,
 body,
 #root {
   height: 100%;
 }
 
+/* Base styles */
 body {
   margin: 0;
-  color: rgb(var(--text));
-  background: rgb(var(--bg));
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", sans-serif;
 }
 
+/* Misc */
 * {
   -webkit-tap-highlight-color: transparent;
 }
 
 ::selection {
   background: rgba(6, 124, 193, 0.2);
-  color: rgb(var(--text));
+  color: var(--color-text);
 }
 
+/* Animation */
 @keyframes fade-in-up {
   from {
     opacity: 0;
@@ -57,6 +66,7 @@ body {
   animation: fade-in-up 0.4s ease-out forwards;
 }
 
+/* Utility helpers */
 .blur-backdrop {
   backdrop-filter: blur(4px);
 }
@@ -64,7 +74,7 @@ body {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0,0,0,0.5);
   backdrop-filter: blur(4px);
   z-index: 50;
 }
