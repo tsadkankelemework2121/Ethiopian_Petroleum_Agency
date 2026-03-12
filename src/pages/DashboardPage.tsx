@@ -170,25 +170,25 @@ export default function DashboardPage() {
                     className="animate-fade-in-up"
                     style={{ animationDelay: `${i * 50}ms` }}
                   >
-                  <Card>
-                  <CardBody>
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div className="min-w-0">
-                        <div className="text-sm font-semibold text-text">{k.label}</div>
-                        <div className="mt-1 text-xs text-text-muted">{k.hint}</div>
-                      </div>
-                      <div className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
-                        <Icon className="size-5" />
-                      </div>
-                    </div>
-                    <div className="flex items-end justify-between gap-2">
-                      <div className="text-3xl font-bold tracking-tight text-text">{k.value}</div>
-                      <div className="rounded-md bg-muted px-2 py-1 text-[10px] font-medium text-text-muted">
-                        Live
-                      </div>
-                    </div>
-                  </CardBody>
-                </Card>
+                    <Card>
+                      <CardBody>
+                        <div className="flex items-start justify-between gap-3 mb-4">
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-text">{k.label}</div>
+                            <div className="mt-1 text-xs text-text-muted">{k.hint}</div>
+                          </div>
+                          <div className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <Icon className="size-5" />
+                          </div>
+                        </div>
+                        <div className="flex items-end justify-between gap-2">
+                          <div className="text-3xl font-bold tracking-tight text-text">{k.value}</div>
+                          <div className="rounded-md bg-muted px-2 py-1 text-[10px] font-medium text-text-muted">
+                            Live
+                          </div>
+                        </div>
+                      </CardBody>
+                    </Card>
                   </div>
                 )
               })
@@ -213,35 +213,35 @@ export default function DashboardPage() {
               {regions.length === 0 ? (
                 <SkeletonChart className="h-full" />
               ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
-                  <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
-                  <XAxis
-                    dataKey="region"
-                    tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                    interval={0}
-                    height={70}
-                  />
-                  <YAxis
-                    label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
-                    tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      borderRadius: 14,
-                      border: '1px solid rgba(203,213,225,0.9)',
-                      background: 'rgba(255,255,255,0.95)',
-                    }}
-                  />
-                  <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.blue} radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.gold} radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.gray} radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                    <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
+                    <XAxis
+                      dataKey="region"
+                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={0}
+                      height={70}
+                    />
+                    <YAxis
+                      label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
+                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
+                      tickLine={false}
+                      axisLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        borderRadius: 14,
+                        border: '1px solid rgba(203,213,225,0.9)',
+                        background: 'rgba(255,255,255,0.95)',
+                      }}
+                    />
+                    <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.blue} radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.gold} radius={[8, 8, 0, 0]} />
+                    <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.gray} radius={[8, 8, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
               )}
             </CardBody>
           </Card>

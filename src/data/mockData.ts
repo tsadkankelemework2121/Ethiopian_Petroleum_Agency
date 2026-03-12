@@ -238,6 +238,20 @@ export const dispatchTasks: DispatchTask[] = [
     status: 'Stopped >5h',
     lastGpsPoint: { position: { lat: 9.02, lng: 38.78 }, timestamp: '2025-12-12T16:00:00Z' },
   },
+  {
+    peaDispatchNo: 'PEA045',
+    oilCompanyId: 'oc-total',
+    transporterId: 'tr-eagle',
+    vehicleId: 'veh-3-3333',
+    dispatchDateTime: '2025-12-11T10:00:00Z',
+    dispatchLocation: 'Horizon-Djb',
+    destinationDepotId: 'ID4025',
+    etaDateTime: '2025-12-16T10:00:00Z',
+    fuelType: 'Benzine',
+    dispatchedLiters: 45000,
+    status: 'On transit',
+    lastGpsPoint: { position: { lat: 9.1, lng: 39.0 }, timestamp: '2025-12-12T10:00:00Z' },
+  },
 ]
 
 export const regionalFuelDispatchedThisWeek: RegionFuelSummary[] = [

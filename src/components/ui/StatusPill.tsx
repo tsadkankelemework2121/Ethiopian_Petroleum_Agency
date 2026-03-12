@@ -3,11 +3,11 @@ import { cn } from '../../lib/cn'
 import { getStatusDetails } from '../../lib/statusDetails'
 
 const tones: Record<DispatchStatus, string> = {
-  'On transit': 'bg-primary/15 text-primary-strong',
-  Delivered: 'bg-emerald-500/15 text-emerald-700',
-  'Exceeded ETA': 'bg-amber-500/15 text-amber-700',
-  'GPS Offline >24h': 'bg-rose-500/15 text-rose-700',
-  'Stopped >5h': 'bg-fuchsia-500/15 text-fuchsia-700',
+  'On transit': 'bg-slate-500/15 text-slate-700',
+  Delivered: 'bg-[#067cc1]/15 text-[#067cc1]',
+  'Exceeded ETA': 'bg-[#f59e0b]/15 text-[#f59e0b]',
+  'GPS Offline >24h': 'bg-[#f59e0b]/15 text-[#f59e0b]',
+  'Stopped >5h': 'bg-[#f59e0b]/15 text-[#f59e0b]',
 }
 
 export default function StatusPill({
