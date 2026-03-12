@@ -18,21 +18,21 @@ export default function TrackingPage() {
   const [error, setError] = useState<string | null>(null)
   const [zoom, setZoom] = useState(9)
   const mapApiRef = useRef<import('../components/map/MapView').MapApi | null>(null)
-  const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false)
 
   // Define statusTag function first (hoisted with function declaration)
   const statusTag = (v: GpsVehicle): { label: string; color: string } => {
     const status = v.status.toLowerCase()
-    const speed = Number(v.speed)
+    
+    // Map exact raw status to the color tag but preserve the exact status for display elsewhere
     if (status.includes('offline')) return { label: 'OFFLINE', color: COLORS.gray }
     if (status.includes('alert')) return { label: 'ALERT', color: '#ef4444' }
-    if (status.includes('idle') || (Number.isFinite(speed) && speed === 0 && v.engine === 'on')) {
+    if (status.includes('idle') || (Number.isFinite(Number(v.speed)) && Number(v.speed) === 0 && v.engine === 'on')) {
       return { label: 'IDLE', color: COLORS.gold }
     }
-    if (status.includes('moving') || (Number.isFinite(speed) && speed > 0)) {
+    if (status.includes('moving') || (Number.isFinite(Number(v.speed)) && Number(v.speed) > 0)) {
       return { label: 'MOVING', color: '#22c55e' }
     }
-    return { label: 'MOVING', color: '#22c55e' }
+    return { label: 'STOPPED', color: '#ef4444' }
   }
 
   const plateFromName = (name: string) => name.trim().split(/\s+/)[0] ?? name
@@ -68,7 +68,8 @@ export default function TrackingPage() {
     })
   }, [items, search])
 
-  const fleetListItems = useMemo(() => filtered.slice(0, 5), [filtered])
+  // Do not slice, show all filtered vehicles
+  const fleetListItems = useMemo(() => filtered, [filtered])
 
   const markers = useMemo(() => {
     return items
@@ -76,6 +77,7 @@ export default function TrackingPage() {
       .map((t) => {
         const lat = Number(t.lat)
         const lng = Number(t.lng)
+        const angle = Number(t.angle) || 0
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
 
         const tag = statusTag(t)
@@ -94,6 +96,7 @@ export default function TrackingPage() {
           label: t.name,
           subtitle: t.status,
           status: t.status,
+          angle,
           color: markerColor,
         }
       })
@@ -132,17 +135,13 @@ export default function TrackingPage() {
       setZoom(15)
       mapApiRef.current?.flyTo({ lat, lng }, 15)
     }
-
-    if (window.matchMedia('(max-width: 1279px)').matches) {
-      setMobileDetailsOpen(true)
-    }
   }
 
   return (
-    <div className="relative mt-4 h-[calc(100vh-140px)]">
+    <div className="relative h-screen w-full overflow-hidden absolute inset-0 -mx-6 -my-8">
       {/* Map background */}
       <MapView
-        className="absolute inset-0 h-full w-full rounded-2xl"
+        className="absolute inset-0 h-full w-full"
         center={center}
         zoom={zoom}
         markers={markers}
@@ -187,28 +186,60 @@ export default function TrackingPage() {
               const isSelected = v.imei === selectedId
 
               return (
-                <button
-                  key={v.imei}
-                  type="button"
-                  onClick={() => handleSelectVehicle(v)}
-                  className="w-full px-5 py-4 text-left border-b border-[#EEF2F7] hover:bg-slate-50 transition"
-                  style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
-                        {plate}
+                <div key={v.imei} className="border-b border-[#EEF2F7]">
+                  <button
+                    type="button"
+                    onClick={() => handleSelectVehicle(v)}
+                    className="w-full px-5 py-4 text-left hover:bg-slate-50 transition"
+                    style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+                          {plate}
+                        </div>
+                        <div className="mt-1 text-[11px] text-slate-500 truncate">{v.name}</div>
                       </div>
-                      <div className="mt-1 text-[11px] text-slate-500 truncate">{v.name}</div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold"
+                          style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
+                        >
+                          {v.status}
+                        </span>
+                      </div>
                     </div>
-                    <span
-                      className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold"
-                      style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
-                    >
-                      {tag.label}
-                    </span>
-                  </div>
-                </button>
+                  </button>
+                  
+                  {isSelected && (
+                    <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50">
+                      <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
+                        <div className="rounded border bg-white p-2 shadow-sm">
+                          <div className="text-slate-500">Speed</div>
+                          <div className="font-semibold text-slate-900">{v.speed} km/h</div>
+                        </div>
+                        <div className="rounded border bg-white p-2 shadow-sm">
+                          <div className="text-slate-500">Engine</div>
+                          <div className="font-semibold text-slate-900">{v.engine}</div>
+                        </div>
+                        <div className="rounded border bg-white p-2 shadow-sm">
+                          <div className="text-slate-500">Odometer</div>
+                          <div className="font-semibold text-slate-900">{v.odometer}</div>
+                        </div>
+                        <div className="rounded border bg-white p-2 shadow-sm">
+                          <div className="text-slate-500">Fuel</div>
+                          <div className="font-semibold text-slate-900">{v.fuel_1}</div>
+                        </div>
+                      </div>
+                      <div className="rounded border bg-white p-2 text-[10px] shadow-sm">
+                        <div className="text-slate-500 mb-1 font-semibold uppercase tracking-wider">Location Data</div>
+                        <div><span className="font-medium text-slate-700">GPS:</span> {v.lat}, {v.lng}</div>
+                        <div><span className="font-medium text-slate-700">Updated:</span> {v.dt_tracker}</div>
+                        <div><span className="font-medium text-slate-700">Server:</span> {v.dt_server}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )
             })
           )}
@@ -272,130 +303,6 @@ export default function TrackingPage() {
         </div>
       </div>
 
-      {/* Right overlay: details (desktop) */}
-      <div className="hidden xl:block absolute right-4 top-4 bottom-4 w-90 rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated overflow-hidden">
-        <div className="h-full flex flex-col">
-          <div className="px-5 py-4 text-white" style={{ background: `linear-gradient(180deg, ${COLORS.blue}, #0b2a3a)` }}>
-            <div className="flex items-center justify-between">
-              <div className="text-sm font-bold">{selectedVehicle ? plateFromName(selectedVehicle.name) : '—'}</div>
-              <button 
-                type="button" 
-                className="text-white/80 hover:text-white transition"
-                onClick={() => setSelectedId(undefined)}
-                aria-label="Close details"
-              >
-                ×
-              </button>
-            </div>
-            {selectedVehicle ? (
-              <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 text-[10px] font-semibold">
-                <span>{statusTag(selectedVehicle).label}</span>
-                <span className="h-1 w-1 rounded-full bg-white/60" />
-                <span>{Number(selectedVehicle.speed) || 0} KM/H</span>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-5 py-4 text-sm">
-            {selectedVehicle ? (
-              <div className="space-y-5">
-                <div className="rounded-xl border border-[#EEF2F7] bg-white p-4">
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                    Vehicle
-                  </div>
-                  <div className="mt-2 text-sm font-semibold text-slate-900">{selectedVehicle.name}</div>
-                  <div className="mt-1 text-[11px] text-slate-500">IMEI: {selectedVehicle.imei}</div>
-                </div>
-
-                <div>
-                  <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                    Cargo details
-                  </div>
-                  <div className="mt-3 grid grid-cols-2 gap-3">
-                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
-                      <div className="text-[11px] text-slate-500">Odometer</div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.odometer}</div>
-                    </div>
-                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
-                      <div className="text-[11px] text-slate-500">Engine</div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.engine}</div>
-                    </div>
-                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
-                      <div className="text-[11px] text-slate-500">Fuel 1</div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.fuel_1}</div>
-                    </div>
-                    <div className="rounded-xl border border-[#EEF2F7] bg-white p-3">
-                      <div className="text-[11px] text-slate-500">Fuel 2</div>
-                      <div className="mt-1 text-sm font-semibold text-slate-900">{selectedVehicle.fuel_2}</div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between">
-                    <div className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                      Route schedule
-                    </div>
-                    <div className="text-[11px] font-semibold" style={{ color: COLORS.blue }}>
-                      68% Completed
-                    </div>
-                  </div>
-                  <div className="mt-3 rounded-xl border border-[#EEF2F7] bg-white p-4 text-[11px] text-slate-600 space-y-2">
-                    <div><span className="font-semibold text-slate-900">Last tracker</span>: {selectedVehicle.dt_tracker}</div>
-                    <div><span className="font-semibold text-slate-900">Last GPS</span>: {selectedVehicle.lat}, {selectedVehicle.lng}</div>
-                    <div><span className="font-semibold text-slate-900">Status</span>: {selectedVehicle.status}</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="text-sm text-slate-600">Select a vehicle to view details.</div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile slide-over details */}
-      {mobileDetailsOpen ? (
-        <div className="xl:hidden fixed inset-0 z-50">
-          <button
-            type="button"
-            className="absolute inset-0"
-            style={{ background: 'rgba(2,6,23,0.55)' }}
-            onClick={() => setMobileDetailsOpen(false)}
-            aria-label="Close mobile details"
-          />
-          <div className="absolute right-0 top-0 h-full w-[88vw] max-w-md bg-white shadow-elevated">
-            <div className="flex items-center justify-between border-b border-[#E5E7EB] px-5 py-4">
-              <div className="text-sm font-semibold text-slate-900">Vehicle details</div>
-              <button 
-                type="button" 
-                onClick={() => setMobileDetailsOpen(false)} 
-                className="text-slate-500 hover:text-slate-700 transition"
-                aria-label="Close"
-              >
-                ×
-              </button>
-            </div>
-            <div className="p-5 text-sm text-slate-700">
-              {selectedVehicle ? (
-                <div className="space-y-3">
-                  <div className="text-lg font-bold" style={{ color: COLORS.blue }}>
-                    {plateFromName(selectedVehicle.name)}
-                  </div>
-                  <div className="text-[11px] text-slate-500">IMEI: {selectedVehicle.imei}</div>
-                  <div className="text-[11px] text-slate-500">Status: {selectedVehicle.status}</div>
-                  <div className="text-[11px] text-slate-500">Speed: {selectedVehicle.speed}</div>
-                  <div className="text-[11px] text-slate-500">
-                    GPS: {selectedVehicle.lat}, {selectedVehicle.lng}
-                  </div>
-                </div>
-              ) : (
-                <div>Select a vehicle.</div>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : null}
     </div>
   )
 }

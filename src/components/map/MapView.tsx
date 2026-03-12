@@ -14,6 +14,7 @@ type MarkerType = {
   label?: string
   subtitle?: string
   status?: string
+  angle?: number
   color?: string
 }
 
@@ -125,7 +126,8 @@ export default function MapView({
     // add/update markers
     markers.forEach((m) => {
       const isSelected = m.id === selectedMarkerId
-      const size = isSelected ? 42 : 36
+      const size = isSelected ? 32 : 24
+      const angle = m.angle ?? 0
 
       let el = markerElsRef.current.get(m.id)
       if (!el) {
@@ -136,19 +138,26 @@ export default function MapView({
       }
 
       el.innerHTML = `
-        <div style="
-          width:${size}px;
-          height:${size}px;
-          background:${m.color ?? '#ffffff'};
-          border-radius:10px;
-          display:flex;
-          align-items:center;
-          justify-content:center;
-          box-shadow:0 10px 22px rgba(2,6,23,0.22);
-          border:2px solid ${isSelected ? '#067cc1' : 'rgba(203,213,225,0.9)'};
-          transition:all 0.2s ease;
-        ">
-          <span style="font-size:${isSelected ? 20 : 18}px">🚚</span>
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
+          ${isSelected && m.label ? `<div style="position: absolute; bottom: 100%; margin-bottom: 4px; background: white; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 10px; font-weight: bold; white-space: nowrap; color: #0f172a; border: 1px solid #e2e8f0; z-index: 10;">${m.label.split(' ')[0]}</div>` : ''}
+          <div style="
+            width:${size}px;
+            height:${size}px;
+            background:${m.color ?? '#ffffff'};
+            border-radius:6px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            box-shadow:0 4px 10px rgba(0,0,0,0.15);
+            border:1.5px solid ${isSelected ? '#067cc1' : 'rgba(203,213,225,0.9)'};
+            transition:all 0.2s ease;
+            transform: rotate(${angle}deg);
+          ">
+            <svg viewBox="0 0 24 24" fill="white" width="${isSelected ? 18 : 14}" height="${isSelected ? 18 : 14}">
+              <!-- Simplified vehicle/arrow pointing UP -->
+              <path d="M12 2L22 22h-5l-5-8-5 8H2L12 2z" />
+            </svg>
+          </div>
         </div>
       `
 
