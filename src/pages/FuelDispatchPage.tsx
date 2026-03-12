@@ -121,7 +121,7 @@ export default function FuelDispatchPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
                 className="w-full md:w-56 rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
               >
-                <option value="All">All Status</option>
+                <option value="All">All Events</option>
                 <option value="On transit">On transit</option>
                 <option value="Delivered">Delivered</option>
                 <option value="Exceeded ETA">Exceeded ETA</option>
@@ -155,7 +155,7 @@ export default function FuelDispatchPage() {
                       'Dispatch Date',
                       'ETA',
                       'Drop-off',
-                      'Status',
+                      'Event',
                     ].map((h) => (
                       <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold">
                         {h}

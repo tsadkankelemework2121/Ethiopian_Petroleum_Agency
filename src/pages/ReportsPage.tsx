@@ -129,7 +129,7 @@ export default function ReportsPage() {
         })
 
       return {
-        columns: ['Dispatch No.', 'Plate', 'Oil Company', 'Transporter', 'Dispatch Date/Time', 'Drop Off Date/Time', 'Duration', 'Status'],
+        columns: ['Dispatch No.', 'Plate', 'Oil Company', 'Transporter', 'Dispatch Date/Time', 'Drop Off Date/Time', 'Duration', 'Event'],
         rows,
       }
     }
@@ -177,7 +177,7 @@ export default function ReportsPage() {
           'Drop Off Location',
           'Drop Off Date/Time',
           'Duration',
-          'Status',
+          'Event',
         ],
         rows,
       }
@@ -203,7 +203,7 @@ export default function ReportsPage() {
       })
 
     return {
-      columns: ['Depot ID', 'Depot Name', 'Drop Off Date/Time', 'Vehicle', 'Oil Company', 'Transporter', 'Duration', 'Status'],
+      columns: ['Depot ID', 'Depot Name', 'Drop Off Date/Time', 'Vehicle', 'Oil Company', 'Transporter', 'Duration', 'Event'],
       rows,
     }
   }, [applied.from, applied.query, applied.to, companiesById, depotsById, filterType, tasks, transportersById, vehiclesById])

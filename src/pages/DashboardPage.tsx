@@ -387,7 +387,7 @@ export default function DashboardPage() {
               <table className="min-w-190 w-full text-left text-sm">
                 <thead className="sticky top-0 z-10 bg-muted text-xs font-semibold text-text-muted border-b border-[#D1D5DB]">
                   <tr>
-                    {['Dispatch', 'Oil company', 'Transporter', 'ETA', 'Status'].map((h) => (
+                    {['Dispatch', 'Oil company', 'Transporter', 'ETA', 'Event'].map((h) => (
                       <th key={h} className="whitespace-nowrap px-5 py-4 font-semibold">
                         {h}
                       </th>
