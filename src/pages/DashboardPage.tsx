@@ -214,15 +214,15 @@ export default function DashboardPage() {
                 <SkeletonChart className="h-full" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                  <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 60 }}>
                     <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
                     <XAxis
                       dataKey="region"
-                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
+                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11, angle: 45, textAnchor: 'start' }}
                       tickLine={false}
                       axisLine={false}
                       interval={0}
-                      height={70}
+                      height={90}
                     />
                     <YAxis
                       label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
@@ -359,12 +359,13 @@ export default function DashboardPage() {
                               <span className="text-text-muted"> ({percentage.toFixed(0)}%)</span>
                             </span>
                           </div>
-                          <div className="w-full h-3 rounded-lg overflow-hidden" style={{ backgroundColor: chartColors.gray }}>
+                          <div className="w-full h-3 rounded-lg overflow-hidden" style={{ backgroundColor: 'transparent' }}>
                             <div
-                              className="h-full transition-all duration-300 rounded-lg"
+                              className="h-full transition-all duration-300 rounded-lg border-2"
                               style={{
                                 width: `${percentage}%`,
-                                backgroundColor: fuel.color,
+                                backgroundColor: 'transparent',
+                                borderColor: fuel.color,
                               }}
                             />
                           </div>
