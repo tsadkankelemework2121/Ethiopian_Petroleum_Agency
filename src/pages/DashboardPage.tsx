@@ -209,7 +209,7 @@ export default function DashboardPage() {
                 </span>
               }
             />
-            <CardBody className="h-80">
+            <CardBody className="h-[360px]">
               {regions.length === 0 ? (
                 <SkeletonChart className="h-full" />
               ) : (
@@ -219,10 +219,13 @@ export default function DashboardPage() {
                     <XAxis
                       dataKey="region"
                       tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
+                      angle={-35}
+                      textAnchor="end"
+                      dy={17}
                       tickLine={false}
                       axisLine={false}
                       interval={0}
-                      height={70}
+                      height={65}
                     />
                     <YAxis
                       label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
@@ -359,7 +362,7 @@ export default function DashboardPage() {
                               <span className="text-text-muted"> ({percentage.toFixed(0)}%)</span>
                             </span>
                           </div>
-                          <div className="w-full h-3 rounded-lg overflow-hidden" style={{ backgroundColor: chartColors.gray }}>
+                          <div className="w-full h-3 rounded-lg overflow-hidden border border-[#CBD5E1] bg-transparent">
                             <div
                               className="h-full transition-all duration-300 rounded-lg"
                               style={{
