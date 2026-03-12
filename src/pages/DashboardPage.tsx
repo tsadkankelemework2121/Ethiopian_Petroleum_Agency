@@ -214,15 +214,15 @@ export default function DashboardPage() {
                 <SkeletonChart className="h-full" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 60 }}>
+                  <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
                     <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
                     <XAxis
                       dataKey="region"
-                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11, angle: 45, textAnchor: 'start' }}
+                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 10, angle: -45, textAnchor: 'end', dy: 5 }}
                       tickLine={false}
                       axisLine={false}
                       interval={0}
-                      height={90}
+                      height={80}
                     />
                     <YAxis
                       label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
@@ -359,13 +359,12 @@ export default function DashboardPage() {
                               <span className="text-text-muted"> ({percentage.toFixed(0)}%)</span>
                             </span>
                           </div>
-                          <div className="w-full h-3 rounded-lg overflow-hidden" style={{ backgroundColor: 'transparent' }}>
+                          <div className="w-full h-3 rounded-lg overflow-hidden" style={{ backgroundColor: chartColors.gray, border: `2px solid ${chartColors.gray}` }}>
                             <div
-                              className="h-full transition-all duration-300 rounded-lg border-2"
+                              className="h-full transition-all duration-300 rounded-lg"
                               style={{
                                 width: `${percentage}%`,
-                                backgroundColor: 'transparent',
-                                borderColor: fuel.color,
+                                backgroundColor: fuel.color,
                               }}
                             />
                           </div>
