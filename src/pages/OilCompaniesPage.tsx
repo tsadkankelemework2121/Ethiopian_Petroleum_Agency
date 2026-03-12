@@ -16,10 +16,7 @@ export default function OilCompaniesPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Oil Companies"
-        subtitle="Registered oil companies and contacts."
-        right={
+      <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-end">
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
@@ -28,8 +25,8 @@ export default function OilCompaniesPage() {
             <PlusIcon className="size-4" />
             New Oil Company
           </button>
-        }
-      />
+        
+        </div>
 
       <ModalOverlay
         isOpen={showForm}

@@ -66,10 +66,7 @@ export default function FuelDispatchPage() {
 
   return (
     <div>
-      <PageHeader
-        title="Fuel Dispatch & Transit"
-        subtitle="Monitor dispatches, deliveries, and alerts."
-        right={
+      {/* <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-end">
           <button
             type="button"
             onClick={() => setShowNewDispatchForm(true)}
@@ -78,8 +75,8 @@ export default function FuelDispatchPage() {
             <PlusIcon className="size-4" />
             New Dispatch
           </button>
-        }
-      />
+        </div>
+       */}
 
       <ModalOverlay
         isOpen={showNewDispatchForm}
@@ -131,7 +128,16 @@ export default function FuelDispatchPage() {
                 <option value="GPS Offline >24h">GPS Offline &gt;24h</option>
                 <option value="Stopped >5h">Stopped &gt;5h</option>
               </select>
-
+              <div>
+          <button
+            type="button"
+            onClick={() => setShowNewDispatchForm(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+          >
+            <PlusIcon className="size-4" />
+            New Dispatch
+          </button>
+        </div>
             </div>
 
             <div className="overflow-x-auto">
