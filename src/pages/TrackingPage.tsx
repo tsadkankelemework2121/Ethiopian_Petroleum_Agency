@@ -138,7 +138,7 @@ export default function TrackingPage() {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden absolute inset-0 -mx-6 -my-8 px-0">
+    <div className="relative h-[calc(100vh-80px)] w-full overflow-hidden absolute inset-0 -mx-6 -my-8 px-0 sm:-mx-8 lg:-mx-12 xl:-mx-16">
       {/* Map background */}
       <MapView
         className="absolute inset-0 h-full w-full"
@@ -158,7 +158,7 @@ export default function TrackingPage() {
       />
 
       {/* Left overlay: fleet list */}
-      <div className="absolute left-4 top-4 bottom-4 w-[320px] rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden">
+      <div className="absolute left-6 md:left-14 top-4 bottom-4 w-[320px] rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden">
         <div className="px-5 py-4 border-b border-[#E5E7EB]">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: '#64748b' }}>
             Fleet list

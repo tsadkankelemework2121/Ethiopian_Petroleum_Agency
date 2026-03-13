@@ -149,7 +149,10 @@ export default function MapView({
 
       el.innerHTML = `
         <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          ${isSelected && m.label ? `<div style="position: absolute; bottom: 100%; margin-bottom: 4px; background: white; padding: 4px 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 11px; font-weight: bold; white-space: nowrap; color: #0f172a; border: 1px solid #e2e8f0; z-index: 10;">${plateName} ${directionArrow}</div>` : ''}
+          ${isSelected && m.label ? `<div style="position: absolute; bottom: 100%; margin-bottom: 8px; background: white; padding: 6px 12px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 14px; font-weight: 800; white-space: nowrap; color: #0f172a; border: 2px solid ${m.color ?? '#e2e8f0'}; z-index: 10; display: flex; align-items: center; gap: 6px;">
+            <span>${plateName}</span>
+            <span style="color: ${m.color ?? '#0f172a'}; font-size: 16px;">${directionArrow}</span>
+          </div>` : ''}
           <svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${m.color ?? '#ffffff'}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.2s ease; transform: rotate(${angle}deg);">
             <!-- Truck icon pointing up -->
             <path d="M19 13h-5v-5h-2v5H9.5C8.1 13 7 14.1 7 15.5V17h2v-1.5h10V17h2v-1.5c0-1.4-1.1-2.5-2.5-2.5zM6 6h12V4H6v2zm13 7.5h-1v-2.5H8v2.5H7V8h12v5.5z"/>
