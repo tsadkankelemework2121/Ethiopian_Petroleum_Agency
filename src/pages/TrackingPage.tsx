@@ -195,21 +195,16 @@ export default function TrackingPage() {
                     className="w-full px-5 py-4 text-left hover:bg-slate-50 transition"
                     style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
-                          {plate}
-                        </div>
-                        <div className="mt-1 text-[11px] text-slate-500 truncate">{v.name}</div>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+                        {plate}
                       </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span
-                          className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold"
-                          style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
-                        >
-                          {v.status}
-                        </span>
-                      </div>
+                      <span
+                        className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
+                        style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
+                      >
+                        {v.status}
+                      </span>
                     </div>
                   </button>
                   
