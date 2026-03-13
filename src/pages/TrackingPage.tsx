@@ -138,7 +138,7 @@ export default function TrackingPage() {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden absolute inset-0 -mx-6 -my-8">
+    <div className="relative h-screen w-full overflow-hidden absolute inset-0 -mx-6 -my-8 px-0">
       {/* Map background */}
       <MapView
         className="absolute inset-0 h-full w-full"
@@ -164,7 +164,9 @@ export default function TrackingPage() {
             Fleet list
           </div>
           <div className="mt-3 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 flex items-center gap-2">
-            <div className="size-4 rounded-full" style={{ backgroundColor: COLORS.gray }} />
+            <svg className="w-4 h-4 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input
               className="w-full bg-transparent text-sm outline-none"
               placeholder="Search fleet..."
@@ -184,6 +186,7 @@ export default function TrackingPage() {
               const tag = statusTag(v)
               const plate = plateFromName(v.name)
               const isSelected = v.imei === selectedId
+              const angle = Number(v.angle) || 0
 
               return (
                 <div key={v.imei} className="border-b border-[#EEF2F7]">
@@ -195,18 +198,23 @@ export default function TrackingPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
-                          {plate}
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+                            {plate}
+                          </span>
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            style={{ transform: `rotate(${angle}deg)`, color: tag.color }}
+                          >
+                            <path d="M12 2L12 22M7 12L12 2L17 12" />
+                          </svg>
                         </div>
-                        <div className="mt-1 text-[11px] text-slate-500 truncate">{v.name}</div>
-                      </div>
-                      <div className="flex flex-col items-end gap-1">
-                        <span
-                          className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold"
-                          style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
-                        >
-                          {v.status}
-                        </span>
+                        <div className="mt-1 text-[11px] text-slate-500">{v.status}</div>
                       </div>
                     </div>
                   </button>
@@ -234,8 +242,8 @@ export default function TrackingPage() {
                       <div className="rounded border bg-white p-2 text-[10px] shadow-sm">
                         <div className="text-slate-500 mb-1 font-semibold uppercase tracking-wider">Location Data</div>
                         <div><span className="font-medium text-slate-700">GPS:</span> {v.lat}, {v.lng}</div>
-                        <div><span className="font-medium text-slate-700">Updated:</span> {v.dt_tracker}</div>
-                        <div><span className="font-medium text-slate-700">Server:</span> {v.dt_server}</div>
+                        <div><span className="font-medium text-slate-700">Latest update:</span> {v.dt_tracker}</div>
+                        <div><span className="font-medium text-slate-700">Latest server:</span> {v.dt_server}</div>
                       </div>
                     </div>
                   )}

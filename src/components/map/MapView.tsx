@@ -140,24 +140,10 @@ export default function MapView({
       el.innerHTML = `
         <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
           ${isSelected && m.label ? `<div style="position: absolute; bottom: 100%; margin-bottom: 4px; background: white; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 10px; font-weight: bold; white-space: nowrap; color: #0f172a; border: 1px solid #e2e8f0; z-index: 10;">${m.label.split(' ')[0]}</div>` : ''}
-          <div style="
-            width:${size}px;
-            height:${size}px;
-            background:${m.color ?? '#ffffff'};
-            border-radius:6px;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            box-shadow:0 4px 10px rgba(0,0,0,0.15);
-            border:1.5px solid ${isSelected ? '#067cc1' : 'rgba(203,213,225,0.9)'};
-            transition:all 0.2s ease;
-            transform: rotate(${angle}deg);
-          ">
-            <svg viewBox="0 0 24 24" fill="white" width="${isSelected ? 18 : 14}" height="${isSelected ? 18 : 14}">
-              <!-- Simplified vehicle/arrow pointing UP -->
-              <path d="M12 2L22 22h-5l-5-8-5 8H2L12 2z" />
-            </svg>
-          </div>
+          <svg viewBox="0 0 24 24" width="${isSelected ? 32 : 24}" height="${isSelected ? 32 : 24}" fill="${m.color ?? '#ffffff'}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.2s ease; transform: rotate(${angle}deg);">
+            <!-- Car icon pointing up -->
+            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z" />
+          </svg>
         </div>
       `
 
