@@ -138,7 +138,7 @@ export default function TrackingPage() {
   }
 
   return (
-    <div className="relative h-[calc(100vh-80px)] w-full overflow-hidden absolute inset-0 -mx-6 -my-8 px-0 sm:-mx-8 lg:-mx-12 xl:-mx-16">
+    <div className="relative h-full w-full bg-slate-100 overflow-hidden">
       {/* Map background */}
       <MapView
         className="absolute inset-0 h-full w-full"
