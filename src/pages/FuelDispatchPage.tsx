@@ -7,6 +7,8 @@ import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
+import MapView from '../components/map/MapView'
+import { MapPinIcon } from '@heroicons/react/24/outline'
 
 export default function FuelDispatchPage() {
   const [tasks, setTasks] = useState<DispatchTask[]>([])
@@ -14,6 +16,7 @@ export default function FuelDispatchPage() {
   const [transporters, setTransporters] = useState<Transporter[]>([])
   const [oilCompanies, setOilCompanies] = useState<OilCompany[]>([])
   const [showNewDispatchForm, setShowNewDispatchForm] = useState(false)
+  const [trackingTask, setTrackingTask] = useState<DispatchTask | null>(null)
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
@@ -95,6 +98,36 @@ export default function FuelDispatchPage() {
         />
       </ModalOverlay>
 
+      {/* Tracking Modal */}
+      <ModalOverlay
+        isOpen={trackingTask !== null}
+        onClose={() => setTrackingTask(null)}
+        title={trackingTask ? `Tracking ${vehiclesById.get(trackingTask.vehicleId)?.plateRegNo ?? ''}` : 'Tracking'}
+      >
+        <div className="h-[60vh] min-h-[400px] w-full mt-2 -mb-6 -mx-6 rounded-b-[inherit] overflow-hidden relative">
+          {trackingTask?.lastGpsPoint ? (
+            <MapView
+              center={{ lat: trackingTask.lastGpsPoint.position.lat, lng: trackingTask.lastGpsPoint.position.lng }}
+              zoom={13}
+              markers={[
+                {
+                  id: trackingTask.vehicleId,
+                  position: { lat: trackingTask.lastGpsPoint.position.lat, lng: trackingTask.lastGpsPoint.position.lng },
+                  label: vehiclesById.get(trackingTask.vehicleId)?.plateRegNo ?? 'Vehicle',
+                  status: trackingTask.status,
+                  color: trackingTask.status === 'On transit' ? '#067cc1' : trackingTask.status === 'Delivered' ? '#22c55e' : '#f59f0a'
+                }
+              ]}
+              className="absolute inset-0"
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-500 text-sm">
+              No recent GPS coordinates available for this vehicle.
+            </div>
+          )}
+        </div>
+      </ModalOverlay>
+
       <div className="space-y-6">
 
         <Card>
@@ -151,11 +184,13 @@ export default function FuelDispatchPage() {
                       'Vehicle Plate',
                       'Fuel Type',
                       'Liters',
+                      'Dispatch Location',
                       'Destination Depot',
                       'Dispatch Date',
                       'ETA',
                       'Drop-off',
                       'Event',
+                      '',
                     ].map((h) => (
                       <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold">
                         {h}
@@ -183,6 +218,7 @@ export default function FuelDispatchPage() {
                         <td className="whitespace-nowrap px-4 py-4">
                           {t.dispatchedLiters.toLocaleString()}
                         </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-slate-600">{t.dispatchLocation}</td>
                         <td className="whitespace-nowrap px-4 py-4">{depot}</td>
                         <td className="whitespace-nowrap px-4 py-4">
                           {t.dispatchDateTime.replace('T', ' ').replace('Z', '')}
@@ -198,13 +234,23 @@ export default function FuelDispatchPage() {
                         <td className="whitespace-nowrap px-4 py-4">
                           <StatusPill status={t.status} task={t} />
                         </td>
+                        <td className="whitespace-nowrap px-4 py-4 text-right">
+                          <button
+                            type="button"
+                            onClick={() => setTrackingTask(t)}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
+                          >
+                            <MapPinIcon className="size-3.5" />
+                            Follow
+                          </button>
+                        </td>
                       </tr>
                     )
                   })}
 
                   {filteredTasks.length === 0 && (
                     <tr>
-                      <td colSpan={11} className="px-4 py-6 text-text-muted">
+                      <td colSpan={13} className="px-4 py-6 text-text-muted">
                         No dispatch records found.
                       </td>
                     </tr>
