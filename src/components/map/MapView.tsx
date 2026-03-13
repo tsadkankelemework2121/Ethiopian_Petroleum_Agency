@@ -137,12 +137,19 @@ export default function MapView({
         markerElsRef.current.set(m.id, el)
       }
 
+      // Get direction arrow based on angle
+      const getDirectionArrow = (deg) => {
+        const directions = ['↑', '↗', '→', '↘', '↓', '↙', '←', '↖']
+        const index = Math.round((deg % 360) / 45) % 8
+        return directions[index]
+      }
+
       el.innerHTML = `
         <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          ${isSelected && m.label ? `<div style="position: absolute; bottom: 100%; margin-bottom: 4px; background: white; padding: 2px 6px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 10px; font-weight: bold; white-space: nowrap; color: #0f172a; border: 1px solid #e2e8f0; z-index: 10;">${m.label.split(' ')[0]}</div>` : ''}
-          <svg viewBox="0 0 24 24" width="${isSelected ? 32 : 24}" height="${isSelected ? 32 : 24}" fill="${m.color ?? '#ffffff'}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.2s ease; transform: rotate(${angle}deg);">
-            <!-- Car icon pointing up -->
-            <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.22.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm11 0c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zM5 11l1.5-4.5h11L19 11H5z" />
+          ${isSelected && m.label ? `<div style="position: absolute; bottom: 100%; margin-bottom: 4px; background: white; padding: 4px 8px; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 11px; font-weight: bold; white-space: nowrap; color: #0f172a; border: 1px solid #e2e8f0; z-index: 10;">${m.label.split(' ')[0]} ${getDirectionArrow(${angle})}</div>` : ''}
+          <svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="${m.color ?? '#ffffff'}" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2)); transition: all 0.2s ease; transform: rotate(${angle}deg);">
+            <!-- Truck icon pointing up -->
+            <path d="M19 13h-5v-5h-2v5H9.5C8.1 13 7 14.1 7 15.5V17h2v-1.5h10V17h2v-1.5c0-1.4-1.1-2.5-2.5-2.5zM6 6h12V4H6v2zm13 7.5h-1v-2.5H8v2.5H7V8h12v5.5z"/>
           </svg>
         </div>
       `

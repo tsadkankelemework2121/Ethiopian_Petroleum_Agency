@@ -186,7 +186,6 @@ export default function TrackingPage() {
               const tag = statusTag(v)
               const plate = plateFromName(v.name)
               const isSelected = v.imei === selectedId
-              const angle = Number(v.angle) || 0
 
               return (
                 <div key={v.imei} className="border-b border-[#EEF2F7]">
@@ -198,29 +197,25 @@ export default function TrackingPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
-                            {plate}
-                          </span>
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            style={{ transform: `rotate(${angle}deg)`, color: tag.color }}
-                          >
-                            <path d="M12 2L12 22M7 12L12 2L17 12" />
-                          </svg>
+                        <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+                          {plate}
                         </div>
-                        <div className="mt-1 text-[11px] text-slate-500">{v.status}</div>
+                        <div className="mt-1 text-[11px] text-slate-500 truncate">{v.name}</div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <span
+                          className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold"
+                          style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
+                        >
+                          {v.status}
+                        </span>
                       </div>
                     </div>
                   </button>
                   
                   {isSelected && (
                     <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50">
+                      <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate">{v.name}</div>
                       <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
                         <div className="rounded border bg-white p-2 shadow-sm">
                           <div className="text-slate-500">Speed</div>
@@ -281,23 +276,16 @@ export default function TrackingPage() {
           <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={() => mapApiRef.current?.zoomOut()}
-              className="grid size-9 place-items-center rounded-full bg-white border border-[#D1D5DB] text-slate-700 hover:bg-slate-50 transition"
-              aria-label="Zoom out"
-            >
-              −
-            </button>
-            <button
-              type="button"
               onClick={() => {
-                if (selectedPosition) mapApiRef.current?.flyTo(selectedPosition, 15)
-                else mapApiRef.current?.flyTo(center, zoom)
+                // Zoom out to show all vehicles
+                mapApiRef.current?.flyTo(center, 9)
               }}
-              className="grid size-10 place-items-center rounded-full text-white font-semibold hover:opacity-90 transition"
-              style={{ backgroundColor: COLORS.blue }}
-              aria-label="Center map"
+              className="grid size-9 place-items-center rounded-full bg-white border border-[#D1D5DB] text-slate-700 hover:bg-slate-50 transition"
+              aria-label="Zoom out to see all"
             >
-              CENTER
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7" />
+              </svg>
             </button>
             <button
               type="button"
