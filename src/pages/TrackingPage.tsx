@@ -138,7 +138,7 @@ export default function TrackingPage() {
   }
 
   return (
-    <div className="relative h-screen w-full overflow-hidden absolute inset-0 -mx-6 -my-8">
+    <div className="relative h-screen w-full overflow-hidden">
       {/* Map background */}
       <MapView
         className="absolute inset-0 h-full w-full"
@@ -164,7 +164,9 @@ export default function TrackingPage() {
             Fleet list
           </div>
           <div className="mt-3 rounded-lg border border-[#E5E7EB] bg-white px-3 py-2 flex items-center gap-2">
-            <div className="size-4 rounded-full" style={{ backgroundColor: COLORS.gray }} />
+            <svg className="size-4 flex-shrink-0" style={{ color: COLORS.gray }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
             <input
               className="w-full bg-transparent text-sm outline-none"
               placeholder="Search fleet..."
@@ -194,25 +196,41 @@ export default function TrackingPage() {
                     style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="flex items-center gap-2">
                         <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
                           {plate}
                         </div>
-                        <div className="mt-1 text-[11px] text-slate-500 truncate">{v.name}</div>
+                        <svg
+                          className="size-5 flex-shrink-0"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                          style={{ color: tag.color, transform: `rotate(${Number(v.angle) || 0}deg)` }}
+                        >
+                          <path d="M12 2L22 22h-5l-5-8-5 8H2L12 2z" />
+                        </svg>
                       </div>
                       <div className="flex flex-col items-end gap-1">
-                        <span
-                          className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold"
-                          style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
-                        >
-                          {v.status}
-                        </span>
+                        <div className="flex items-center gap-1">
+                          <div
+                            className="w-5 h-5 rounded-md flex items-center justify-center text-white text-xs font-bold"
+                            style={{ backgroundColor: tag.color }}
+                          >
+                            🚛
+                          </div>
+                          <div className="text-[10px] font-semibold text-slate-700">
+                            {v.status}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </button>
                   
                   {isSelected && (
                     <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50">
+                      <div className="mb-3 rounded border bg-white p-2 text-[11px] shadow-sm">
+                        <div className="text-slate-500">Vehicle Name</div>
+                        <div className="font-semibold text-slate-900">{v.name}</div>
+                      </div>
                       <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
                         <div className="rounded border bg-white p-2 shadow-sm">
                           <div className="text-slate-500">Speed</div>
@@ -234,8 +252,8 @@ export default function TrackingPage() {
                       <div className="rounded border bg-white p-2 text-[10px] shadow-sm">
                         <div className="text-slate-500 mb-1 font-semibold uppercase tracking-wider">Location Data</div>
                         <div><span className="font-medium text-slate-700">GPS:</span> {v.lat}, {v.lng}</div>
-                        <div><span className="font-medium text-slate-700">Updated:</span> {v.dt_tracker}</div>
-                        <div><span className="font-medium text-slate-700">Server:</span> {v.dt_server}</div>
+                        <div><span className="font-medium text-slate-700">Latest Update:</span> {v.dt_tracker}</div>
+                        <div><span className="font-medium text-slate-700">Latest Server:</span> {v.dt_server}</div>
                       </div>
                     </div>
                   )}
