@@ -23,7 +23,7 @@ export default function TrackingPage() {
   // Define statusTag function first (hoisted with function declaration)
   const statusTag = (v: GpsVehicle): { label: string; color: string } => {
     const status = v.status.toLowerCase()
-    
+
     // Map exact raw status to the color tag but preserve the exact status for display elsewhere
     if (status.includes('offline')) return { label: 'OFFLINE', color: COLORS.gray }
     if (status.includes('alert')) return { label: 'ALERT', color: '#ef4444' }
@@ -40,20 +40,20 @@ export default function TrackingPage() {
 
   useEffect(() => {
     let cancelled = false
-    ;(async () => {
-      try {
-        if (!cancelled) {
-          setLoading(true)
-          setError(null)
+      ; (async () => {
+        try {
+          if (!cancelled) {
+            setLoading(true)
+            setError(null)
+          }
+          const data = await fetchGpsVehicles()
+          if (!cancelled) setItems(data)
+        } catch (err: unknown) {
+          if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load GPS data')
+        } finally {
+          if (!cancelled) setLoading(false)
         }
-        const data = await fetchGpsVehicles()
-        if (!cancelled) setItems(data)
-      } catch (err: unknown) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load GPS data')
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    })()
+      })()
 
     return () => {
       cancelled = true
@@ -74,11 +74,11 @@ export default function TrackingPage() {
 
   const markers = useMemo(() => {
     const validFleets = fleetListItems.filter((t) => t.lat && t.lng)
-    
+
     if (isClustered && validFleets.length > 0) {
       const avgLat = validFleets.reduce((sum, t) => sum + Number(t.lat), 0) / validFleets.length
       const avgLng = validFleets.reduce((sum, t) => sum + Number(t.lng), 0) / validFleets.length
-      
+
       return [{
         id: 'global-cluster',
         position: { lat: avgLat, lng: avgLng },
@@ -175,8 +175,8 @@ export default function TrackingPage() {
         }}
       />
 
-      {/* Left overlay: fleet list */}
-      <div className="absolute left-6 md:left-14 top-4 bottom-4 w-[320px] rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden">
+      {/* Left overlay:  */}
+      <div className="absolute left-6 md:left-3 top-4 bottom-4 w-[320px] rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden">
         <div className="px-5 py-4 border-b border-[#E5E7EB]">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: '#64748b' }}>
             Fleet list
@@ -225,7 +225,7 @@ export default function TrackingPage() {
                       </span>
                     </div>
                   </button>
-                  
+
                   {isSelected && (
                     <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50">
                       <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate">{v.name}</div>
@@ -274,14 +274,13 @@ export default function TrackingPage() {
       {/* Bottom controls - Simplified */}
       <div className="absolute inset-x-0 bottom-4 flex justify-center pointer-events-none">
         <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-[#D1D5DB] bg-white/95 px-4 py-2 shadow-card">
-          <button 
-            type="button" 
+          <button
+            type="button"
             onClick={() => setIsClustered(!isClustered)}
-            className={`rounded-full px-3 py-1.5 text-[11px] font-bold border transition ${
-              isClustered 
-                ? 'bg-[#067cc1] text-white border-[#067cc1] shadow-md hover:bg-[#056096]' 
+            className={`rounded-full px-3 py-1.5 text-[11px] font-bold border transition ${isClustered
+                ? 'bg-[#067cc1] text-white border-[#067cc1] shadow-md hover:bg-[#056096]'
                 : 'bg-white text-slate-600 border-[#E5E7EB] hover:bg-slate-50'
-            }`}
+              }`}
           >
             CLUSTER {isClustered && 'ON'}
           </button>
