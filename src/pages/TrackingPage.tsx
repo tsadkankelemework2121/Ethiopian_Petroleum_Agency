@@ -16,9 +16,11 @@ export default function TrackingPage() {
   const [items, setItems] = useState<GpsVehicle[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [zoom, setZoom] = useState(9)
   const [isClustered, setIsClustered] = useState(false)
+  const [hasFitBounds, setHasFitBounds] = useState(false)
   const mapApiRef = useRef<import('../components/map/MapView').MapApi | null>(null)
+
+  const defaultCenter = useMemo(() => ({ lat: 9.0192, lng: 38.7525 }), [])
 
   // Define statusTag function first (hoisted with function declaration)
   const statusTag = (v: GpsVehicle): { label: string; color: string } => {
@@ -121,14 +123,32 @@ export default function TrackingPage() {
       .filter((m): m is NonNullable<typeof m> => m !== null)
   }, [fleetListItems, isClustered])
 
-  const center = useMemo(() => {
-    const selected = markers.find((m) => m.id === selectedId)
-    if (selected) return selected.position
-    if (markers.length === 0) return { lat: 9.0192, lng: 38.7525 }
-    const avgLat = markers.reduce((s, m) => s + m.position.lat, 0) / markers.length
-    const avgLng = markers.reduce((s, m) => s + m.position.lng, 0) / markers.length
-    return { lat: avgLat, lng: avgLng }
-  }, [markers, selectedId])
+  const mapBounds = useMemo(() => {
+    const validItems = items.filter((t) => t.lat && t.lng)
+    if (validItems.length === 0) return null
+
+    let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180
+    validItems.forEach((v) => {
+      const lat = Number(v.lat)
+      const lng = Number(v.lng)
+      if (lat < minLat) minLat = lat
+      if (lat > maxLat) maxLat = lat
+      if (lng < minLng) minLng = lng
+      if (lng > maxLng) maxLng = lng
+    })
+
+    if (minLat === maxLat) { minLat -= 0.01; maxLat += 0.01 }
+    if (minLng === maxLng) { minLng -= 0.01; maxLng += 0.01 }
+
+    return [[minLng, minLat], [maxLng, maxLat]] as [[number, number], [number, number]]
+  }, [items])
+
+  useEffect(() => {
+    if (mapBounds && mapApiRef.current && !hasFitBounds) {
+      mapApiRef.current.fitBounds(mapBounds)
+      setHasFitBounds(true)
+    }
+  }, [mapBounds, hasFitBounds])
 
   const selectedVehicle = useMemo(() => {
     if (selectedId) return items.find((v) => v.imei === selectedId) ?? null
@@ -150,7 +170,6 @@ export default function TrackingPage() {
     const lng = Number(vehicle.lng)
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
       // Zoom in to show roads clearly
-      setZoom(15)
       mapApiRef.current?.flyTo({ lat, lng }, 15)
     }
   }
@@ -160,18 +179,21 @@ export default function TrackingPage() {
       {/* Map background */}
       <MapView
         className="absolute inset-0 h-full w-full"
-        center={center}
-        zoom={zoom}
+        center={defaultCenter}
+        zoom={6}
         markers={markers}
         selectedMarkerId={selectedId}
         onMarkerSelect={(id) => {
           setSelectedId(id)
-          setZoom(15)
           const v = items.find((x) => x.imei === id)
           if (v) handleSelectVehicle(v)
         }}
         onMapReady={(api) => {
           mapApiRef.current = api
+          if (mapBounds && !hasFitBounds) {
+            api.fitBounds(mapBounds)
+            setHasFitBounds(true)
+          }
         }}
       />
 
@@ -294,8 +316,9 @@ export default function TrackingPage() {
             <button
               type="button"
               onClick={() => {
-                // Zoom out to show all vehicles
-                mapApiRef.current?.flyTo(center, 9)
+                if (mapBounds) {
+                  mapApiRef.current?.fitBounds(mapBounds)
+                }
               }}
               className="grid size-9 place-items-center rounded-full bg-white border border-[#D1D5DB] text-slate-700 hover:bg-slate-50 transition"
               aria-label="Zoom out to see all"

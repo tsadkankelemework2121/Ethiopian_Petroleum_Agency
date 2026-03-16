@@ -25,6 +25,7 @@ export type MapApi = {
   zoomIn: () => void
   zoomOut: () => void
   flyTo: (pos: Position, zoom?: number) => void
+  fitBounds: (bounds: [[number, number], [number, number]], padding?: number) => void
 }
 
 type Props = {
@@ -64,6 +65,9 @@ export default function MapView({
           zoom: nextZoom ?? mapRef.current?.getZoom(),
           essential: true,
         })
+      },
+      fitBounds: (bounds, padding = 40) => {
+        mapRef.current?.fitBounds(bounds, { padding, maxZoom: 15, duration: 1000 })
       },
     }
   }, [])
@@ -108,7 +112,7 @@ export default function MapView({
   useEffect(() => {
     if (!mapRef.current) return
     mapRef.current.jumpTo({ center: [center.lng, center.lat], zoom })
-  }, [center, zoom])
+  }, [center.lat, center.lng, zoom])
 
   // markers diff/update
   useEffect(() => {
