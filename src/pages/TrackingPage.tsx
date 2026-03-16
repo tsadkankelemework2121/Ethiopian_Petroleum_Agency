@@ -260,14 +260,14 @@ export default function TrackingPage() {
             type="button" 
             className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 border border-[#E5E7EB] hover:bg-slate-50 transition"
           >
-            LAYERS
+            Cluster
           </button>
-          <button 
+          {/* <button 
             type="button" 
             className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 border border-[#E5E7EB] hover:bg-slate-50 transition"
           >
             TRAFFIC
-          </button>
+          </button> */}
           <div className="flex items-center gap-1">
             <button
               type="button"
