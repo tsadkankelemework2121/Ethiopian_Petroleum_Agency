@@ -150,22 +150,45 @@ export default function MapView({
       if (m.isCluster) {
         el.innerHTML = `
           <div style="position: relative; display: flex; flex-direction: column; align-items: center;" class="group">
-            <div class="absolute bottom-full mb-3 hidden group-hover:flex flex-col bg-white p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 z-50 min-w-[160px] max-h-[250px] overflow-y-auto cursor-default pointer-events-none">
-              <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-100 pb-2 uppercase tracking-wider">Vehicles (${m.clusterCount})</div>
-              <div class="flex flex-col gap-1.5">
-                ${(m.clusterVehicles || []).map(cv => `
-                  <div class="flex items-center justify-between bg-slate-50/50 px-2 py-1.5 rounded-md">
-                    <span class="text-[11px] font-bold text-slate-700">${cv.plate}</span>
-                    <div class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: ${cv.statusColor};"></div>
-                  </div>
-                `).join('')}
+            <!-- Wrapper with padding bottom bridging the hover gap -->
+            <div class="absolute bottom-full hidden group-hover:flex flex-col pb-2 z-50">
+              <div class="flex flex-col bg-white p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 min-w-[160px] max-h-[220px] overflow-y-auto cursor-default pointer-events-auto">
+                <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-100 pb-2 uppercase tracking-wider">Vehicles (${m.clusterCount})</div>
+                <div class="flex flex-col gap-1.5">
+                  ${(m.clusterVehicles || []).map(cv => `
+                    <div class="flex items-center justify-between bg-slate-50/50 px-2 py-1.5 rounded-md">
+                      <span class="text-[11px] font-bold text-slate-700">${cv.plate}</span>
+                      <div class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: ${cv.statusColor};"></div>
+                    </div>
+                  `).join('')}
+                </div>
               </div>
             </div>
 
-            <div class="relative flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] border-[3px] border-[#067cc1] transition-transform hover:scale-105">
-              <span class="text-xl font-black text-[#067cc1]">${m.clusterCount}</span>
-              <div class="absolute -bottom-2 bg-slate-800 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-md tracking-wider">
-                 FLEET
+            <div style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s ease; position: relative; display: flex; align-items: center; justify-content: center;" class="hover:scale-105">
+              <svg viewBox="0 0 64 128" width="40" height="66">
+                <!-- Wheels -->
+                <rect x="8" y="24" width="8" height="20" rx="3" fill="#1e293b" />
+                <rect x="48" y="24" width="8" height="20" rx="3" fill="#1e293b" />
+                <rect x="6" y="70" width="8" height="20" rx="3" fill="#1e293b" />
+                <rect x="50" y="70" width="8" height="20" rx="3" fill="#1e293b" />
+                <rect x="6" y="96" width="8" height="20" rx="3" fill="#1e293b" />
+                <rect x="50" y="96" width="8" height="20" rx="3" fill="#1e293b" />
+
+                <!-- Truck Cab -->
+                <path d="M 14 26 C 14 10 24 4 32 4 C 40 4 50 10 50 26 L 50 42 C 50 48 48 52 40 52 L 24 52 C 16 52 14 48 14 42 Z" fill="#94a3b8" />
+                <path d="M 18 30 L 46 30 L 44 14 C 44 14 40 10 32 10 C 24 10 20 14 20 14 Z" fill="#38bdf8" opacity="0.9" />
+                <rect x="22" y="34" width="20" height="12" rx="4" fill="#ffffff" opacity="0.3" />
+                
+                <rect x="28" y="52" width="8" height="10" fill="#475569" />
+
+                <!-- Cargo Tank Base -->
+                <rect x="10" y="60" width="44" height="64" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="3" />
+              </svg>
+
+              <!-- Central badge with number -->
+              <div class="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-6 px-1 h-6 bg-[#067cc1] text-white rounded-full flex items-center justify-center font-bold text-[11px] border-2 border-white shadow-sm">
+                ${m.clusterCount}
               </div>
             </div>
           </div>
