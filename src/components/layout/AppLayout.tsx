@@ -153,15 +153,7 @@ export default function AppLayout() {
         )}
 
         {/* Toggle button when sidebar is hidden (e.g. GPS Tracking) */}
-        {isTracking && (
-          <button
-            type="button"
-            onClick={() => setMobileOpen(true)}
-            className="hidden md:flex fixed left-4 top-20 z-40 h-10 w-10 items-center justify-center rounded-full border border-[#D1D5DB] bg-white shadow-card text-text"
-          >
-            ☰
-          </button>
-        )}
+        {/* Removed from absolute overlay, moved to header */}
 
         {/* Slide-in Sidebar (all screen sizes when open) */}
         {mobileOpen && (
@@ -185,24 +177,27 @@ export default function AppLayout() {
 
               <div className="flex items-center gap-4">
                 <button
-                  className="md:hidden border px-3 py-2 rounded-lg"
+                  className={cn("border px-3 py-2 rounded-lg", !isTracking && "md:hidden")}
                   onClick={() => setMobileOpen(true)}
                 >
-                  Menu
+                  <span className="hidden md:block">☰ Menu</span>
+                  <span className="md:hidden">Menu</span>
                 </button>
 
                 <h2 className="text-sm font-semibold text-text">{title}</h2>
               </div>
 
               <div className="hidden flex-1 px-6 lg:block">
-                <div className="relative max-w-xl mx-auto">
-                  <input
-                    value={globalSearch}
-                    onChange={(e) => setGlobalSearch(e.target.value)}
-                    placeholder="Search dispatches, vehicles, or depots..."
-                    className="w-full rounded-xl border border-[#D1D5DB] bg-muted/40 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-                  />
-                </div>
+                {!isTracking && (
+                  <div className="relative max-w-xl mx-auto">
+                    <input
+                      value={globalSearch}
+                      onChange={(e) => setGlobalSearch(e.target.value)}
+                      placeholder="Search dispatches, vehicles, or depots..."
+                      className="w-full rounded-xl border border-[#D1D5DB] bg-muted/40 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-4">

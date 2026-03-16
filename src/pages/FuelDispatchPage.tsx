@@ -103,8 +103,9 @@ export default function FuelDispatchPage() {
         isOpen={trackingTask !== null}
         onClose={() => setTrackingTask(null)}
         title={trackingTask ? `Tracking ${vehiclesById.get(trackingTask.vehicleId)?.plateRegNo ?? ''}` : 'Tracking'}
+        noPadding
       >
-        <div className="h-[60vh] min-h-[400px] w-full mt-2 -mb-6 -mx-6 rounded-b-[inherit] overflow-hidden relative">
+        <div className="h-[65vh] min-h-[500px] w-full relative">
           {trackingTask?.lastGpsPoint ? (
             <MapView
               center={{ lat: trackingTask.lastGpsPoint.position.lat, lng: trackingTask.lastGpsPoint.position.lng }}

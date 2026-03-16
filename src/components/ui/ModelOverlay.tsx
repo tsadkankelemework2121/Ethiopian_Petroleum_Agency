@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 
-export function ModalOverlay({ isOpen, onClose, children, title }: { isOpen: boolean; onClose: () => void; children: ReactNode; title: string }) {
+export function ModalOverlay({ isOpen, onClose, children, title, noPadding }: { isOpen: boolean; onClose: () => void; children: ReactNode; title: string; noPadding?: boolean }) {
   if (!isOpen) return null
 
   return (
@@ -25,7 +25,7 @@ export function ModalOverlay({ isOpen, onClose, children, title }: { isOpen: boo
             </svg>
           </button>
         </div>
-        <div className="p-6">
+        <div className={noPadding ? "" : "p-6"}>
           {children}
         </div>
       </div>

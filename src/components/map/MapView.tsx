@@ -16,6 +16,9 @@ type MarkerType = {
   status?: string
   angle?: number
   color?: string
+  isCluster?: boolean
+  clusterCount?: number
+  clusterVehicles?: {plate: string, statusColor: string}[]
 }
 
 export type MapApi = {
@@ -144,8 +147,32 @@ export default function MapView({
         return directions[index]
       }
 
-      const directionArrow = getDirectionArrow(angle)
-      const plateName = m.label?.split(' ')[0] ?? ''
+      if (m.isCluster) {
+        el.innerHTML = `
+          <div style="position: relative; display: flex; flex-direction: column; align-items: center;" class="group">
+            <div class="absolute bottom-full mb-3 hidden group-hover:flex flex-col bg-white p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 z-50 min-w-[160px] max-h-[250px] overflow-y-auto cursor-default pointer-events-none">
+              <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-100 pb-2 uppercase tracking-wider">Vehicles (${m.clusterCount})</div>
+              <div class="flex flex-col gap-1.5">
+                ${(m.clusterVehicles || []).map(cv => `
+                  <div class="flex items-center justify-between bg-slate-50/50 px-2 py-1.5 rounded-md">
+                    <span class="text-[11px] font-bold text-slate-700">${cv.plate}</span>
+                    <div class="w-2.5 h-2.5 rounded-full shadow-sm" style="background-color: ${cv.statusColor};"></div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="relative flex items-center justify-center w-14 h-14 bg-white rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.15)] border-[3px] border-[#067cc1] transition-transform hover:scale-105">
+              <span class="text-xl font-black text-[#067cc1]">${m.clusterCount}</span>
+              <div class="absolute -bottom-2 bg-slate-800 text-white text-[9px] font-bold px-2 py-0.5 rounded-full shadow-md tracking-wider">
+                 FLEET
+              </div>
+            </div>
+          </div>
+        `
+      } else {
+        const directionArrow = getDirectionArrow(angle)
+        const plateName = m.label?.split(' ')[0] ?? ''
 
       el.innerHTML = `
         <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
@@ -195,6 +222,7 @@ export default function MapView({
           </div>
         </div>
       `
+      }
 
       let mk = markersRef.current.get(m.id)
       if (!mk) {

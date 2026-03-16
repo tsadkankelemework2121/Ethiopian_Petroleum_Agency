@@ -17,6 +17,7 @@ export default function TrackingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [zoom, setZoom] = useState(9)
+  const [isClustered, setIsClustered] = useState(false)
   const mapApiRef = useRef<import('../components/map/MapView').MapApi | null>(null)
 
   // Define statusTag function first (hoisted with function declaration)
@@ -72,8 +73,25 @@ export default function TrackingPage() {
   const fleetListItems = useMemo(() => filtered, [filtered])
 
   const markers = useMemo(() => {
-    return items
-      .filter((t) => t.lat && t.lng)
+    const validFleets = fleetListItems.filter((t) => t.lat && t.lng)
+    
+    if (isClustered && validFleets.length > 0) {
+      const avgLat = validFleets.reduce((sum, t) => sum + Number(t.lat), 0) / validFleets.length
+      const avgLng = validFleets.reduce((sum, t) => sum + Number(t.lng), 0) / validFleets.length
+      
+      return [{
+        id: 'global-cluster',
+        position: { lat: avgLat, lng: avgLng },
+        isCluster: true,
+        clusterCount: validFleets.length,
+        clusterVehicles: validFleets.map(v => ({
+          plate: plateFromName(v.name),
+          statusColor: statusTag(v).color
+        }))
+      }]
+    }
+
+    return validFleets
       .map((t) => {
         const lat = Number(t.lat)
         const lng = Number(t.lng)
@@ -101,7 +119,7 @@ export default function TrackingPage() {
         }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
-  }, [items])
+  }, [fleetListItems, isClustered])
 
   const center = useMemo(() => {
     const selected = markers.find((m) => m.id === selectedId)
@@ -258,9 +276,14 @@ export default function TrackingPage() {
         <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-[#D1D5DB] bg-white/95 px-4 py-2 shadow-card">
           <button 
             type="button" 
-            className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-600 border border-[#E5E7EB] hover:bg-slate-50 transition"
+            onClick={() => setIsClustered(!isClustered)}
+            className={`rounded-full px-3 py-1.5 text-[11px] font-bold border transition ${
+              isClustered 
+                ? 'bg-[#067cc1] text-white border-[#067cc1] shadow-md hover:bg-[#056096]' 
+                : 'bg-white text-slate-600 border-[#E5E7EB] hover:bg-slate-50'
+            }`}
           >
-            Cluster
+            CLUSTER {isClustered && 'ON'}
           </button>
           {/* <button 
             type="button" 
