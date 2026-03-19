@@ -1,6 +1,7 @@
 import type { ComponentType, SVGProps } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
+import logo from "../../assets/logo.png"
 import {
   AdjustmentsHorizontalIcon,
   BellIcon,
@@ -15,6 +16,7 @@ import { getDashboardKpis } from '../../data/mockApi'
 import { cn } from '../../lib/cn'
 
 import profileImg from '../../assets/profile.jpg'
+import { useAuth } from '../../context/AuthContext'
 
 type NavItem = {
   to: string
@@ -36,9 +38,7 @@ const entitiesNav: NavItem[] = [
   { to: '/entities/depots', label: 'Depots', icon: MapIcon },
 ]
 
-const footerNav: NavItem[] = [
-  { to: '/settings', label: 'Settings', icon: AdjustmentsHorizontalIcon },
-]
+
 
 function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => void }) {
   const Icon = item.icon
@@ -68,7 +68,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       <div className="flex items-center gap-3 px-5 py-5">
         <div className="grid size-10 place-items-center overflow-hidden rounded-lg bg-primary text-white font-semibold">
           <img
-            src="/logo-placeholder.png"
+            src={logo}
             alt="Company logo"
             className="size-10 object-cover"
           />
@@ -100,13 +100,6 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
 
-      <div className="px-3 pb-4 pt-6 border-t border-[#D1D5DB]">
-        <div className="space-y-1 pt-3">
-          {footerNav.map((item) => (
-            <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
@@ -115,8 +108,14 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
+  const { logout } = useAuth()
   const [alertsCount, setAlertsCount] = useState(0)
   const [globalSearch, setGlobalSearch] = useState('')
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   const getPageTitle = (pathname: string): string => {
     if (pathname === '/' || pathname === '') return 'Operations Overview'
@@ -216,22 +215,45 @@ export default function AppLayout() {
                   )}
                 </button>
 
-                {/* Profile */}
-                <button
-                  onClick={() => navigate('/profile')}
-                  className="flex items-center gap-3"
-                >
-                  <div className="text-right">
-                    <div className="text-sm font-semibold text-text">Abebe B.</div>
-                    <div className="text-xs text-text-muted">Ops Manager</div>
-                  </div>
+                {/* Profile Dropdown */}
+                <div className="relative group text-left">
+                  <button className="flex items-center gap-3 py-2 cursor-pointer">
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-text">Abebe B.</div>
+                      <div className="text-xs text-text-muted">Ops Manager</div>
+                    </div>
 
-                  <img
-                    src={profileImg}
-                    alt="User profile"
-                    className="h-10 w-10 rounded-full object-cover border border-[#D1D5DB]"
-                  />
-                </button>
+                    <img
+                      src={profileImg}
+                      alt="User profile"
+                      className="h-10 w-10 rounded-full object-cover border border-[#D1D5DB]"
+                    />
+                  </button>
+
+                  <div className="absolute right-0 top-full mt-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
+                    <div className="py-1">
+                      <button
+                        onClick={() => navigate('/profile')}
+                        className="block w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Profile
+                      </button>
+                      <button
+                        onClick={() => navigate('/settings')}
+                        className="block w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                      >
+                        Settings
+                      </button>
+                      <div className="my-1 border-t border-gray-100"></div>
+                      <button
+                        onClick={handleLogout}
+                        className="block w-full text-left px-5 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50"
+                      >
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                </div>
 
               </div>
             </div>

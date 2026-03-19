@@ -129,7 +129,7 @@ const LoginPage = () => {
                 Auto Fill Credentials
               </button>
               <p className="mt-2 text-xs text-center text-gray-500">
-                (Remove this button in production)
+                ( email:admin@epa.com password:admin123)
               </p>
             </div>
           </div>
