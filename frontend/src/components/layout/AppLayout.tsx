@@ -258,9 +258,8 @@ export default function AppLayout() {
             </div>
           </header>
 
-          {/* Page Content */}
           <main className={cn("flex-1 bg-bg overflow-y-auto", isTracking && "p-0 overflow-hidden")}>
-            <div className={cn("mx-auto w-full h-full", isTracking ? "max-w-none" : "max-w-7xl p-6")}>
+            <div className={cn("mx-auto w-full h-full", isTracking ? "max-w-none" : "max-w-7xl p-4 sm:p-6")}>
               <Outlet />
             </div>
           </main>
