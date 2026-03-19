@@ -151,9 +151,9 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="grid gap-4 lg:grid-cols-12">
+      <div className="grid gap-4 md:grid-cols-12">
         {/* KPIs */}
-        <div className="lg:col-span-12">
+        <div className="md:col-span-12">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {kpis === null ? (
               <>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts row */}
-        <div className="lg:col-span-8">
+        <div className="md:col-span-12 lg:col-span-8">
           <Card>
             <CardHeader
               title="Regional fuel dispatch overview"
@@ -250,7 +250,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-4">
+        <div className="md:col-span-12 lg:col-span-4">
           <Card>
             <CardHeader title="Dispatch Events" subtitle="Distribution of current dispatch tasks" />
             <CardBody className="h-80">
@@ -325,7 +325,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Fuel Type Dispatch Summary */}
-        <div className="lg:col-span-12">
+        <div className="md:col-span-12">
           <Card>
             <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
             <CardBody className="h-48">
@@ -383,7 +383,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="lg:col-span-12">
+        <div className="md:col-span-12">
           <Card>
             <CardHeader title="Recent dispatches" subtitle="Latest dispatch tasks with ETA and status" />
             <div className="overflow-x-auto">
