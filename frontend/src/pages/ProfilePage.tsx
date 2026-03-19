@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeftIcon, CameraIcon, PencilIcon } from '@heroicons/react/24/outline'
 import { Card, CardBody } from '../components/ui/Card'
 import defaultProfile from '../assets/profile.jpg'
+import { useAuth } from '../context/AuthContext'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
+  const { logout } = useAuth()
 
   const [formData, setFormData] = useState({
     name: 'PEA Admin',
@@ -101,7 +103,10 @@ export default function ProfilePage() {
     setTimeout(() => setSuccessMessage(''), 3000)
   }
 
-  const handleLogout = () => navigate('/')
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
 
   const handleCancel = () => {
     setIsEditing(false)

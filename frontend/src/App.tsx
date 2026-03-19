@@ -9,26 +9,31 @@ import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import TrackingPage from './pages/TrackingPage'
 import TransportersPage from './pages/TransportersPage'
+import LoginPage from './pages/LoginPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
   return (
     <Routes>
-      <Route element={<AppLayout />}>
-        <Route index element={<DashboardPage />} />
-        <Route path="/tracking" element={<TrackingPage />} />
-        <Route path="/fuel-dispatch" element={<FuelDispatchPage />} />
-        <Route path="/reports" element={<ReportsPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<AppLayout />}>
+          <Route index element={<DashboardPage />} />
+          <Route path="/tracking" element={<TrackingPage />} />
+          <Route path="/fuel-dispatch" element={<FuelDispatchPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
 
-        <Route path="/entities">
-          <Route index element={<Navigate to="/entities/oil-companies" replace />} />
-          <Route path="oil-companies" element={<OilCompaniesPage />} />
-          <Route path="transporters" element={<TransportersPage />} />
-          <Route path="depots" element={<DepotsPage />} />
+          <Route path="/entities">
+            <Route index element={<Navigate to="/entities/oil-companies" replace />} />
+            <Route path="oil-companies" element={<OilCompaniesPage />} />
+            <Route path="transporters" element={<TransportersPage />} />
+            <Route path="depots" element={<DepotsPage />} />
+          </Route>
+
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+         
         </Route>
-
-        <Route path="/settings" element={<SettingsPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-       
       </Route>
     </Routes>
   )
