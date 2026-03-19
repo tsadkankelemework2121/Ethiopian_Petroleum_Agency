@@ -198,7 +198,7 @@ export default function TrackingPage() {
       />
 
       {/* Left overlay:  */}
-      <div className="absolute left-6 md:left-3 top-4 bottom-4 w-[320px] rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden">
+      <div className="absolute left-4 right-4 md:right-auto md:w-[320px] top-4 bottom-20 md:bottom-4 rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden z-10">
         <div className="px-5 py-4 border-b border-[#E5E7EB]">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: '#64748b' }}>
             Fleet list

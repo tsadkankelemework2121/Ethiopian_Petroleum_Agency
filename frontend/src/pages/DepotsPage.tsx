@@ -120,8 +120,8 @@ export default function DepotsPage() {
       </ModalOverlay>
 
       {loading ? (
-        <div className="rounded-xl border border-[#D1D5DB] bg-white overflow-hidden">
-          <table className="min-w-full divide-y divide-[#D1D5DB]">
+        <div className="rounded-xl border border-[#D1D5DB] bg-white overflow-x-auto">
+          <table className="min-w-[800px] w-full divide-y divide-[#D1D5DB]">
             <thead className="bg-muted/50">
               <tr>
                 {['Depot', 'Location', 'Contact Person', 'Phone', 'Email', 'Actions'].map((header) => (
@@ -176,8 +176,8 @@ export default function DepotsPage() {
           }
         />
       ) : (
-        <div className="rounded-xl border border-[#D1D5DB] bg-white overflow-hidden">
-          <table className="min-w-full divide-y divide-[#D1D5DB]">
+        <div className="rounded-xl border border-[#D1D5DB] bg-white overflow-x-auto">
+          <table className="min-w-[800px] w-full divide-y divide-[#D1D5DB]">
             <thead className="bg-muted/50">
               <tr>
                 <th className="px-6 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider">Depot</th>

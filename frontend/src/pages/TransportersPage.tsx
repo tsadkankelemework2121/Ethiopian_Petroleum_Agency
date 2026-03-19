@@ -57,8 +57,8 @@ function TransporterCard({ t }: { t: Transporter }) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0 bg-slate-50/30 rounded-b-xl">
-        <table className="w-full text-left text-sm relative">
+      <div className="flex-1 overflow-auto min-h-0 bg-slate-50/30 rounded-b-xl">
+        <table className="min-w-[500px] w-full text-left text-sm relative">
           <thead className="bg-muted text-xs text-text-muted sticky top-0 z-10 shadow-sm">
             <tr>
               {['Plate', 'Trailer', 'Side', 'Driver'].map((h) => (
