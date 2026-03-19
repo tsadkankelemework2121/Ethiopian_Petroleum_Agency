@@ -14,14 +14,14 @@ function TransporterCard({ t }: { t: Transporter }) {
   return (
     <div className="flex flex-col rounded-xl border border-[#D1D5DB] bg-white shadow-card max-h-[600px]">
       <div className="border-b border-[#D1D5DB] p-4 shrink-0">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="text-sm font-semibold text-text">{t.name}</div>
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-sm font-semibold text-text break-words">{t.name}</div>
             <div className="mt-1 text-xs text-text-muted">
               {t.location.city} • {t.location.region}
             </div>
           </div>
-          <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-strong">
+          <span className="rounded-full bg-primary/15 px-3 py-1 text-xs font-semibold text-primary-strong self-start sm:self-auto">
             {t.vehicles.length} vehicles
           </span>
         </div>
@@ -45,7 +45,7 @@ function TransporterCard({ t }: { t: Transporter }) {
       </div>
 
       <div className="p-4 shrink-0 border-b border-[#D1D5DB]">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-xs font-semibold text-text-muted">Vehicle Fleet</div>
           <input
             type="text"
@@ -100,7 +100,7 @@ export default function TransportersPage() {
   }, [])
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="min-h-full flex flex-col">
       <PageHeader
         title="Transporters"
         subtitle="Transporters and their fleet details (read-only mock)."
