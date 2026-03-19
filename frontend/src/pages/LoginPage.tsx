@@ -46,13 +46,10 @@ const LoginPage = () => {
       <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:w-1/2 lg:px-20 xl:px-24 bg-gray-50">
         <div className="mx-auto w-full max-w-sm lg:max-w-md">
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <img src={logo} alt="Company Logo" className="h-16 w-auto object-contain mb-6" />
-            <h1 className="text-3xl font-extrabold text-gray-900">
+            <img src={logo} alt="Company Logo" className="h-15 w-auto object-contain mb-6" />
+            <h1 className="text-3xl font-bold text-gray-900">
               Ethiopian Petroleum Agency
             </h1>
-            <p className="mt-2 text-md text-gray-500 max-w-md">
-              Managing and optimizing the national petroleum supply chain with real-time tracking, insights, and analytics.
-            </p>
             <h2 className="mt-8 text-2xl font-bold text-gray-800">
               Sign in to your account
             </h2>
