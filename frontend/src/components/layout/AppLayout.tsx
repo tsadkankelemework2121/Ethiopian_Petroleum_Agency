@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import logo from "../../assets/logo.png"
 import {
-  AdjustmentsHorizontalIcon,
   BellIcon,
   BuildingOffice2Icon,
   ChartBarSquareIcon,
