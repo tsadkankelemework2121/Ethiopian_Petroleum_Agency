@@ -18,6 +18,7 @@ export default function TrackingPage() {
   const [error, setError] = useState<string | null>(null)
   const [isClustered, setIsClustered] = useState(false)
   const [hasFitBounds, setHasFitBounds] = useState(false)
+  const [isListOpen, setIsListOpen] = useState(false) // Start hidden on mobile
   const mapApiRef = useRef<import('../components/map/MapView').MapApi | null>(null)
 
   const defaultCenter = useMemo(() => ({ lat: 9.0192, lng: 38.7525 }), [])
@@ -172,6 +173,11 @@ export default function TrackingPage() {
       // Zoom in to show roads clearly
       mapApiRef.current?.flyTo({ lat, lng }, 15)
     }
+    
+    // Hide list on mobile when a truck is selected
+    if (window.innerWidth < 768) {
+      setIsListOpen(false)
+    }
   }
 
   return (
@@ -197,8 +203,18 @@ export default function TrackingPage() {
         }}
       />
 
+      {/* Mobile Menu Toggle */}
+      <button 
+        className="md:hidden absolute top-4 left-4 z-20 p-2.5 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-[#D1D5DB] text-slate-700 hover:bg-slate-50 transition"
+        onClick={() => setIsListOpen(!isListOpen)}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
       {/* Left overlay:  */}
-      <div className="absolute left-4 right-4 md:right-auto md:w-[320px] top-4 bottom-20 md:bottom-4 rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex flex-col overflow-hidden z-10">
+      <div className={`absolute left-4 right-4 md:right-auto md:w-[320px] top-20 md:top-4 bottom-20 md:bottom-4 rounded-2xl border border-[#D1D5DB] bg-white/95 backdrop-blur-sm shadow-elevated flex-col overflow-hidden z-10 transition-opacity ${isListOpen ? 'flex' : 'hidden md:flex'}`}>
         <div className="px-5 py-4 border-b border-[#E5E7EB]">
           <div className="text-[11px] font-semibold uppercase tracking-[0.12em]" style={{ color: '#64748b' }}>
             Fleet list
