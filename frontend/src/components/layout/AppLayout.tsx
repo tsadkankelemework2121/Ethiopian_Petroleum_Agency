@@ -65,7 +65,7 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="flex h-screen flex-col bg-white border-r border-[#D1D5DB] overflow-y-auto">
       <div className="flex items-center gap-3 px-5 py-5">
-        <div className="grid size-10 place-items-center overflow-hidden rounded-lg bg-primary text-white font-semibold">
+        <div className="grid size-10 place-items-center overflow-hidden rounded-lg bg-white">
           <img
             src={logo}
             alt="Company logo"

@@ -11,8 +11,8 @@ export function ModalOverlay({ isOpen, onClose, children, title, noPadding }: { 
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
         aria-label="Close modal"
       />
-      <div className="relative z-10 w-full max-w-2xl mx-4 rounded-xl border border-[#D1D5DB] bg-white shadow-elevated max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between gap-4 border-b border-[#D1D5DB] p-6">
+      <div className={`relative z-10 w-full max-w-2xl mx-4 rounded-xl border border-[#D1D5DB] bg-white shadow-elevated max-h-[90vh] flex flex-col ${noPadding ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+        <div className="flex items-center justify-between gap-4 border-b border-[#D1D5DB] p-6 shrink-0">
           <h2 className="text-lg font-bold text-text">{title}</h2>
           <button
             type="button"
@@ -25,7 +25,7 @@ export function ModalOverlay({ isOpen, onClose, children, title, noPadding }: { 
             </svg>
           </button>
         </div>
-        <div className={noPadding ? "" : "p-6"}>
+        <div className={noPadding ? "flex-1 relative" : "p-6"}>
           {children}
         </div>
       </div>

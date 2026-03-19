@@ -45,12 +45,12 @@ const LoginPage = () => {
       {/* Right side: Login form */}
       <div className="flex-1 flex flex-col justify-center py-12 px-4 sm:px-6 lg:w-1/2 lg:px-20 xl:px-24 bg-gray-50">
         <div className="mx-auto w-full max-w-sm lg:max-w-md">
-          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
-            <img src={logo} alt="Company Logo" className="h-15 w-auto object-contain mb-6" />
+          <div className="flex flex-col items-center text-center">
+            <img src={logo} alt="Company Logo" className="h-15 w-auto object-contain mb-5" />
             <h1 className="text-3xl font-bold text-gray-900">
               Ethiopian Petroleum Agency
             </h1>
-            <h2 className="mt-8 text-2xl font-bold text-gray-800">
+            <h2 className="mt-6 text-2xl font-bold text-gray-800">
               Sign in to your account
             </h2>
           </div>
