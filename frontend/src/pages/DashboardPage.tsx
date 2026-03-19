@@ -153,8 +153,8 @@ export default function DashboardPage() {
     <div>
       <div className="grid gap-4 md:grid-cols-12">
         {/* KPIs */}
-        <div className="md:col-span-12">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="md:col-span-12 min-w-0">
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
             {kpis === null ? (
               <>
                 {[1, 2, 3, 4].map((i) => (
@@ -172,18 +172,18 @@ export default function DashboardPage() {
                   >
                     <Card>
                       <CardBody>
-                        <div className="flex items-start justify-between gap-3 mb-4">
+                        <div className="flex items-start justify-between gap-2 mb-3">
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold text-text">{k.label}</div>
-                            <div className="mt-1 text-xs text-text-muted">{k.hint}</div>
+                            <div className="text-xs sm:text-sm font-semibold text-text truncate">{k.label}</div>
+                            <div className="mt-0.5 text-[10px] sm:text-xs text-text-muted truncate">{k.hint}</div>
                           </div>
-                          <div className="grid size-10 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
-                            <Icon className="size-5" />
+                          <div className="grid size-8 sm:size-10 place-items-center rounded-lg bg-primary/10 text-primary shrink-0">
+                            <Icon className="size-4 sm:size-5" />
                           </div>
                         </div>
                         <div className="flex items-end justify-between gap-2">
-                          <div className="text-3xl font-bold tracking-tight text-text">{k.value}</div>
-                          <div className="rounded-md bg-muted px-2 py-1 text-[10px] font-medium text-text-muted">
+                          <div className="text-xl sm:text-3xl font-bold tracking-tight text-text">{k.value}</div>
+                          <div className="rounded-md bg-muted px-2 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-medium text-text-muted">
                             Live
                           </div>
                         </div>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Charts row */}
-        <div className="md:col-span-12 lg:col-span-8">
+        <div className="md:col-span-12 lg:col-span-8 min-w-0">
           <Card>
             <CardHeader
               title="Regional fuel dispatch overview"
@@ -224,7 +224,6 @@ export default function DashboardPage() {
                       dy={17}
                       tickLine={false}
                       axisLine={false}
-                      interval={0}
                       height={65}
                     />
                     <YAxis
@@ -250,7 +249,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="md:col-span-12 lg:col-span-4">
+        <div className="md:col-span-12 lg:col-span-4 min-w-0">
           <Card>
             <CardHeader title="Dispatch Events" subtitle="Distribution of current dispatch tasks" />
             <CardBody className="h-80">
@@ -325,7 +324,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Fuel Type Dispatch Summary */}
-        <div className="md:col-span-12">
+        <div className="md:col-span-12 min-w-0">
           <Card>
             <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
             <CardBody className="h-48">
@@ -383,7 +382,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <div className="md:col-span-12">
+        <div className="md:col-span-12 min-w-0">
           <Card>
             <CardHeader title="Recent dispatches" subtitle="Latest dispatch tasks with ETA and status" />
             <div className="overflow-x-auto">
