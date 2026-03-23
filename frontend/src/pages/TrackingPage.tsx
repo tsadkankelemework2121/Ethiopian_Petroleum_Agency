@@ -213,10 +213,6 @@ export default function TrackingPage() {
     }
   }, [mapBounds, hasFitBounds])
 
-  const selectedVehicle = useMemo(() => {
-    if (selectedId) return items.find((v) => v.imei === selectedId) ?? null
-    return items[0] ?? null
-  }, [items, selectedId])
 
 
 
