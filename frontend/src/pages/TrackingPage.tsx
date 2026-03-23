@@ -218,13 +218,7 @@ export default function TrackingPage() {
     return items[0] ?? null
   }, [items, selectedId])
 
-  const selectedPosition = useMemo(() => {
-    if (!selectedVehicle) return null
-    const lat = Number(selectedVehicle.lat)
-    const lng = Number(selectedVehicle.lng)
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
-    return { lat, lng }
-  }, [selectedVehicle])
+
 
   const handleSelectVehicle = (vehicle: GpsVehicle) => {
     setSelectedId(vehicle.imei)
