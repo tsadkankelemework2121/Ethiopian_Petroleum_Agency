@@ -1,7 +1,7 @@
 import type { GpsVehicle } from './types'
 
 const GPS_API_URL =
-  'https://mellatech.et/et/api/api.php?api=user&ver=1.0&key=4DC7C24EDCF88C5B3F8B03A72631DBF8&cmd=USER_GET_OBJECTS'
+  'https://mellatech.et/et/api/api.php?api=user&ver=1.0&key=A8201FF8426454566D4F5A3F740AB880&cmd=USER_GET_OBJECTS'
 
 export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
   const res = await fetch(GPS_API_URL)
