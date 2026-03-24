@@ -133,7 +133,7 @@ export default function MapView({
     // add/update markers
     markers.forEach((m) => {
       const isSelected = m.id === selectedMarkerId
-      const size = isSelected ? 32 : 24
+      const size = isSelected ? 24 : 16
       const angle = m.angle ?? 0
 
       let el = markerElsRef.current.get(m.id)
@@ -170,7 +170,7 @@ export default function MapView({
             </div>
 
             <div style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s ease; position: relative; display: flex; align-items: center; justify-content: center;" class="hover:scale-105">
-              <svg viewBox="0 0 64 128" width="40" height="66">
+              <svg viewBox="0 0 64 128" width="24" height="40">
                 <!-- Wheels -->
                 <rect x="8" y="24" width="8" height="20" rx="3" fill="#1e293b" />
                 <rect x="48" y="24" width="8" height="20" rx="3" fill="#1e293b" />
@@ -189,11 +189,6 @@ export default function MapView({
                 <!-- Cargo Tank Base -->
                 <rect x="10" y="60" width="44" height="64" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="3" />
               </svg>
-
-              <!-- Central badge with number -->
-              <div class="absolute top-[60%] left-1/2 -translate-x-1/2 -translate-y-1/2 min-w-6 px-1 h-6 bg-[#067cc1] text-white rounded-full flex items-center justify-center font-bold text-[11px] border-2 border-white shadow-sm">
-                ${m.clusterCount}
-              </div>
             </div>
           </div>
         `
