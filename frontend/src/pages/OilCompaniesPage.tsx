@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import type { OilCompany } from '../data/types'
-// import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { getOilCompanies } from '../data/mockApi'

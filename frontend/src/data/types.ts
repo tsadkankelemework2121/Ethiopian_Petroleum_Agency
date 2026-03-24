@@ -68,6 +68,7 @@ export type Depot = {
   contacts: ContactInfo
   location: Location
   mapLocation?: LatLng
+  mapLink?: string
   oilCompanyId?: string // If created/owned by an oil company
 }
 

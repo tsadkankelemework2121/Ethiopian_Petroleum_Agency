@@ -3,7 +3,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { PlusIcon } from 'lucide-react'
 import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
 import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../data/types'
-// import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
@@ -78,18 +77,6 @@ export default function FuelDispatchPage() {
 
   return (
     <div>
-      {/* <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-end">
-          <button
-            type="button"
-            onClick={() => setShowNewDispatchForm(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            <PlusIcon className="size-4" />
-            New Dispatch
-          </button>
-        </div>
-       */}
-
       <ModalOverlay
         isOpen={showNewDispatchForm}
         onClose={() => setShowNewDispatchForm(false)}

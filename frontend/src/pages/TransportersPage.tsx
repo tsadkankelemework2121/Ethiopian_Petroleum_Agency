@@ -58,7 +58,7 @@ function TransporterCard({ t, onAddTruck, userRole }: { t: Transporter, onAddTru
               onChange={(e) => setSearch(e.target.value)}
               className="w-48 rounded-md border border-[#D1D5DB] bg-white px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/40"
             />
-            {(userRole === 'OIL_COMPANY_ADMIN' || userRole === 'EPA_ADMIN') && (
+            {userRole === 'OIL_COMPANY_ADMIN' && (
               <button
                 type="button"
                 onClick={() => onAddTruck(t.id)}
@@ -109,7 +109,7 @@ function TransporterCard({ t, onAddTruck, userRole }: { t: Transporter, onAddTru
 
 function NewTransporterForm({ onClose, onSubmit, companyId }: { onClose: () => void; onSubmit: (t: Transporter) => void, companyId?: string }) {
   const [formData, setFormData] = useState({
-    name: '', region: '', city: '', address: '', person1: '', phone1: '', email1: ''
+    name: '', region: '', city: '', address: '', person1: '', person2: '', phone1: '', phone2: '', email1: '', email2: ''
   })
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -118,7 +118,14 @@ function NewTransporterForm({ onClose, onSubmit, companyId }: { onClose: () => v
       id: `TR-${Date.now()}`,
       name: formData.name,
       location: { region: formData.region, city: formData.city, address: formData.address },
-      contacts: { person1: formData.person1, phone1: formData.phone1, email1: formData.email1 },
+      contacts: {
+        person1: formData.person1 || undefined,
+        person2: formData.person2 || undefined,
+        phone1: formData.phone1 || undefined,
+        phone2: formData.phone2 || undefined,
+        email1: formData.email1 || undefined,
+        email2: formData.email2 || undefined,
+      },
       vehicles: [],
       oilCompanyId: companyId
     }
@@ -144,6 +151,30 @@ function NewTransporterForm({ onClose, onSubmit, companyId }: { onClose: () => v
         <div className="sm:col-span-2">
           <label className="block text-sm font-semibold text-text mb-1">Address</label>
           <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Contact Person 1</label>
+          <input type="text" value={formData.person1} onChange={e => setFormData({...formData, person1: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Contact Person 2</label>
+          <input type="text" value={formData.person2} onChange={e => setFormData({...formData, person2: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Phone 1</label>
+          <input type="tel" value={formData.phone1} onChange={e => setFormData({...formData, phone1: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Phone 2</label>
+          <input type="tel" value={formData.phone2} onChange={e => setFormData({...formData, phone2: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Email 1</label>
+          <input type="email" value={formData.email1} onChange={e => setFormData({...formData, email1: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Email 2</label>
+          <input type="email" value={formData.email2} onChange={e => setFormData({...formData, email2: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
         </div>
       </div>
       <div className="flex justify-end gap-3 pt-4">
@@ -220,6 +251,7 @@ export default function TransportersPage() {
   const handleCreateTransporter = (t: Transporter) => {
     setItems((prev) => [...prev, t])
     setShowTransporterForm(false)
+    setShowTruckFormForTransporter(t.id)
   }
 
   const handleAddTruck = (v: Vehicle) => {
@@ -240,7 +272,7 @@ export default function TransportersPage() {
         title="Transporters"
         subtitle="Transporters and their fleet details."
         right={
-          (user?.role === 'OIL_COMPANY_ADMIN' || user?.role === 'EPA_ADMIN') && (
+          user?.role === 'OIL_COMPANY_ADMIN' && (
             <button
               onClick={() => setShowTransporterForm(true)}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong"

@@ -3,7 +3,7 @@ import { getDepots } from '../data/mockApi'
 import type { Depot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
-import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon } from '@heroicons/react/24/outline'
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { useAuth } from '../context/AuthContext'
@@ -13,8 +13,6 @@ export default function DepotsPage() {
   const [items, setItems] = useState<Depot[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
-  const [selectedDepot, setSelectedDepot] = useState<Depot | null>(null)
-  const [showMapModal, setShowMapModal] = useState(false)
 
   useEffect(() => {
     void getDepots(user?.companyId)
@@ -23,7 +21,9 @@ export default function DepotsPage() {
   }, [user?.companyId])
 
   const openGoogleMaps = (depot: Depot) => {
-    if (depot.mapLocation) {
+    if (depot.mapLink) {
+      window.open(depot.mapLink, '_blank')
+    } else if (depot.mapLocation) {
       const { lat, lng } = depot.mapLocation
       window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank')
     } else {
@@ -33,18 +33,13 @@ export default function DepotsPage() {
     }
   }
 
-  const viewOnMap = (depot: Depot) => {
-    setSelectedDepot(depot)
-    setShowMapModal(true)
-  }
-
   return (
     <div>
       <PageHeader
         title="Depots"
         subtitle="Depots with contact details and map location."
         right={
-          (user?.role === 'OIL_COMPANY_ADMIN' || user?.role === 'EPA_ADMIN') && (
+          user?.role === 'OIL_COMPANY_ADMIN' && (
             <button
               type="button"
               onClick={() => setShowForm(!showForm)}
@@ -72,57 +67,7 @@ export default function DepotsPage() {
         />
       </ModalOverlay>
 
-      <ModalOverlay
-        isOpen={showMapModal}
-        onClose={() => setShowMapModal(false)}
-        title={`Map Location - ${selectedDepot?.name}`}
-      >
-        {selectedDepot && (
-          <div className="space-y-4">
-            {selectedDepot.mapLocation ? (
-              <>
-                <div className="h-[400px] w-full rounded-lg overflow-hidden border border-gray-200">
-                  <iframe
-                    title="depot-map"
-                    width="100%"
-                    height="100%"
-                    frameBorder="0"
-                    style={{ border: 0 }}
-                    src={`https://www.google.com/maps/embed/v1/place?key=YOUR_GOOGLE_MAPS_API_KEY&q=${selectedDepot.mapLocation.lat},${selectedDepot.mapLocation.lng}`}
-                    allowFullScreen
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <button
-                    type="button"
-                    onClick={() => openGoogleMaps(selectedDepot)}
-                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition"
-                  >
-                    <MapPinIcon className="size-4" />
-                    Open in Google Maps
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <MapPinIcon className="size-12 mx-auto text-gray-400" />
-                <h3 className="mt-4 text-lg font-medium text-gray-900">No map location available</h3>
-                <p className="mt-2 text-sm text-gray-500">
-                  This depot doesn't have coordinates set. You can still view it by address.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => openGoogleMaps(selectedDepot)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition"
-                >
-                  <MapPinIcon className="size-4" />
-                  Search by Address
-                </button>
-              </div>
-            )}
-          </div>
-        )}
-      </ModalOverlay>
+
 
       {loading ? (
         <div className="rounded-xl border border-[#D1D5DB] bg-white overflow-x-auto">
@@ -170,14 +115,16 @@ export default function DepotsPage() {
           title="No depots yet"
           description="Add your first depot to get started with contact details and map locations."
           action={
-            <button
-              type="button"
-              onClick={() => setShowForm(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            >
-              <PlusIcon className="size-4" />
-              Add your first depot
-            </button>
+            user?.role === 'OIL_COMPANY_ADMIN' ? (
+              <button
+                type="button"
+                onClick={() => setShowForm(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+              >
+                <PlusIcon className="size-4" />
+                Add your first depot
+              </button>
+            ) : undefined
           }
         />
       ) : (
@@ -252,23 +199,13 @@ export default function DepotsPage() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => viewOnMap(depot)}
-                        className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/20 transition"
+                        onClick={() => openGoogleMaps(depot)}
+                        className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 transition"
+                        title="Open in Google Maps"
                       >
-                        <EyeIcon className="size-4" />
-                        View Map
+                        <MapPinIcon className="size-4" />
+                        <span>Google Maps</span>
                       </button>
-                      {depot.mapLocation && (
-                        <button
-                          type="button"
-                          onClick={() => openGoogleMaps(depot)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-gray-100 px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-200 transition"
-                          title="Open in Google Maps"
-                        >
-                          <MapPinIcon className="size-4" />
-                          <span className="sr-only sm:not-sr-only sm:inline">GMaps</span>
-                        </button>
-                      )}
                     </div>
                   </td>
                 </tr>
@@ -315,6 +252,25 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
     lng: '',
   })
 
+  const [mapLink, setMapLink] = useState('')
+
+  const handleMapLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value
+    setMapLink(val)
+    
+    // Parse Google Maps URLs
+    const atMatch = val.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/)
+    if (atMatch) {
+      setFormData(prev => ({ ...prev, lat: atMatch[1], lng: atMatch[2] }))
+      return
+    }
+    const dMatch = val.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/)
+    if (dMatch) {
+      setFormData(prev => ({ ...prev, lat: dMatch[1], lng: dMatch[2] }))
+      return
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const newDepot: Depot = {
@@ -337,6 +293,7 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
         formData.lat && formData.lng
           ? { lat: Number(formData.lat), lng: Number(formData.lng) }
           : undefined,
+      mapLink: mapLink || undefined,
       oilCompanyId: companyId,
     }
     onSubmit(newDepot)
@@ -436,6 +393,17 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
             type="email"
             value={formData.email2}
             onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <div className="sm:col-span-2 pt-2 border-t border-[#D1D5DB] mt-2">
+          <label className="block text-sm font-semibold text-text mb-1">Google Maps Link</label>
+          <p className="text-xs text-text-muted mb-2">Paste a Google Maps link to auto-fill Latitude and Longitude.</p>
+          <input
+            type="url"
+            value={mapLink}
+            onChange={handleMapLinkChange}
+            placeholder="e.g. https://www.google.com/maps/place/..."
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
