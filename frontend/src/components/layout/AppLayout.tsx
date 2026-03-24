@@ -16,6 +16,7 @@ import { cn } from '../../lib/cn'
 
 import profileImg from '../../assets/profile.jpg'
 import { useAuth } from '../../context/AuthContext'
+import type { UserRole } from '../../data/types'
 
 type NavItem = {
   to: string
@@ -61,7 +62,11 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
   )
 }
 
-function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
+function Sidebar({ onNavigate, role }: { onNavigate?: () => void, role: UserRole }) {
+  const filteredEntitiesNav = role === 'OIL_COMPANY_ADMIN' 
+    ? entitiesNav.filter(n => n.to !== '/entities/oil-companies')
+    : entitiesNav;
+
   return (
     <div className="flex h-screen flex-col bg-white border-r border-[#D1D5DB] overflow-y-auto">
       <div className="flex items-center gap-3 px-5 py-5">
@@ -74,7 +79,9 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         </div>
 
         <div className="min-w-0">
-          <div className="truncate text-sm font-bold text-text">EPA ETHIOPIA</div>
+          <div className="truncate text-sm font-bold text-text">
+            {role === 'EPA_ADMIN' ? 'EPA ETHIOPIA' : 'OIL COMPANY'}
+          </div>
           <div className="truncate text-xs text-text-muted">Ops Command Center</div>
         </div>
       </div>
@@ -88,11 +95,11 @@ function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
 
         <div className="mt-6 space-y-3">
           <div className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-            Stakeholders
+            {role === 'OIL_COMPANY_ADMIN' ? 'Company Resources' : 'Stakeholders'}
           </div>
 
           <div className="space-y-1">
-            {entitiesNav.map((item) => (
+            {filteredEntitiesNav.map((item) => (
               <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
             ))}
           </div>
@@ -107,7 +114,7 @@ export default function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
-  const { logout } = useAuth()
+  const { user, logout } = useAuth()
   const [alertsCount, setAlertsCount] = useState(0)
   const [globalSearch, setGlobalSearch] = useState('')
 
@@ -126,18 +133,19 @@ export default function AppLayout() {
     if (pathname.includes('/entities/depots')) return 'Depots'
     if (pathname === '/settings') return 'Settings'
     if (pathname === '/profile') return 'Profile'
-    return 'EPA Dashboard'
+    return 'Dashboard'
   }
 
   const title = useMemo(() => getPageTitle(location.pathname), [location.pathname])
   const isTracking = location.pathname === '/tracking'
+  const role = user?.role || 'EPA_ADMIN'
 
   useEffect(() => {
-    void getDashboardKpis().then((kpis) => {
+    void getDashboardKpis(user?.companyId).then((kpis) => {
       const total = kpis.exceededEta + kpis.gpsOfflineOver24h + kpis.stoppedOver5h
       setAlertsCount(total)
     })
-  }, [])
+  }, [user?.companyId])
 
   return (
     <div className="h-full bg-bg">
@@ -146,7 +154,7 @@ export default function AppLayout() {
         {/* Desktop Sidebar */}
         {!isTracking && (
           <aside className="hidden w-70 shrink-0 border-r border-[#D1D5DB] bg-white shadow-[2px_0_12px_rgba(0,0,0,0.04)] md:block">
-            <Sidebar />
+            <Sidebar role={role} />
           </aside>
         )}
 
@@ -161,7 +169,7 @@ export default function AppLayout() {
               onClick={() => setMobileOpen(false)}
             />
             <aside className="absolute left-0 top-0 h-full w-70 border-r border-[#D1D5DB] bg-white">
-              <Sidebar onNavigate={() => setMobileOpen(false)} />
+              <Sidebar role={role} onNavigate={() => setMobileOpen(false)} />
             </aside>
           </div>
         )}
@@ -219,7 +227,7 @@ export default function AppLayout() {
                   <button className="flex items-center gap-3 py-2 cursor-pointer">
                     <div className="text-right">
                       <div className="text-sm font-semibold text-text">Abebe B.</div>
-                      <div className="text-xs text-text-muted">Ops Manager</div>
+                      <div className="text-xs text-text-muted">{role === 'EPA_ADMIN' ? 'EPA Admin' : 'Company Admin'}</div>
                     </div>
 
                     <img
@@ -232,16 +240,16 @@ export default function AppLayout() {
                   <div className="absolute right-0 top-full mt-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
                     <div className="py-1">
                       <button
-                        onClick={() => navigate('/profile')}
-                        className="block w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                         onClick={() => navigate('/profile')}
+                         className="block w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       >
-                        Profile
+                         Profile
                       </button>
                       <button
-                        onClick={() => navigate('/settings')}
-                        className="block w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
+                         onClick={() => navigate('/settings')}
+                         className="block w-full text-left px-5 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       >
-                        Settings
+                         Settings
                       </button>
                       <div className="my-1 border-t border-gray-100"></div>
                       <button

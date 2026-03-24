@@ -1,3 +1,11 @@
+export type UserRole = 'EPA_ADMIN' | 'OIL_COMPANY_ADMIN'
+
+export type User = {
+  email: string
+  role: UserRole
+  companyId?: string // if role is OIL_COMPANY_ADMIN
+}
+
 export type FuelType = 'Benzine' | 'Diesel' | 'Jet Fuel'
 
 export type DispatchStatus =
@@ -51,6 +59,7 @@ export type Transporter = {
   contacts: ContactInfo
   location: Location
   vehicles: Vehicle[]
+  oilCompanyId?: string // If created/owned by an oil company
 }
 
 export type Depot = {
@@ -59,6 +68,7 @@ export type Depot = {
   contacts: ContactInfo
   location: Location
   mapLocation?: LatLng
+  oilCompanyId?: string // If created/owned by an oil company
 }
 
 export type GpsPoint = {

@@ -61,6 +61,7 @@ export const depots: Depot[] = [
       address: 'Bole, Airport Road',
     },
     mapLocation: { lat: 9.0192, lng: 38.7525 },
+    oilCompanyId: 'oc-noc',
   },
   {
     id: 'ID6341',
@@ -112,6 +113,7 @@ export const transporters: Transporter[] = [
       city: 'Addis Ababa',
       address: 'Ring Road, Logistics Hub',
     },
+    oilCompanyId: 'oc-noc',
     vehicles: [
       {
         id: 'veh-3-11111',

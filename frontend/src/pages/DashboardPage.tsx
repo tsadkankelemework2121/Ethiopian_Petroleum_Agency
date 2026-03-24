@@ -13,6 +13,7 @@ import type { DispatchTask, OilCompany, Transporter } from '../data/types'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
+import { useAuth } from '../context/AuthContext'
 import {
   Bar,
   BarChart,
@@ -34,6 +35,7 @@ import {
 } from '@heroicons/react/24/outline'
 
 export default function DashboardPage() {
+  const { user } = useAuth();
   const [kpis, setKpis] = useState<{
     vehiclesOnTransit: number
     gpsOfflineOver24h: number
@@ -48,17 +50,26 @@ export default function DashboardPage() {
   const [charts, setCharts] = useState<Awaited<ReturnType<typeof getDashboardCharts>> | null>(null)
 
   useEffect(() => {
-    void Promise.all([getDashboardKpis(), getRegionalFuelDispatchedThisWeek(), getDashboardCharts()]).then(
+    void Promise.all([
+      getDashboardKpis(user?.companyId), 
+      getRegionalFuelDispatchedThisWeek(user?.companyId), 
+      getDashboardCharts(user?.companyId)
+    ]).then(
       ([k, r, ch]) => {
         setKpis(k)
         setRegions(r)
         setCharts(ch)
       },
     )
-  }, [])
+  }, [user?.companyId])
 
   useEffect(() => {
-    void Promise.all([getVehiclesOnTransit(), getDispatchTasks(), getOilCompanies(), getTransporters()]).then(
+    void Promise.all([
+      getVehiclesOnTransit(user?.companyId), 
+      getDispatchTasks(user?.companyId), 
+      getOilCompanies(), 
+      getTransporters(user?.companyId)
+    ]).then(
       ([vt, t, c, tr]) => {
         setOnTransit(vt)
         setTasks(t)
@@ -66,7 +77,7 @@ export default function DashboardPage() {
         setTransporters(tr)
       },
     )
-  }, [])
+  }, [user?.companyId])
 
   const companiesById = useMemo(() => new Map(companies.map((c) => [c.id, c] as const)), [companies])
   const transportersById = useMemo(

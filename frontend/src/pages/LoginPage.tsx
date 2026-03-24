@@ -15,7 +15,10 @@ const LoginPage = () => {
     e.preventDefault();
     setError('');
 
-    if (email === 'admin@epa.com' && password === 'admin123') {
+    if (
+      (email === 'admin@epa.com' && password === 'admin123') ||
+      ((email === 'admin@oilcompany.com' || email === 'admin@oilcomapny.com') && password === 'admin123')
+    ) {
       login(email);
       navigate('/', { replace: true });
     } else {
@@ -23,8 +26,13 @@ const LoginPage = () => {
     }
   };
 
-  const handleAutoFill = () => {
+  const handleAutoFillEpa = () => {
     setEmail('admin@epa.com');
+    setPassword('admin123');
+  };
+
+  const handleAutoFillOil = () => {
+    setEmail('admin@oilcomapny.com');
     setPassword('admin123');
   };
 
@@ -110,18 +118,27 @@ const LoginPage = () => {
             </div>
           </form>
 
-          <div className="mt-6 border-t border-gray-200 pt-6">
-            <button
-              type="button"
-              onClick={handleAutoFill}
-              className="w-full flex justify-center py-2.5 px-4 border text-primary border-primary rounded-lg shadow-sm text-sm font-bold bg-blue-50/50 hover:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-            >
-              Auto Fill Credentials
-            </button>
-            <p className="mt-3 text-xs text-center text-gray-500 font-medium">
-              ( email:admin@epa.com password:admin123)
-            </p>
-          </div>
+            <div className="mt-6 border-t border-gray-200 pt-6">
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={handleAutoFillEpa}
+                  className="w-full flex justify-center py-2.5 px-4 border text-primary border-primary rounded-lg shadow-sm text-sm font-bold bg-blue-50/50 hover:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                >
+                  Auto Fill EPA Admin
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAutoFillOil}
+                  className="w-full flex justify-center py-2.5 px-4 border text-primary border-primary rounded-lg shadow-sm text-sm font-bold bg-blue-50/50 hover:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
+                >
+                  Auto Fill Oil Company Admin
+                </button>
+              </div>
+              <p className="mt-3 text-xs text-center text-gray-500 font-medium">
+                (password: admin123)
+              </p>
+            </div>
         </div>
       </div>
     </div>
@@ -129,3 +146,4 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
+

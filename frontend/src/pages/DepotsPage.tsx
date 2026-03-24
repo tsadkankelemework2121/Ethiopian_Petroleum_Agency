@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { getDepots } from '../data/mockApi'
 import type { Depot } from '../data/types'
-// import PageHeader from '../components/layout/PageHeader'
+import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon, EyeIcon } from '@heroicons/react/24/outline'
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
+import { useAuth } from '../context/AuthContext'
 
 export default function DepotsPage() {
+  const { user } = useAuth()
   const [items, setItems] = useState<Depot[]>([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -15,10 +17,10 @@ export default function DepotsPage() {
   const [showMapModal, setShowMapModal] = useState(false)
 
   useEffect(() => {
-    void getDepots()
+    void getDepots(user?.companyId)
       .then(setItems)
       .finally(() => setLoading(false))
-  }, [])
+  }, [user?.companyId])
 
   const openGoogleMaps = (depot: Depot) => {
     if (depot.mapLocation) {
@@ -38,20 +40,22 @@ export default function DepotsPage() {
 
   return (
     <div>
-      {/* <PageHeader
+      <PageHeader
         title="Depots"
         subtitle="Depots with contact details and map location."
         right={
-          <button
-            type="button"
-            onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            <PlusIcon className="size-4" />
-            New Depot
-          </button>
+          (user?.role === 'OIL_COMPANY_ADMIN' || user?.role === 'EPA_ADMIN') && (
+            <button
+              type="button"
+              onClick={() => setShowForm(!showForm)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+            >
+              <PlusIcon className="size-4" />
+              New Depot
+            </button>
+          )
         }
-      /> */}
+      />
 
       <ModalOverlay
         isOpen={showForm}
@@ -59,6 +63,7 @@ export default function DepotsPage() {
         title="Add New Depot"
       >
         <NewDepotForm
+          companyId={user?.companyId}
           onClose={() => setShowForm(false)}
           onSubmit={(newDepot) => {
             setItems([...items, newDepot])
@@ -294,7 +299,7 @@ export default function DepotsPage() {
   )
 }
 
-function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (depot: Depot) => void }) {
+function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; onSubmit: (depot: Depot) => void; companyId?: string }) {
   const [formData, setFormData] = useState({
     name: '',
     region: '',
@@ -332,6 +337,7 @@ function NewDepotForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (d
         formData.lat && formData.lng
           ? { lat: Number(formData.lat), lng: Number(formData.lng) }
           : undefined,
+      oilCompanyId: companyId,
     }
     onSubmit(newDepot)
   }

@@ -9,8 +9,10 @@ import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import MapView from '../components/map/MapView'
 import { MapPinIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '../context/AuthContext'
 
 export default function FuelDispatchPage() {
+  const { user } = useAuth()
   const [tasks, setTasks] = useState<DispatchTask[]>([])
   const [depots, setDepots] = useState<Depot[]>([])
   const [transporters, setTransporters] = useState<Transporter[]>([])
@@ -22,7 +24,12 @@ export default function FuelDispatchPage() {
   const [statusFilter, setStatusFilter] = useState('All')
 
   useEffect(() => {
-    void Promise.all([getDispatchTasks(), getDepots(), getTransporters(), getOilCompanies()]).then(
+    void Promise.all([
+      getDispatchTasks(user?.companyId), 
+      getDepots(user?.companyId), 
+      getTransporters(user?.companyId), 
+      getOilCompanies()
+    ]).then(
       ([t, d, tr, oc]) => {
         setTasks(t)
         setDepots(d)
@@ -30,7 +37,7 @@ export default function FuelDispatchPage() {
         setOilCompanies(oc)
       },
     )
-  }, [])
+  }, [user?.companyId])
 
   const transportersById = useMemo(() => new Map(transporters.map((t) => [t.id, t] as const)), [transporters])
   const depotsById = useMemo(() => new Map(depots.map((d) => [d.id, d] as const)), [depots])
@@ -65,6 +72,8 @@ export default function FuelDispatchPage() {
     vehiclesById,
     depotsById,
     oilCompaniesById,
+    user?.role,
+    user?.companyId,
   ])
 
   return (

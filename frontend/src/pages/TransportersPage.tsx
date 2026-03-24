@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { getTransporters } from '../data/mockApi'
-import type { Transporter } from '../data/types'
+import type { Transporter, Vehicle } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
+import { useAuth } from '../context/AuthContext'
+import { ModalOverlay } from '../components/ui/ModelOverlay'
+import { PlusIcon } from '@heroicons/react/24/outline'
 
-function TransporterCard({ t }: { t: Transporter }) {
+function TransporterCard({ t, onAddTruck, userRole }: { t: Transporter, onAddTruck: (tId: string) => void, userRole: string }) {
   const [search, setSearch] = useState('')
 
   const filteredVehicles = t.vehicles.filter(v => 
@@ -47,13 +50,25 @@ function TransporterCard({ t }: { t: Transporter }) {
       <div className="p-4 shrink-0 border-b border-[#D1D5DB]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="text-xs font-semibold text-text-muted">Vehicle Fleet</div>
-          <input
-            type="text"
-            placeholder="Search plate or driver..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-48 rounded-md border border-[#D1D5DB] bg-white px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/40"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Search plate or driver..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-48 rounded-md border border-[#D1D5DB] bg-white px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            {(userRole === 'OIL_COMPANY_ADMIN' || userRole === 'EPA_ADMIN') && (
+              <button
+                type="button"
+                onClick={() => onAddTruck(t.id)}
+                className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition"
+              >
+                <PlusIcon className="size-3" />
+                Add Truck
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -92,22 +107,162 @@ function TransporterCard({ t }: { t: Transporter }) {
   )
 }
 
+function NewTransporterForm({ onClose, onSubmit, companyId }: { onClose: () => void; onSubmit: (t: Transporter) => void, companyId?: string }) {
+  const [formData, setFormData] = useState({
+    name: '', region: '', city: '', address: '', person1: '', phone1: '', email1: ''
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const newTransporter: Transporter = {
+      id: `TR-${Date.now()}`,
+      name: formData.name,
+      location: { region: formData.region, city: formData.city, address: formData.address },
+      contacts: { person1: formData.person1, phone1: formData.phone1, email1: formData.email1 },
+      vehicles: [],
+      oilCompanyId: companyId
+    }
+    onSubmit(newTransporter)
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+         {/* Simplified form for brevity */}
+         <div className="sm:col-span-2">
+          <label className="block text-sm font-semibold text-text mb-1">Name *</label>
+          <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Region *</label>
+          <input required type="text" value={formData.region} onChange={e => setFormData({...formData, region: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">City *</label>
+          <input required type="text" value={formData.city} onChange={e => setFormData({...formData, city: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="block text-sm font-semibold text-text mb-1">Address</label>
+          <input type="text" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 pt-4">
+        <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-semibold">Cancel</button>
+        <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Create</button>
+      </div>
+    </form>
+  )
+}
+
+function NewTruckForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (v: Vehicle) => void }) {
+  const [formData, setFormData] = useState({
+    plateRegNo: '', trailerRegNo: '', manufacturer: '', model: '', yearOfManufacture: new Date().getFullYear(), sideNo: '', driverName: '', driverPhone: ''
+  })
+
+  // Optionally include an upload CSV mock here
+  const handleUploadCsv = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    if (e.target.files && e.target.files.length > 0) {
+       alert('CSV Upload Mocked: Would parse CSV and populate trucks here.');
+    }
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit({
+      id: `VEH-${Date.now()}`,
+      ...formData
+    })
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg border border-dashed border-[#D1D5DB] mb-4">
+         <span className="text-sm font-medium text-text-muted">Bulk upload via CSV?</span>
+         <input type="file" accept=".csv" onChange={handleUploadCsv} className="text-xs text-text-muted file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20" />
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Plate Reg No *</label>
+          <input required type="text" value={formData.plateRegNo} onChange={e => setFormData({...formData, plateRegNo: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Driver Name *</label>
+          <input required type="text" value={formData.driverName} onChange={e => setFormData({...formData, driverName: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Trailer Reg No</label>
+          <input type="text" value={formData.trailerRegNo} onChange={e => setFormData({...formData, trailerRegNo: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label className="block text-sm font-semibold text-text mb-1">Side No</label>
+          <input type="text" value={formData.sideNo} onChange={e => setFormData({...formData, sideNo: e.target.value})} className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+      </div>
+      <div className="flex justify-end gap-3 pt-4">
+        <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-semibold">Cancel</button>
+        <button type="submit" className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white">Add Truck</button>
+      </div>
+    </form>
+  )
+}
+
 export default function TransportersPage() {
+  const { user } = useAuth()
   const [items, setItems] = useState<Transporter[]>([])
+  const [showTransporterForm, setShowTransporterForm] = useState(false)
+  const [showTruckFormForTransporter, setShowTruckFormForTransporter] = useState<string | null>(null)
 
   useEffect(() => {
-    void getTransporters().then(setItems)
-  }, [])
+    void getTransporters(user?.companyId).then(setItems)
+  }, [user?.companyId])
+
+  const handleCreateTransporter = (t: Transporter) => {
+    setItems((prev) => [...prev, t])
+    setShowTransporterForm(false)
+  }
+
+  const handleAddTruck = (v: Vehicle) => {
+    if (showTruckFormForTransporter) {
+      setItems((prev) => prev.map(t => {
+        if (t.id === showTruckFormForTransporter) {
+          return { ...t, vehicles: [...t.vehicles, v] }
+        }
+        return t;
+      }))
+    }
+    setShowTruckFormForTransporter(null)
+  }
 
   return (
     <div className="min-h-full flex flex-col">
       <PageHeader
         title="Transporters"
-        subtitle="Transporters and their fleet details (read-only mock)."
+        subtitle="Transporters and their fleet details."
+        right={
+          (user?.role === 'OIL_COMPANY_ADMIN' || user?.role === 'EPA_ADMIN') && (
+            <button
+              onClick={() => setShowTransporterForm(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong"
+            >
+              <PlusIcon className="size-4" />
+              New Transporter
+            </button>
+          )
+        }
       />
+      
+      <ModalOverlay isOpen={showTransporterForm} onClose={() => setShowTransporterForm(false)} title="Add Transporter">
+         <NewTransporterForm companyId={user?.companyId} onClose={() => setShowTransporterForm(false)} onSubmit={handleCreateTransporter} />
+      </ModalOverlay>
+
+      <ModalOverlay isOpen={!!showTruckFormForTransporter} onClose={() => setShowTruckFormForTransporter(null)} title="Add Truck">
+         <NewTruckForm onClose={() => setShowTruckFormForTransporter(null)} onSubmit={handleAddTruck} />
+      </ModalOverlay>
+
       <div className="grid gap-6 lg:grid-cols-2 mt-2">
         {items.map((t) => (
-          <TransporterCard key={t.id} t={t} />
+          <TransporterCard key={t.id} t={t} onAddTruck={setShowTruckFormForTransporter} userRole={user?.role || 'EPA_ADMIN'} />
         ))}
       </div>
     </div>
