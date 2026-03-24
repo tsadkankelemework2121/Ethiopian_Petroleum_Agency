@@ -146,6 +146,10 @@ export default function MapView({
 
       // Check if state changed to prevent unnecessary innerHTML rewrites
       const stateStr = JSON.stringify({ isSelected, size, angle, label: m.label, cluster: m.isCluster, count: m.clusterCount, c: m.color })
+      
+      const lngStr = String(m.position.lng)
+      const latStr = String(m.position.lat)
+
       if (el.dataset.state === stateStr) {
         let mk = markersRef.current.get(m.id)
         if (!mk) {
@@ -153,12 +157,21 @@ export default function MapView({
             .setLngLat([m.position.lng, m.position.lat])
             .addTo(map)
           markersRef.current.set(m.id, mk)
+          el.dataset.lng = lngStr
+          el.dataset.lat = latStr
         } else {
-          mk.setLngLat([m.position.lng, m.position.lat])
+          // Only call setLngLat if it actually changed, MapLibre forces layout recalcs on this
+          if (el.dataset.lng !== lngStr || el.dataset.lat !== latStr) {
+            mk.setLngLat([m.position.lng, m.position.lat])
+            el.dataset.lng = lngStr
+            el.dataset.lat = latStr
+          }
         }
         return // skip innerHTML update to prevent huge layout thrashing
       }
       el.dataset.state = stateStr
+      el.dataset.lng = lngStr
+      el.dataset.lat = latStr
 
       // Get direction arrow based on angle
       const getDirectionArrow = (deg: number) => {
