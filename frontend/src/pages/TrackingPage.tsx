@@ -223,7 +223,7 @@ export default function TrackingPage() {
     const lng = Number(vehicle.lng)
     if (Number.isFinite(lat) && Number.isFinite(lng)) {
       // Zoom in to show roads clearly
-      mapApiRef.current?.flyTo({ lat, lng }, 15)
+      mapApiRef.current?.flyTo({ lat, lng }, 18)
     }
     
     // Hide list on mobile when a truck is selected

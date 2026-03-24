@@ -18,7 +18,7 @@ type MarkerType = {
   color?: string
   isCluster?: boolean
   clusterCount?: number
-  clusterVehicles?: {plate: string, statusColor: string}[]
+  clusterVehicles?: { plate: string, statusColor: string }[]
 }
 
 export type MapApi = {
@@ -133,7 +133,7 @@ export default function MapView({
     // add/update markers
     markers.forEach((m) => {
       const isSelected = m.id === selectedMarkerId
-      const size = isSelected ? 24 : 16
+      const size = isSelected ? 14 : 10
       const angle = m.angle ?? 0
 
       let el = markerElsRef.current.get(m.id)
@@ -143,6 +143,22 @@ export default function MapView({
         el.addEventListener('click', () => onMarkerSelect?.(m.id))
         markerElsRef.current.set(m.id, el)
       }
+
+      // Check if state changed to prevent unnecessary innerHTML rewrites
+      const stateStr = JSON.stringify({ isSelected, size, angle, label: m.label, cluster: m.isCluster, count: m.clusterCount, c: m.color })
+      if (el.dataset.state === stateStr) {
+        let mk = markersRef.current.get(m.id)
+        if (!mk) {
+          mk = new maplibregl.Marker({ element: el, anchor: 'bottom' })
+            .setLngLat([m.position.lng, m.position.lat])
+            .addTo(map)
+          markersRef.current.set(m.id, mk)
+        } else {
+          mk.setLngLat([m.position.lng, m.position.lat])
+        }
+        return // skip innerHTML update to prevent huge layout thrashing
+      }
+      el.dataset.state = stateStr
 
       // Get direction arrow based on angle
       const getDirectionArrow = (deg: number) => {
@@ -170,7 +186,7 @@ export default function MapView({
             </div>
 
             <div style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s ease; position: relative; display: flex; align-items: center; justify-content: center;" class="hover:scale-105">
-              <svg viewBox="0 0 64 128" width="24" height="40">
+              <svg viewBox="0 0 64 128" width="14" height="24">
                 <!-- Wheels -->
                 <rect x="8" y="24" width="8" height="20" rx="3" fill="#1e293b" />
                 <rect x="48" y="24" width="8" height="20" rx="3" fill="#1e293b" />
@@ -196,7 +212,7 @@ export default function MapView({
         const directionArrow = getDirectionArrow(angle)
         const plateName = m.label?.split(' ')[0] ?? ''
 
-      el.innerHTML = `
+        el.innerHTML = `
         <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
           ${isSelected && m.label ? `<div style="position: absolute; bottom: 100%; margin-bottom: 6px; background: white; padding: 4px 8px; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); font-size: 11px; font-weight: 700; white-space: nowrap; color: #0f172a; border: 1px solid ${m.color ?? '#e2e8f0'}; z-index: 10; display: flex; align-items: center; gap: 4px;">
             <span>${plateName}</span>
