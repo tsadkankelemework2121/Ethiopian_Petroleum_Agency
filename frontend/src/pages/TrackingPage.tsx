@@ -65,7 +65,15 @@ export default function TrackingPage() {
     }
   }, [])
 
-  const filtered = useMemo(() => {
+  // ===== PHASE 1: SEPARATE DATA FLOWS =====
+  // mapData: Only contains vehicles with valid coordinates for the map
+  // This is independent from list filtering, so map won't re-render when you search
+  const mapData = useMemo(() => {
+    return items.filter((t) => t.lat && t.lng)
+  }, [items])
+
+  // listData: Filtered vehicles for the list panel (can be searched)
+  const listData = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return items
     return items.filter((t) => {
@@ -74,13 +82,10 @@ export default function TrackingPage() {
     })
   }, [items, search])
 
-  // Do not slice, show all filtered vehicles
-  const fleetListItems = useMemo(() => filtered, [filtered])
-
+  // Build markers ONLY from mapData (not listData)
+  // This means searching the list won't cause map re-renders
   const markers = useMemo(() => {
-    const validFleets = fleetListItems.filter((t) => t.lat && t.lng)
-
-    return validFleets
+    return mapData
       .map((t) => {
         const lat = Number(t.lat)
         const lng = Number(t.lng)
@@ -108,7 +113,10 @@ export default function TrackingPage() {
         }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
-  }, [fleetListItems])
+  }, [mapData])
+
+  // Keep fleetListItems for backward compatibility (used for rendering the list)
+  const fleetListItems = useMemo(() => listData, [listData])
 
   const mapBounds = useMemo(() => {
     const validItems = items.filter((t) => t.lat && t.lng)
