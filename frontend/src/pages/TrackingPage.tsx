@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { List as VirtualList, type RowComponentProps } from 'react-window'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { GpsVehicle } from '../data/types'
 import MapView from '../components/map/MapView'
@@ -24,6 +25,14 @@ export default function TrackingPage() {
   const mapApiRef = useRef<import('../components/map/MapView').MapApi | null>(null)
 
   const defaultCenter = useMemo(() => ({ lat: 9.0192, lng: 38.7525 }), [])
+
+  // react-window sizing
+  const listHostRef = useRef<HTMLDivElement | null>(null)
+  const [listSize, setListSize] = useState({ width: 0, height: 0 })
+
+  const collapsedRowHeight = 82
+  const expandedRowHeight = 360
+  const expandedDetailsMaxHeight = expandedRowHeight - collapsedRowHeight + 2
 
   // Define statusTag function first (hoisted with function declaration)
   const statusTag = (v: GpsVehicle): { label: string; color: string } => {
@@ -156,6 +165,98 @@ export default function TrackingPage() {
     }
   }
 
+  // Measure the list container so react-window can calculate scroll space.
+  useLayoutEffect(() => {
+    const el = listHostRef.current
+    if (!el) return
+
+    const updateSize = () => {
+      setListSize({
+        width: el.clientWidth,
+        height: el.clientHeight,
+      })
+    }
+
+    updateSize()
+
+    const ro = new ResizeObserver(() => updateSize())
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  const getItemSize = (index: number) => {
+    const v = fleetListItems[index]
+    return v && v.imei === selectedId ? expandedRowHeight : collapsedRowHeight
+  }
+
+  type RowData = {
+    items: GpsVehicle[]
+    selectedId: string | undefined
+    onSelect: (v: GpsVehicle) => void
+  }
+
+  const Row = ({ index, style, items, selectedId: rowSelectedId, onSelect }: RowComponentProps<RowData>) => {
+    const v = items[index]
+    if (!v) return null
+
+    const tag = statusTag(v)
+    const plate = plateFromName(v.name)
+    const isSelected = v.imei === rowSelectedId
+
+    return (
+      <div style={style} className="border-b border-[#EEF2F7]">
+        <button
+          type="button"
+          onClick={() => onSelect(v)}
+          className="w-full px-5 py-4 text-left hover:bg-slate-50 transition"
+          style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+              {plate}
+            </div>
+            <span
+              className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
+              style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
+            >
+              {v.status}
+            </span>
+          </div>
+        </button>
+
+        {isSelected && (
+          <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50" style={{ maxHeight: expandedDetailsMaxHeight, overflowY: 'auto' }}>
+            <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate">{v.name}</div>
+            <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
+              <div className="rounded border bg-white p-2 shadow-sm">
+                <div className="text-slate-500">Speed</div>
+                <div className="font-semibold text-slate-900">{v.speed} km/h</div>
+              </div>
+              <div className="rounded border bg-white p-2 shadow-sm">
+                <div className="text-slate-500">Engine</div>
+                <div className="font-semibold text-slate-900">{v.engine}</div>
+              </div>
+              <div className="rounded border bg-white p-2 shadow-sm">
+                <div className="text-slate-500">Odometer</div>
+                <div className="font-semibold text-slate-900">{v.odometer}</div>
+              </div>
+              <div className="rounded border bg-white p-2 shadow-sm">
+                <div className="text-slate-500">Fuel</div>
+                <div className="font-semibold text-slate-900">{v.fuel_1}</div>
+              </div>
+            </div>
+            <div className="rounded border bg-white p-2 text-[10px] shadow-sm">
+              <div className="text-slate-500 mb-1 font-semibold uppercase tracking-wider">Location Data</div>
+              <div><span className="font-medium text-slate-700">GPS:</span> {v.lat}, {v.lng}</div>
+              <div><span className="font-medium text-slate-700">Latest update:</span> {v.dt_tracker}</div>
+              <div><span className="font-medium text-slate-700">Latest server:</span> {v.dt_server}</div>
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
   return (
     <div className="relative h-full w-full bg-slate-100 overflow-hidden">
       {/* Map background */}
@@ -209,70 +310,27 @@ export default function TrackingPage() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
+        <div ref={listHostRef} className="flex-1 overflow-hidden">
           {loading ? (
             <div className="p-4 text-sm text-slate-600">Loading…</div>
           ) : error ? (
             <div className="p-4 text-sm text-red-600">{error}</div>
+          ) : listSize.height > 0 && listSize.width > 0 ? (
+            <VirtualList
+              style={{ height: listSize.height, width: listSize.width }}
+            rowCount={fleetListItems.length}
+              rowHeight={(index) => getItemSize(index)}
+              rowComponent={Row}
+            rowProps={{
+              items: fleetListItems,
+              selectedId,
+              onSelect: (v: GpsVehicle) => handleSelectVehicle(v),
+            }}
+            >
+              {/* List renders through rowComponent */}
+          </VirtualList>
           ) : (
-            fleetListItems.map((v) => {
-              const tag = statusTag(v)
-              const plate = plateFromName(v.name)
-              const isSelected = v.imei === selectedId
-
-              return (
-                <div key={v.imei} className="border-b border-[#EEF2F7]">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectVehicle(v)}
-                    className="w-full px-5 py-4 text-left hover:bg-slate-50 transition"
-                    style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
-                        {plate}
-                      </div>
-                      <span
-                        className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
-                        style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
-                      >
-                        {v.status}
-                      </span>
-                    </div>
-                  </button>
-
-                  {isSelected && (
-                    <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50">
-                      <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate">{v.name}</div>
-                      <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
-                        <div className="rounded border bg-white p-2 shadow-sm">
-                          <div className="text-slate-500">Speed</div>
-                          <div className="font-semibold text-slate-900">{v.speed} km/h</div>
-                        </div>
-                        <div className="rounded border bg-white p-2 shadow-sm">
-                          <div className="text-slate-500">Engine</div>
-                          <div className="font-semibold text-slate-900">{v.engine}</div>
-                        </div>
-                        <div className="rounded border bg-white p-2 shadow-sm">
-                          <div className="text-slate-500">Odometer</div>
-                          <div className="font-semibold text-slate-900">{v.odometer}</div>
-                        </div>
-                        <div className="rounded border bg-white p-2 shadow-sm">
-                          <div className="text-slate-500">Fuel</div>
-                          <div className="font-semibold text-slate-900">{v.fuel_1}</div>
-                        </div>
-                      </div>
-                      <div className="rounded border bg-white p-2 text-[10px] shadow-sm">
-                        <div className="text-slate-500 mb-1 font-semibold uppercase tracking-wider">Location Data</div>
-                        <div><span className="font-medium text-slate-700">GPS:</span> {v.lat}, {v.lng}</div>
-                        <div><span className="font-medium text-slate-700">Latest update:</span> {v.dt_tracker}</div>
-                        <div><span className="font-medium text-slate-700">Latest server:</span> {v.dt_server}</div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            })
+            <div className="p-4 text-sm text-slate-600">Loading list…</div>
           )}
         </div>
 

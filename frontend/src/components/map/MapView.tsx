@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -43,6 +43,15 @@ type Props = {
 }
 
 // MapController exposes the imperative API and syncs bounds for supercluster
+type MapControllerProps = {
+  apiRef: MutableRefObject<MapApi | null>
+  onMapReady?: (api: MapApi) => void
+  center: Position
+  zoomProp: number
+  setBounds: (bounds: [number, number, number, number] | undefined) => void
+  setZoom: (z: number) => void
+}
+
 function MapController({ 
   apiRef, 
   onMapReady, 
@@ -50,7 +59,7 @@ function MapController({
   zoomProp, 
   setBounds, 
   setZoom 
-}: any) {
+}: MapControllerProps) {
   const map = useMap()
 
   useEffect(() => {
@@ -85,7 +94,7 @@ function MapController({
     }
     map.on('moveend', update)
     map.on('zoomend', update)
-    update() 
+    update()
     return () => {
       map.off('moveend', update)
       map.off('zoomend', update)
@@ -159,15 +168,26 @@ const getVehicleIcon = (m: MarkerType, isSelected: boolean) => {
 
 const clusterIconCache = new Map<string, L.DivIcon>()
 
-const getClusterIcon = (cluster: any, supercluster: any) => {
-  const count = cluster.properties.point_count
-  const cacheKey = `cluster-${cluster.id}-${count}`
+const getClusterIcon = (cluster: unknown, supercluster: unknown) => {
+  const clusterTyped = cluster as {
+    id: number
+    properties: { point_count: number }
+  }
+  const superclusterTyped = supercluster as {
+    getLeaves: (clusterId: number, limit: number) => { properties: { marker: MarkerType } }[]
+  } | null
+
+  const count = clusterTyped.properties.point_count
+  const cacheKey = `cluster-${clusterTyped.id}-${count}`
   const cached = clusterIconCache.get(cacheKey)
   if (cached) return cached
 
   // Optionally, get some leaves to show plates if it's a small cluster
   const maxLeavesToShow = 8
-  const leaves = count <= maxLeavesToShow && supercluster ? supercluster.getLeaves(cluster.id, maxLeavesToShow) : []
+  const leaves =
+    count <= maxLeavesToShow && superclusterTyped
+      ? superclusterTyped.getLeaves(clusterTyped.id, maxLeavesToShow)
+      : []
   
   const html = `
     <div style="position: relative; display: flex; flex-direction: column; align-items: center;" class="group">
@@ -176,8 +196,8 @@ const getClusterIcon = (cluster: any, supercluster: any) => {
           <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-100 pb-2 uppercase tracking-wider">Vehicles (${count})</div>
           ${leaves.length > 0 ? `
             <div class="flex flex-col gap-1.5">
-              ${leaves.map((l: any) => {
-                const m = l.properties.marker as MarkerType
+              ${leaves.map((l) => {
+                const m = (l as { properties: { marker: MarkerType } }).properties.marker
                 return `
                   <div class="flex items-center justify-between bg-slate-50/50 px-2 py-1.5 rounded-md">
                     <span class="text-[11px] font-bold text-slate-700">${m.label?.split(' ')[0] ?? ''}</span>
@@ -238,6 +258,17 @@ export default function MapView({
   const [bounds, setBounds] = useState<[number, number, number, number] | undefined>(undefined)
   const [currentZoom, setCurrentZoom] = useState(zoom)
 
+  const selectedMarker = useMemo(() => {
+    if (!selectedMarkerId) return undefined
+    return markers.find(m => m.id === selectedMarkerId)
+  }, [markers, selectedMarkerId])
+
+  // Pre-create the selected icon once per selection to avoid rework on every marker render.
+  const selectedIcon = useMemo(() => {
+    if (!selectedMarker) return undefined
+    return getVehicleIcon(selectedMarker, true)
+  }, [selectedMarker])
+
   const points = useMemo(() => {
     return markers.map(m => ({
       type: "Feature" as const,
@@ -264,7 +295,7 @@ export default function MapView({
   // so we don't render 3000 markers at once, causing extreme lag.
   const renderFeatures = useMemo(() => {
     if (isClustered) return clusters
-    if (!bounds) return points
+    if (!bounds) return []
     
     const [minLng, minLat, maxLng, maxLat] = bounds
     return points.filter(p => {
@@ -272,6 +303,48 @@ export default function MapView({
       return lng >= minLng && lng <= maxLng && lat >= minLat && lat <= maxLat
     })
   }, [isClustered, clusters, points, bounds])
+
+  // Memoize unselected marker elements so selection changes don't force rebuilding their icons.
+  const renderedUnselectedVehicleMarkers = useMemo(() => {
+    if (isClustered) return null
+    if (!renderFeatures || renderFeatures.length === 0) return null
+
+    return renderFeatures.map((feature) => {
+      const m = (feature as { properties: { marker: MarkerType } }).properties.marker
+      if (m.id === selectedMarkerId) return null
+
+      return (
+        <Marker
+          key={m.id}
+          position={[m.position.lat, m.position.lng]}
+          icon={getVehicleIcon(m, false)}
+          eventHandlers={{
+            click: () => onMarkerSelect?.(m.id)
+          }}
+          zIndexOffset={0}
+        />
+      )
+    })
+  }, [isClustered, renderFeatures, selectedMarkerId, onMarkerSelect])
+
+  const renderedSelectedVehicleMarker = useMemo(() => {
+    if (!selectedMarkerId || !selectedMarker || isClustered) return null
+    const lat = selectedMarker.position.lat
+    const lng = selectedMarker.position.lng
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
+
+    return (
+      <Marker
+        key={`selected-${selectedMarker.id}`}
+        position={[lat, lng]}
+        icon={selectedIcon}
+        eventHandlers={{
+          click: () => onMarkerSelect?.(selectedMarker.id)
+        }}
+        zIndexOffset={1000}
+      />
+    )
+  }, [selectedMarkerId, selectedMarker, isClustered, selectedIcon, onMarkerSelect])
 
   return (
     <div className={cn('w-full h-full min-h-[100px] overflow-hidden relative z-0', className)}>
@@ -293,46 +366,53 @@ export default function MapView({
           setBounds={setBounds}
           setZoom={setCurrentZoom}
         />
-        
-        {renderFeatures.map((feature: any) => {
-          const [lng, lat] = feature.geometry.coordinates
-          const { cluster: isCluster } = feature.properties
-          
-          if (isCluster) {
+
+        {/* Clustered rendering (keeps previous behavior) */}
+        {isClustered &&
+          renderFeatures.map((feature) => {
+            const [lng, lat] = (feature as { geometry: { coordinates: [number, number] } }).geometry.coordinates
+            const { cluster: isCluster } = (feature as { properties: { cluster: boolean } }).properties
+            const featureId = (feature as { id: number }).id
+
+            if (isCluster) {
+              return (
+                <Marker
+                  key={`cluster-${featureId}`}
+                  position={[lat, lng]}
+                  icon={getClusterIcon(feature, supercluster)}
+                  eventHandlers={{
+                    click: () => {
+                      if (!supercluster) return
+                      const expansionZoom = Math.min(
+                        supercluster.getClusterExpansionZoom(featureId),
+                        20
+                      )
+                      apiRef.current?.flyTo({ lat, lng }, expansionZoom)
+                    }
+                  }}
+                />
+              )
+            }
+
+            const m = (feature as { properties: { marker: MarkerType } }).properties.marker
+            const isSelected = m.id === selectedMarkerId
+
             return (
               <Marker
-                key={`cluster-${feature.id}`}
-                position={[lat, lng]}
-                icon={getClusterIcon(feature, supercluster)}
+                key={m.id}
+                position={[m.position.lat, m.position.lng]}
+                icon={getVehicleIcon(m, isSelected)}
                 eventHandlers={{
-                  click: () => {
-                    if (!supercluster) return
-                    const expansionZoom = Math.min(
-                      supercluster.getClusterExpansionZoom(feature.id),
-                      20
-                    );
-                    apiRef.current?.flyTo({ lat, lng }, expansionZoom)
-                  }
+                  click: () => onMarkerSelect?.(m.id)
                 }}
+                zIndexOffset={isSelected ? 1000 : 0}
               />
             )
-          }
+          })}
 
-          const m = feature.properties.marker as MarkerType
-          const isSelected = m.id === selectedMarkerId
-
-          return (
-              <Marker
-              key={m.id}
-              position={[m.position.lat, m.position.lng]}
-              icon={getVehicleIcon(m, isSelected)}
-              eventHandlers={{
-                click: () => onMarkerSelect?.(m.id)
-              }}
-              zIndexOffset={isSelected ? 1000 : 0}
-            />
-          )
-        })}
+        {/* Non-clustered rendering */}
+        {!isClustered && renderedUnselectedVehicleMarkers}
+        {!isClustered && renderedSelectedVehicleMarker}
       </MapContainer>
     </div>
   )
