@@ -114,6 +114,7 @@ function NewOilCompanyForm({
           <input
             type="text"
             required
+            placeholder="Enter company name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -123,6 +124,7 @@ function NewOilCompanyForm({
           <label className="block text-sm font-semibold text-text mb-1">Contact Person 1</label>
           <input
             type="text"
+            placeholder="Enter primary contact name"
             value={formData.person1}
             onChange={(e) => setFormData({ ...formData, person1: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -132,6 +134,7 @@ function NewOilCompanyForm({
           <label className="block text-sm font-semibold text-text mb-1">Contact Person 2</label>
           <input
             type="text"
+            placeholder="Enter secondary contact name"
             value={formData.person2}
             onChange={(e) => setFormData({ ...formData, person2: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -141,6 +144,7 @@ function NewOilCompanyForm({
           <label className="block text-sm font-semibold text-text mb-1">Phone 1</label>
           <input
             type="tel"
+            placeholder="e.g. +251 911 234 567"
             value={formData.phone1}
             onChange={(e) => setFormData({ ...formData, phone1: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -150,6 +154,7 @@ function NewOilCompanyForm({
           <label className="block text-sm font-semibold text-text mb-1">Phone 2</label>
           <input
             type="tel"
+            placeholder="e.g. +251 911 234 568"
             value={formData.phone2}
             onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -159,6 +164,7 @@ function NewOilCompanyForm({
           <label className="block text-sm font-semibold text-text mb-1">Email 1</label>
           <input
             type="email"
+            placeholder="e.g. contact@company.com"
             value={formData.email1}
             onChange={(e) => setFormData({ ...formData, email1: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -168,6 +174,7 @@ function NewOilCompanyForm({
           <label className="block text-sm font-semibold text-text mb-1">Email 2</label>
           <input
             type="email"
+            placeholder="e.g. alt@company.com"
             value={formData.email2}
             onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"

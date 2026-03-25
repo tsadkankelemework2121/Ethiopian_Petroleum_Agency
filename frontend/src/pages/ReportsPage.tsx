@@ -286,14 +286,16 @@ export default function ReportsPage() {
             onChange={(e) => setQuery(e.target.value)}
           />
           <input
+            type="date"
             className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-            placeholder="From (YYYY-MM-DD)"
+            placeholder="From"
             value={from}
             onChange={(e) => setFrom(e.target.value)}
           />
           <input
+            type="date"
             className="rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-            placeholder="To (YYYY-MM-DD)"
+            placeholder="To"
             value={to}
             onChange={(e) => setTo(e.target.value)}
           />

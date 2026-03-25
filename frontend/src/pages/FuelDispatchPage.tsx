@@ -325,6 +325,7 @@ function NewDispatchForm({
           <input
             type="text"
             required
+            placeholder="e.g. PEA001"
             value={formData.peaDispatchNo}
             onChange={(e) => setFormData({ ...formData, peaDispatchNo: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
@@ -332,7 +333,7 @@ function NewDispatchForm({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Oil Company</label>
+           <label className="block text-sm font-semibold mb-1">Oil Company</label>
           <select
             required
             value={formData.oilCompanyId}
@@ -397,6 +398,7 @@ function NewDispatchForm({
           <input
             type="text"
             required
+            placeholder="Enter dispatch location"
             value={formData.dispatchLocation}
             onChange={(e) => setFormData({ ...formData, dispatchLocation: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
@@ -451,6 +453,7 @@ function NewDispatchForm({
             type="number"
             required
             min="1"
+            placeholder="e.g. 45000"
             value={formData.dispatchedLiters}
             onChange={(e) => setFormData({ ...formData, dispatchedLiters: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"

@@ -179,6 +179,7 @@ export default function ProfilePage() {
                     <input
                       type="text"
                       name="name"
+                      placeholder="Enter full name"
                       value={formData.name}
                       onChange={handleInputChange}
                       className="text-2xl font-bold border-b-2 outline-none pb-1 border-primary"
