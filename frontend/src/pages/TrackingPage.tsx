@@ -10,19 +10,7 @@ const COLORS = {
   bg: '#f3f4f6',
 } as const
 
-const CLUSTER_RADIUS_KM = 50 // The maximum distance in kilometers to group cars together
 
-function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371 // Radius of the Earth in km
-  const dLat = (lat2 - lat1) * (Math.PI / 180)
-  const dLon = (lon2 - lon1) * (Math.PI / 180)
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) * 
-    Math.sin(dLon / 2) * Math.sin(dLon / 2)
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
-  return R * c
-}
 
 export default function TrackingPage() {
   const [search, setSearch] = useState('')
@@ -92,70 +80,6 @@ export default function TrackingPage() {
   const markers = useMemo(() => {
     const validFleets = fleetListItems.filter((t) => t.lat && t.lng)
 
-    if (isClustered && validFleets.length > 0) {
-      const clusters: any[] = []
-      let unclustered = [...validFleets]
-
-      while (unclustered.length > 0) {
-        const base = unclustered[0]
-        const baseLat = Number(base.lat)
-        const baseLng = Number(base.lng)
-
-        // Find all vehicles within the cluster radius
-        const currentCluster = unclustered.filter(v => 
-          getDistance(baseLat, baseLng, Number(v.lat), Number(v.lng)) <= CLUSTER_RADIUS_KM
-        )
-
-        // Remove them from the unclustered list
-        unclustered = unclustered.filter(v => 
-          getDistance(baseLat, baseLng, Number(v.lat), Number(v.lng)) > CLUSTER_RADIUS_KM
-        )
-
-        if (currentCluster.length > 1) {
-          // It's a cluster
-          const avgLat = currentCluster.reduce((sum, t) => sum + Number(t.lat), 0) / currentCluster.length
-          const avgLng = currentCluster.reduce((sum, t) => sum + Number(t.lng), 0) / currentCluster.length
-
-          clusters.push({
-            id: `cluster-${base.imei}`,
-            position: { lat: avgLat, lng: avgLng },
-            isCluster: true,
-            clusterCount: currentCluster.length,
-            clusterVehicles: currentCluster.map(v => ({
-              plate: plateFromName(v.name),
-              statusColor: statusTag(v).color
-            }))
-          })
-        } else {
-          // Single vehicle that is out of range, should remain a standalone marker
-          const lat = Number(base.lat)
-          const lng = Number(base.lng)
-          const angle = Number(base.angle) || 0
-          const tag = statusTag(base)
-          const markerColor =
-            tag.label === 'MOVING'
-              ? '#22c55e'
-              : tag.label === 'IDLE'
-                ? COLORS.gold
-                : tag.label === 'OFFLINE'
-                  ? COLORS.gray
-                  : '#ef4444'
-
-          clusters.push({
-            id: base.imei,
-            position: { lat, lng },
-            label: base.name,
-            subtitle: base.status,
-            status: base.status,
-            angle,
-            color: markerColor,
-          })
-        }
-      }
-
-      return clusters
-    }
-
     return validFleets
       .map((t) => {
         const lat = Number(t.lat)
@@ -184,7 +108,7 @@ export default function TrackingPage() {
         }
       })
       .filter((m): m is NonNullable<typeof m> => m !== null)
-  }, [fleetListItems, isClustered])
+  }, [fleetListItems])
 
   const mapBounds = useMemo(() => {
     const validItems = items.filter((t) => t.lat && t.lng)
@@ -240,6 +164,7 @@ export default function TrackingPage() {
         center={defaultCenter}
         zoom={6}
         markers={markers}
+        isClustered={isClustered}
         selectedMarkerId={selectedId}
         onMarkerSelect={(id) => {
           setSelectedId(id)
