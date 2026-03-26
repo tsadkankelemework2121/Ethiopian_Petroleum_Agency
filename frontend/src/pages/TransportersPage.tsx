@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getTransporters } from '../data/mockApi'
+import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Transporter, Vehicle } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { useAuth } from '../context/AuthContext'
@@ -245,8 +245,44 @@ export default function TransportersPage() {
   const [showTruckFormForTransporter, setShowTruckFormForTransporter] = useState<string | null>(null)
 
   useEffect(() => {
-    void getTransporters(user?.companyId).then(setItems)
-  }, [user?.companyId])
+    void fetchGpsVehicles()
+      .then((vehicles) => {
+        const transportersMap = new Map<string, Transporter>()
+
+        vehicles.forEach((v) => {
+          const transName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
+          if (!transName) return // Skip vehicles with no transporter
+
+          let transporter = transportersMap.get(transName)
+          if (!transporter) {
+            transporter = {
+              id: `TR-${transName}`,
+              name: transName,
+              location: { region: '—', city: '—', address: '—' },
+              contacts: {},
+              vehicles: [],
+              oilCompanyId: v.group || undefined,
+            }
+            transportersMap.set(transName, transporter)
+          }
+
+          transporter.vehicles.push({
+            id: v.imei,
+            plateRegNo: v.name,
+            trailerRegNo: '—',
+            sideNo: '—',
+            driverName: '—',
+            manufacturer: '—',
+            model: '—',
+            yearOfManufacture: new Date().getFullYear(),
+            driverPhone: '—',
+          })
+        })
+
+        setItems(Array.from(transportersMap.values()))
+      })
+      .catch(console.error)
+  }, [])
 
   const handleCreateTransporter = (t: Transporter) => {
     setItems((prev) => [...prev, t])
