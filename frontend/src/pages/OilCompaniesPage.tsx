@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { OilCompany } from '../data/types'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { PlusIcon } from '@heroicons/react/24/outline'
-import { getOilCompanies } from '../data/mockApi'
+import { fetchGpsVehicles } from '../data/gpsApi'
 import { useEffect } from 'react'
 
 export default function OilCompaniesPage() {
@@ -10,7 +10,22 @@ export default function OilCompaniesPage() {
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
-    void getOilCompanies().then(setCompanies)
+    void fetchGpsVehicles().then((vehicles) => {
+      const groups = Array.from(new Set(vehicles.map((v) => v.group).filter(Boolean))) as string[];
+      const mappedCompanies: OilCompany[] = groups.map((group) => ({
+        id: `OC-${group}`,
+        name: group,
+        contacts: {
+          person1: undefined,
+          person2: undefined,
+          phone1: undefined,
+          phone2: undefined,
+          email1: undefined,
+          email2: undefined,
+        },
+      }));
+      setCompanies(mappedCompanies);
+    }).catch(console.error);
   }, [])
 
   return (
