@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { OilCompany } from '../data/types'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
-import { PlusIcon } from '@heroicons/react/24/outline'
+// import { PlusIcon } from '@heroicons/react/24/outline'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import { useEffect } from 'react'
 
@@ -30,7 +30,7 @@ export default function OilCompaniesPage() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-end">
+      {/* <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-end">
           <button
             type="button"
             onClick={() => setShowForm(!showForm)}
@@ -40,7 +40,7 @@ export default function OilCompaniesPage() {
             New Oil Company
           </button>
         
-        </div>
+        </div> */}
 
       <ModalOverlay
         isOpen={showForm}
