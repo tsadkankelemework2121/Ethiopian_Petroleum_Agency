@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('depots', function (Blueprint $table) {
             $table->id();
             $table->string('depot_id')->unique();
+            $table->string('code')->unique();
             $table->string('name');
             $table->string('region');
             $table->string('city');

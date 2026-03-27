@@ -18,6 +18,7 @@ class DepotSeeder extends Seeder
 
         Depot::create([
             'depot_id' => 'ID8548',
+            'code' => 'ID8548',
             'name' => 'Depot 1',
             'region' => 'Addis Ababa',
             'city' => 'Addis Ababa',
@@ -33,6 +34,7 @@ class DepotSeeder extends Seeder
 
         Depot::create([
             'depot_id' => 'ID6341',
+            'code' => 'ID6341',
             'name' => 'Depot 2',
             'region' => 'Oromia',
             'city' => 'Adama',
@@ -47,6 +49,7 @@ class DepotSeeder extends Seeder
 
         Depot::create([
             'depot_id' => 'ID4025',
+            'code' => 'ID4025',
             'name' => 'Depot 3',
             'region' => 'Amhara',
             'city' => 'Bahir Dar',

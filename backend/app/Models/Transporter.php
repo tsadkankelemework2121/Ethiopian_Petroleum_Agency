@@ -6,31 +6,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Depot extends Model
+class Transporter extends Model
 {
     protected $fillable = [
-        'depot_id',
-        'code',
+        'transporter_id',
         'name',
         'region',
         'city',
         'address',
-        'person1',
-        'person2',
+        'contact_person1',
+        'contact_person2',
         'phone1',
         'phone2',
-        'email1',
-        'email2',
-        'latitude',
-        'longitude',
-        'map_link',
+        'email',
         'oil_company_id',
     ];
 
-    protected $casts = [
-        'latitude' => 'float',
-        'longitude' => 'float',
-    ];
+    public function vehicles(): HasMany
+    {
+        return $this->hasMany(Vehicle::class);
+    }
 
     public function oilCompany(): BelongsTo
     {
@@ -39,6 +34,6 @@ class Depot extends Model
 
     public function dispatches(): HasMany
     {
-        return $this->hasMany(Dispatch::class, 'destination_depot_id');
+        return $this->hasMany(Dispatch::class);
     }
 }

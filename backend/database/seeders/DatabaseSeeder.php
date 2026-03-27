@@ -19,6 +19,9 @@ class DatabaseSeeder extends Seeder
             OilCompanySeeder::class,
             UserSeeder::class,
             DepotSeeder::class,
+            TransporterSeeder::class,
+            VehicleSeeder::class,
+            DispatchSeeder::class,
         ]);
     }
 }
