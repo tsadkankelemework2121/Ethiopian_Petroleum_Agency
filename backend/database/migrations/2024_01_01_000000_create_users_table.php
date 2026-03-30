@@ -18,7 +18,6 @@ return new class extends Migration
             $table->string('password');
             $table->enum('role', ['epa_admin', 'oil_company'])->default('oil_company');
             $table->unsignedBigInteger('company_id')->nullable();
-            $table->rememberToken();
             $table->timestamps();
         });
     }

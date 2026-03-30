@@ -1,56 +1,55 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useMutation } from '@tanstack/react-query';
+import api from '../api/axios';
 import truckImage from '../assets/truck.png';
 import logo from '../assets/logo.png';
 
 const LoginPage = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const mutation = useMutation({
+    mutationFn: async (credentials: {email: string, password: string}) => {
+      const response = await api.post('/auth/login', credentials);
+      return response.data;
+    },
+    onSuccess: (data) => {
+      // data contains { token, user: {id, name, email, role, company_id} }
+      login(data.user, data.token);
+      navigate('/', { replace: true });
+    },
+    onError: (err: any) => {
+      if (err.response && err.response.data && err.response.data.message) {
+         setErrorMsg(err.response.data.message);
+      } else {
+         setErrorMsg('Invalid email or password');
+      }
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-
-    if (
-      (email === 'admin@epa.com' && password === 'admin123') ||
-      ((email === 'admin@oilcompany.com' || email === 'admin@oilcomapny.com') && password === 'admin123')
-    ) {
-      login(email);
-      navigate('/', { replace: true });
-    } else {
-      setError('Invalid email or password');
-    }
-  };
-
-  const handleAutoFillEpa = () => {
-    setEmail('admin@epa.com');
-    setPassword('admin123');
-  };
-
-  const handleAutoFillOil = () => {
-    setEmail('admin@oilcomapny.com');
-    setPassword('admin123');
+    setErrorMsg('');
+    mutation.mutate({ email, password });
   };
 
   return (
     <div className="relative h-screen overflow-hidden flex items-center justify-center bg-gray-900">
-      {/* Background Image with blur */}
       <div className="absolute inset-0 z-0">
         <img 
           className="absolute inset-0 h-full w-full object-cover blur-[6px] scale-105" 
           src={truckImage} 
           alt="Blue Truck Background" 
         />
-        {/* Overlays for readability and brand tint */}
         <div className="absolute inset-0 bg-primary/40 mix-blend-multiply" />
         <div className="absolute inset-0 bg-gray-900/40" />
       </div>
 
-      {/* Login form container */}
       <div className="relative z-10 w-full max-w-sm px-4 lg:max-w-md scale-90 sm:scale-95 lg:scale-100">
         <div className="flex flex-col items-center text-center">
           <div className="bg-white/90 p-3 rounded-2xl shadow-lg mb-5 inline-block">
@@ -78,6 +77,7 @@ const LoginPage = () => {
                   autoComplete="email"
                   required
                   value={email}
+                  disabled={mutation.isPending}
                   onChange={(e) => setEmail(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white/80"
                 />
@@ -96,49 +96,29 @@ const LoginPage = () => {
                   autoComplete="current-password"
                   required
                   value={password}
+                  disabled={mutation.isPending}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm bg-white/80"
                 />
               </div>
             </div>
 
-            {error && (
+            {errorMsg && (
               <div className="text-red-600 text-sm bg-red-50/90 p-2 rounded-lg border border-red-100">
-                {error}
+                {errorMsg}
               </div>
             )}
 
             <div className="pt-2">
               <button
                 type="submit"
-                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-primary hover:bg-primary-strong focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
+                disabled={mutation.isPending}
+                className="w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-primary hover:bg-primary-strong disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all"
               >
-                Sign in
+                {mutation.isPending ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>
-
-            <div className="mt-6 border-t border-gray-200 pt-6">
-              <div className="flex flex-col gap-2">
-                <button
-                  type="button"
-                  onClick={handleAutoFillEpa}
-                  className="w-full flex justify-center py-2.5 px-4 border text-primary border-primary rounded-lg shadow-sm text-sm font-bold bg-blue-50/50 hover:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  Auto Fill EPA Admin
-                </button>
-                <button
-                  type="button"
-                  onClick={handleAutoFillOil}
-                  className="w-full flex justify-center py-2.5 px-4 border text-primary border-primary rounded-lg shadow-sm text-sm font-bold bg-blue-50/50 hover:bg-blue-100 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
-                >
-                  Auto Fill Oil Company Admin
-                </button>
-              </div>
-              <p className="mt-3 text-xs text-center text-gray-500 font-medium">
-                (password: admin123)
-              </p>
-            </div>
         </div>
       </div>
     </div>
