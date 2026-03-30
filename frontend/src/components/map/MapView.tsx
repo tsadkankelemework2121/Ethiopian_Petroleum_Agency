@@ -212,31 +212,18 @@ const getClusterIcon = (cluster: unknown, supercluster: unknown) => {
         </div>
       </div>
 
-      <div style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s ease; position: relative; display: flex; align-items: center; justify-content: center;" class="hover:scale-105">
-        <div style="position: absolute; top: -10px; right: -10px; background: #ef4444; color: white; border-radius: 999px; padding: 2px 6px; font-size: 10px; font-weight: bold; border: 2px solid white; z-index: 10;">
+      <div style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s ease; display: flex; align-items: center; justify-content: center;" class="hover:scale-110">
+        <div style="background: #067cc1; color: white; border-radius: 999px; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 8px; font-size: 13px; font-weight: bold; border: 2.5px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
           ${count}
         </div>
-        <svg viewBox="0 0 64 128" width="14" height="24">
-          <rect x="8" y="24" width="8" height="20" rx="3" fill="#1e293b" />
-          <rect x="48" y="24" width="8" height="20" rx="3" fill="#1e293b" />
-          <rect x="6" y="70" width="8" height="20" rx="3" fill="#1e293b" />
-          <rect x="50" y="70" width="8" height="20" rx="3" fill="#1e293b" />
-          <rect x="6" y="96" width="8" height="20" rx="3" fill="#1e293b" />
-          <rect x="50" y="96" width="8" height="20" rx="3" fill="#1e293b" />
-          <path d="M 14 26 C 14 10 24 4 32 4 C 40 4 50 10 50 26 L 50 42 C 50 48 48 52 40 52 L 24 52 C 16 52 14 48 14 42 Z" fill="#94a3b8" />
-          <path d="M 18 30 L 46 30 L 44 14 C 44 14 40 10 32 10 C 24 10 20 14 20 14 Z" fill="#38bdf8" opacity="0.9" />
-          <rect x="22" y="34" width="20" height="12" rx="4" fill="#ffffff" opacity="0.3" />
-          <rect x="28" y="52" width="8" height="10" fill="#475569" />
-          <rect x="10" y="60" width="44" height="64" rx="10" fill="#f8fafc" stroke="#94a3b8" stroke-width="3" />
-        </svg>
       </div>
     </div>
   `
   const icon = L.divIcon({
     html,
     className: '',
-    iconSize: [28, 48],
-    iconAnchor: [14, 48]
+    iconSize: [40, 40],
+    iconAnchor: [20, 20]
   })
   clusterIconCache.set(cacheKey, icon)
   return icon

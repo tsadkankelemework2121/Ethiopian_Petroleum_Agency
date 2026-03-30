@@ -75,6 +75,7 @@ export default function DepotsPage() {
           companyId={user?.companyId}
           onClose={() => setShowForm(false)}
           onSubmit={(newDepot) => {
+            // Note: newDepot here is the raw formData payload we passed from the form
             api.post('/depots', newDepot)
               .then((res) => {
                 const d = res.data;
@@ -87,7 +88,8 @@ export default function DepotsPage() {
                     email1: d.email1, email2: d.email2
                   },
                   mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
-                  mapLink: d.map_link
+                  mapLink: d.map_link,
+                  oilCompanyId: d.oil_company_id,
                 };
                 setItems([...items, mappedObj])
                 setShowForm(false)
@@ -303,29 +305,25 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const newDepot: Depot = {
-      id: `DEP-${Date.now()}`,
+    
+    // Flat payload for backend
+    const payload = {
       name: formData.name,
-      location: {
-        region: formData.region,
-        city: formData.city,
-        address: formData.address,
-      },
-      contacts: {
-        person1: formData.person1 || undefined,
-        person2: formData.person2 || undefined,
-        phone1: formData.phone1 || undefined,
-        phone2: formData.phone2 || undefined,
-        email1: formData.email1 || undefined,
-        email2: formData.email2 || undefined,
-      },
-      mapLocation: undefined, // Handled implicitly by backend
-      mapLink: mapLink || undefined,
-      lat: formData.lat ? Number(formData.lat) : undefined,
-      lng: formData.lng ? Number(formData.lng) : undefined,
+      region: formData.region,
+      city: formData.city,
+      address: formData.address,
+      person1: formData.person1 || null,
+      person2: formData.person2 || null,
+      phone1: formData.phone1 || null,
+      phone2: formData.phone2 || null,
+      email1: formData.email1 || null,
+      email2: formData.email2 || null,
+      lat: formData.lat ? Number(formData.lat) : null,
+      lng: formData.lng ? Number(formData.lng) : null,
+      map_link: mapLink || null,
       oil_company_id: companyId,
-    } as any // Quick override for payload shape since it maps exactly to DB
-    onSubmit(newDepot)
+    } as any
+    onSubmit(payload)
   }
 
   return (
