@@ -1,7 +1,7 @@
-
 import { useEffect, useMemo, useState } from 'react'
 import { PlusIcon } from 'lucide-react'
-import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
+import api from '../api/axios'
+import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../data/types'
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
@@ -22,20 +22,101 @@ export default function FuelDispatchPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
 
+  // Derive if current user can add dispatches
+  const canAddDispatch = user?.role?.toUpperCase() === 'EPA_ADMIN' || user?.role?.toUpperCase() === 'SUPER_ADMIN'
+
+  // Fetch tasks
+  const fetchTasks = () => {
+    api.get('/dispatches', { params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {} })
+      .then((res) => {
+        const fetchedTasks = res.data.map((d: any) => ({
+          peaDispatchNo: d.pea_dispatch_no,
+          oilCompanyId: d.oil_company_id,
+          transporterId: d.transporter_id,
+          vehicleId: d.vehicle_id,
+          dispatchDateTime: d.dispatch_datetime.replace(' ', 'T'),
+          dispatchLocation: d.dispatch_location,
+          destinationDepotId: d.destination_depot_id?.toString() || '',
+          etaDateTime: d.eta_datetime.replace(' ', 'T'),
+          dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+          fuelType: d.fuel_type,
+          dispatchedLiters: Number(d.dispatched_liters),
+          status: d.status,
+        }))
+        setTasks(fetchedTasks)
+      })
+      .catch(console.error)
+  }
+
   useEffect(() => {
-    void Promise.all([
-      getDispatchTasks(user?.companyId), 
-      getDepots(user?.companyId), 
-      getTransporters(user?.companyId), 
-      getOilCompanies()
-    ]).then(
-      ([t, d, tr, oc]) => {
-        setTasks(t)
-        setDepots(d)
-        setTransporters(tr)
-        setOilCompanies(oc)
-      },
-    )
+    fetchTasks()
+    
+    // Fetch all Depots to resolve addresses in the list
+    api.get('/depots')
+      .then((res) => {
+         const mappedDepots = res.data.map((d: any) => ({
+          ...d,
+          id: d.id.toString(),
+          location: { region: d.region, city: d.city, address: d.address },
+          contacts: {
+            person1: d.person1, person2: d.person2,
+            phone1: d.phone1, phone2: d.phone2,
+            email1: d.email1, email2: d.email2
+          },
+          mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
+          mapLink: d.map_link,
+          oilCompanyId: d.oil_company_id,
+        }))
+        setDepots(mappedDepots)
+      })
+      .catch(console.error)
+
+    fetchGpsVehicles()
+      .then((vehicles) => {
+        const transportersMap = new Map<string, Transporter>()
+        const oilCompaniesSet = new Set<string>()
+
+        vehicles.forEach((v) => {
+          const transName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
+          const groupName = v.group || ''
+          
+          if (groupName) oilCompaniesSet.add(groupName)
+          
+          if (!transName) return // Skip vehicles with no transporter
+
+          let transporter = transportersMap.get(transName)
+          if (!transporter) {
+            transporter = {
+              id: transName,
+              name: transName,
+              location: { region: '—', city: '—', address: '—' },
+              contacts: {},
+              vehicles: [],
+              oilCompanyId: groupName || undefined,
+            }
+            transportersMap.set(transName, transporter)
+          }
+
+          transporter.vehicles.push({
+            id: v.imei,
+            plateRegNo: v.name,
+            trailerRegNo: '—',
+            sideNo: '—',
+            driverName: '—',
+            manufacturer: '—',
+            model: '—',
+            yearOfManufacture: new Date().getFullYear(),
+            driverPhone: '—',
+          })
+        })
+        setTransporters(Array.from(transportersMap.values()))
+        setOilCompanies(Array.from(oilCompaniesSet).map(name => ({
+          id: name,
+          name: name,
+          contacts: {}
+        })))
+      })
+      .catch(console.error)
   }, [user?.companyId])
 
   const transportersById = useMemo(() => new Map(transporters.map((t) => [t.id, t] as const)), [transporters])
@@ -51,10 +132,10 @@ export default function FuelDispatchPage() {
     return tasks.filter((t) => {
       const matchesStatus = statusFilter === 'All' ? true : t.status === statusFilter
 
-      const transporter = transportersById.get(t.transporterId)?.name ?? ''
-      const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? ''
-      const depot = depotsById.get(t.destinationDepotId)?.name ?? ''
-      const oilCompany = oilCompaniesById.get(t.oilCompanyId)?.name ?? ''
+      const transporter = transportersById.get(t.transporterId)?.name ?? t.transporterId
+      const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? t.vehicleId
+      const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
+      const oilCompany = oilCompaniesById.get(t.oilCompanyId)?.name ?? t.oilCompanyId
 
       const text =
         `${t.peaDispatchNo} ${transporter} ${vehicle} ${depot} ${oilCompany} ${t.fuelType}`.toLowerCase()
@@ -87,9 +168,10 @@ export default function FuelDispatchPage() {
           transporters={transporters}
           depots={depots}
           onClose={() => setShowNewDispatchForm(false)}
-          onSubmit={(newTask) => {
-            setTasks([...tasks, newTask])
-            setShowNewDispatchForm(false)
+          onSubmit={() => {
+             // Let the hook re-fetch to resolve ID display
+             fetchTasks()
+             setShowNewDispatchForm(false)
           }}
         />
       </ModalOverlay>
@@ -159,15 +241,17 @@ export default function FuelDispatchPage() {
                 <option value="Stopped >5h">Stopped &gt;5h</option>
               </select>
               <div>
-          <button
-            type="button"
-            onClick={() => setShowNewDispatchForm(true)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            <PlusIcon className="size-4" />
-            New Dispatch
-          </button>
-        </div>
+               {canAddDispatch && (
+                 <button
+                   type="button"
+                   onClick={() => setShowNewDispatchForm(true)}
+                   className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                 >
+                   <PlusIcon className="size-4" />
+                   New Dispatch
+                 </button>
+               )}
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -198,10 +282,10 @@ export default function FuelDispatchPage() {
 
                 <tbody className="divide-y divide-[#D1D5DB]">
                   {filteredTasks.map((t) => {
-                    const transporter = transportersById.get(t.transporterId)?.name ?? '—'
-                    const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
+                    const transporter = transportersById.get(t.transporterId)?.name ?? t.transporterId
+                    const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? t.vehicleId
                     const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
-                    const oilCompany = oilCompaniesById.get(t.oilCompanyId)?.name ?? '—'
+                    const oilCompany = oilCompaniesById.get(t.oilCompanyId)?.name ?? t.oilCompanyId
 
                     return (
                       <tr key={t.peaDispatchNo} className="hover:bg-muted/30">
@@ -218,10 +302,10 @@ export default function FuelDispatchPage() {
                         <td className="whitespace-nowrap px-4 py-4 text-slate-600">{t.dispatchLocation}</td>
                         <td className="whitespace-nowrap px-4 py-4">{depot}</td>
                         <td className="whitespace-nowrap px-4 py-4">
-                          {t.dispatchDateTime.replace('T', ' ').replace('Z', '')}
+                          {t.dispatchDateTime?.replace('T', ' ').replace('Z', '')}
                         </td>
                         <td className="whitespace-nowrap px-4 py-4">
-                          {t.etaDateTime.replace('T', ' ').replace('Z', '')}
+                          {t.etaDateTime?.replace('T', ' ').replace('Z', '')}
                         </td>
                         <td className="whitespace-nowrap px-4 py-4">
                           {t.dropOffDateTime
@@ -289,31 +373,72 @@ function NewDispatchForm({
     fuelType: 'Benzine' as FuelType,
     dispatchedLiters: '',
   })
+  
+  const [saving, setSaving] = useState(false)
+
+  // Filter transporters by selected oil company
+  // Note: the original mapping allowed multiple companies per transporter, but here we can just 
+  // show all transporters or filter them if the GPS mapping links them. 
+  // Let's just show transporters that have vehicles belonging to this oilCompany group.
+  const availableTransporters = useMemo(() => {
+    if (!formData.oilCompanyId) return transporters
+    return transporters.filter(t => t.oilCompanyId === formData.oilCompanyId || !t.oilCompanyId)
+  }, [formData.oilCompanyId, transporters])
 
   const availableVehicles = useMemo(() => {
     if (!formData.transporterId) return []
     const transporter = transporters.find((t) => t.id === formData.transporterId)
     return transporter?.vehicles ?? []
   }, [formData.transporterId, transporters])
+  
+  // Update available depots dynamically 
+  const [availableDepots, setAvailableDepots] = useState<Depot[]>([])
+  
+  useEffect(() => {
+     if (formData.oilCompanyId) {
+         setAvailableDepots(depots.filter(d => d.oilCompanyId === formData.oilCompanyId))
+     } else {
+         setAvailableDepots([])
+     }
+  }, [formData.oilCompanyId, depots])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setSaving(true)
 
-    const newTask: DispatchTask = {
-      peaDispatchNo: formData.peaDispatchNo,
-      oilCompanyId: formData.oilCompanyId,
-      transporterId: formData.transporterId,
-      vehicleId: formData.vehicleId,
-      dispatchDateTime: formData.dispatchDateTime,
-      dispatchLocation: formData.dispatchLocation,
-      destinationDepotId: formData.destinationDepotId,
-      etaDateTime: formData.etaDateTime,
-      fuelType: formData.fuelType,
-      dispatchedLiters: Number(formData.dispatchedLiters),
-      status: 'On transit',
+    const payload = {
+      pea_dispatch_no: formData.peaDispatchNo,
+      oil_company_id: formData.oilCompanyId,
+      transporter_id: formData.transporterId,
+      vehicle_id: formData.vehicleId,
+      dispatch_datetime: formData.dispatchDateTime,
+      dispatch_location: formData.dispatchLocation,
+      destination_depot_id: formData.destinationDepotId,
+      eta_datetime: formData.etaDateTime,
+      fuel_type: formData.fuelType,
+      dispatched_liters: Number(formData.dispatchedLiters),
     }
 
-    onSubmit(newTask)
+    api.post('/dispatches', payload).then(() => {
+         // Create task shape to notify parent
+         const newTask: DispatchTask = {
+          peaDispatchNo: formData.peaDispatchNo,
+          oilCompanyId: formData.oilCompanyId,
+          transporterId: formData.transporterId,
+          vehicleId: formData.vehicleId,
+          dispatchDateTime: formData.dispatchDateTime,
+          dispatchLocation: formData.dispatchLocation,
+          destinationDepotId: formData.destinationDepotId,
+          etaDateTime: formData.etaDateTime,
+          fuelType: formData.fuelType,
+          dispatchedLiters: Number(formData.dispatchedLiters),
+          status: 'On transit',
+        }
+        onSubmit(newTask)
+    }).catch(err => {
+         console.error('Failed to create dispatch:', err)
+         alert('Error creating dispatch. Ensure Dispatch No is unique.')
+    }).finally(() => setSaving(false))
   }
 
   return (
@@ -337,7 +462,7 @@ function NewDispatchForm({
           <select
             required
             value={formData.oilCompanyId}
-            onChange={(e) => setFormData({ ...formData, oilCompanyId: e.target.value })}
+            onChange={(e) => setFormData({ ...formData, oilCompanyId: e.target.value, destinationDepotId: '', transporterId: '', vehicleId: '' })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
           >
             <option value="">Select...</option>
@@ -351,6 +476,7 @@ function NewDispatchForm({
           <label className="block text-sm font-semibold mb-1">Transporter</label>
           <select
             required
+            disabled={!formData.oilCompanyId}
             value={formData.transporterId}
             onChange={(e) =>
               setFormData({ ...formData, transporterId: e.target.value, vehicleId: '' })
@@ -358,7 +484,7 @@ function NewDispatchForm({
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
           >
             <option value="">Select...</option>
-            {transporters.map((t) => (
+            {availableTransporters.map((t) => (
               <option key={t.id} value={t.id}>{t.name}</option>
             ))}
           </select>
@@ -414,11 +540,14 @@ function NewDispatchForm({
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
           >
             <option value="">Select...</option>
-            {depots.map((d) => (
+            {availableDepots.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name} ({d.location.city})
               </option>
-            ))}
+             ))}
+             {availableDepots.length === 0 && (
+                <option value="" disabled>No depots found for this company</option>
+             )}
           </select>
         </div>
 
@@ -473,9 +602,10 @@ function NewDispatchForm({
 
         <button
           type="submit"
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition"
+          disabled={saving}
+          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition disabled:opacity-50"
         >
-          Create Dispatch
+          {saving ? 'Creating...' : 'Create Dispatch'}
         </button>
       </div>
     </form>

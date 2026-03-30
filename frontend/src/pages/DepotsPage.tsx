@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getDepots } from '../data/mockApi'
+import api from '../api/axios'
 import type { Depot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
@@ -15,8 +15,22 @@ export default function DepotsPage() {
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
-    void getDepots(user?.companyId)
-      .then(setItems)
+    void api.get('/depots', { params: { oil_company_id: user?.companyId } })
+      .then((res) => {
+        const mappedDepots = res.data.map((d: any) => ({
+          ...d,
+          location: { region: d.region, city: d.city, address: d.address },
+          contacts: {
+            person1: d.person1, person2: d.person2,
+            phone1: d.phone1, phone2: d.phone2,
+            email1: d.email1, email2: d.email2
+          },
+          mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
+          mapLink: d.map_link
+        }))
+        setItems(mappedDepots)
+      })
+      .catch(console.error)
       .finally(() => setLoading(false))
   }, [user?.companyId])
 
@@ -61,8 +75,24 @@ export default function DepotsPage() {
           companyId={user?.companyId}
           onClose={() => setShowForm(false)}
           onSubmit={(newDepot) => {
-            setItems([...items, newDepot])
-            setShowForm(false)
+            api.post('/depots', newDepot)
+              .then((res) => {
+                const d = res.data;
+                const mappedObj = {
+                  ...d,
+                  location: { region: d.region, city: d.city, address: d.address },
+                  contacts: {
+                    person1: d.person1, person2: d.person2,
+                    phone1: d.phone1, phone2: d.phone2,
+                    email1: d.email1, email2: d.email2
+                  },
+                  mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
+                  mapLink: d.map_link
+                };
+                setItems([...items, mappedObj])
+                setShowForm(false)
+              })
+              .catch(console.error)
           }}
         />
       </ModalOverlay>
@@ -289,13 +319,12 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
         email1: formData.email1 || undefined,
         email2: formData.email2 || undefined,
       },
-      mapLocation:
-        formData.lat && formData.lng
-          ? { lat: Number(formData.lat), lng: Number(formData.lng) }
-          : undefined,
+      mapLocation: undefined, // Handled implicitly by backend
       mapLink: mapLink || undefined,
-      oilCompanyId: companyId,
-    }
+      lat: formData.lat ? Number(formData.lat) : undefined,
+      lng: formData.lng ? Number(formData.lng) : undefined,
+      oil_company_id: companyId,
+    } as any // Quick override for payload shape since it maps exactly to DB
     onSubmit(newDepot)
   }
 

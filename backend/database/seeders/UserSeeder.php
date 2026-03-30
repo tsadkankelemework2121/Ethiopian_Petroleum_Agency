@@ -21,11 +21,11 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
-            'name' => 'Oil Company Admin',
+            'name' => 'OLA Admin',
             'email' => 'admin@ola.com',
             'password' => Hash::make('admin123'),
             'role' => 'oil_company',
-            'company_id' => 1,
+            'company_id' => 'OLA',
         ]);
     }
 }
