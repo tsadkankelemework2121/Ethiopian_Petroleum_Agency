@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Transporter, Vehicle } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { PlusIcon } from '@heroicons/react/24/outline'
 import { Skeleton } from '../components/ui/Skeleton'
+import { useQuery } from '@tanstack/react-query'
 
 function TransporterSkeleton() {
   return (
@@ -279,61 +280,76 @@ function NewTruckForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (v
 
 export default function TransportersPage() {
   const { user } = useAuth()
-  const [items, setItems] = useState<Transporter[]>([])
-  const [loading, setLoading] = useState(true)
   const [showTransporterForm, setShowTransporterForm] = useState(false)
   const [showTruckFormForTransporter, setShowTruckFormForTransporter] = useState<string | null>(null)
+  
+  const { data: vehicles = [], isLoading } = useQuery({
+    queryKey: ['gps-vehicles'],
+    queryFn: fetchGpsVehicles,
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  })
 
-  useEffect(() => {
-    void fetchGpsVehicles()
-      .then((vehicles) => {
-        const transportersMap = new Map<string, Transporter>()
+  // Local state for newly created transporters/trucks (simulating persistence for this session)
+  const [localItems, setLocalItems] = useState<Transporter[]>([])
 
-        vehicles.forEach((v) => {
-          const transName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
-          if (!transName) return // Skip vehicles with no transporter
+  const items = useMemo(() => {
+    const transportersMap = new Map<string, Transporter>()
 
-          let transporter = transportersMap.get(transName)
-          if (!transporter) {
-            transporter = {
-              id: `TR-${transName}`,
-              name: transName,
-              location: { region: '—', city: '—', address: '—' },
-              contacts: {},
-              vehicles: [],
-              oilCompanyId: v.group || undefined,
-            }
-            transportersMap.set(transName, transporter)
-          }
+    // Start with API data
+    vehicles.forEach((v) => {
+      const transName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
+      if (!transName) return
 
-          transporter.vehicles.push({
-            id: v.imei,
-            plateRegNo: v.name,
-            trailerRegNo: '—',
-            sideNo: '—',
-            driverName: '—',
-            manufacturer: '—',
-            model: '—',
-            yearOfManufacture: new Date().getFullYear(),
-            driverPhone: '—',
-          })
-        })
+      let transporter = transportersMap.get(transName)
+      if (!transporter) {
+        transporter = {
+          id: `TR-${transName}`,
+          name: transName,
+          location: { region: '—', city: '—', address: '—' },
+          contacts: {},
+          vehicles: [],
+          oilCompanyId: v.group || undefined,
+        }
+        transportersMap.set(transName, transporter)
+      }
 
-        setItems(Array.from(transportersMap.values()))
+      transporter.vehicles.push({
+        id: v.imei,
+        plateRegNo: v.name,
+        trailerRegNo: '—',
+        sideNo: '—',
+        driverName: '—',
+        manufacturer: '—',
+        model: '—',
+        yearOfManufacture: new Date().getFullYear(),
+        driverPhone: '—',
       })
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [])
+    })
+
+    // Merge with localItems
+    const combined = Array.from(transportersMap.values())
+    localItems.forEach(li => {
+      const existing = combined.find(c => c.id === li.id)
+      if (existing) {
+        // Merge vehicles if needed, or just replace
+        existing.vehicles = [...existing.vehicles, ...li.vehicles]
+      } else {
+        combined.push(li)
+      }
+    })
+
+    return combined
+  }, [vehicles, localItems])
 
   const handleCreateTransporter = (t: Transporter) => {
-    setItems((prev) => [...prev, t])
+    setLocalItems((prev) => [...prev, t])
     setShowTransporterForm(false)
     setShowTruckFormForTransporter(t.id)
   }
 
   const handleAddTruck = (v: Vehicle) => {
     if (showTruckFormForTransporter) {
-      setItems((prev) => prev.map(t => {
+      setLocalItems((prev) => prev.map(t => {
         if (t.id === showTruckFormForTransporter) {
           return { ...t, vehicles: [...t.vehicles, v] }
         }
@@ -369,7 +385,7 @@ export default function TransportersPage() {
          <NewTruckForm onClose={() => setShowTruckFormForTransporter(null)} onSubmit={handleAddTruck} />
       </ModalOverlay>
 
-      {loading ? (
+      {isLoading ? (
         <div className="grid gap-6 lg:grid-cols-2 mt-2">
           {[1, 2, 3, 4].map((i) => (
             <TransporterSkeleton key={i} />

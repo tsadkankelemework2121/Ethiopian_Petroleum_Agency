@@ -1,35 +1,47 @@
-import { useState } from 'react'
-import type { OilCompany } from '../data/types'
-import { ModalOverlay } from '../components/ui/ModelOverlay'
-// import { PlusIcon } from '@heroicons/react/24/outline'
 import { fetchGpsVehicles } from '../data/gpsApi'
-import { useEffect } from 'react'
+import { useMemo, useState } from 'react'
 import { Skeleton } from '../components/ui/Skeleton'
 import PageHeader from '../components/layout/PageHeader'
+import { useQuery } from '@tanstack/react-query'
+import type { OilCompany } from '../data/types'
+import { ModalOverlay } from '../components/ui/ModelOverlay'
 
 export default function OilCompaniesPage() {
-  const [companies, setCompanies] = useState<OilCompany[]>([])
-  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
 
-  useEffect(() => {
-    void fetchGpsVehicles().then((vehicles) => {
-      const groups = Array.from(new Set(vehicles.map((v) => v.group).filter(Boolean))) as string[];
-      const mappedCompanies: OilCompany[] = groups.map((group) => ({
-        id: `OC-${group}`,
-        name: group,
-        contacts: {
-          person1: undefined,
-          person2: undefined,
-          phone1: undefined,
-          phone2: undefined,
-          email1: undefined,
-          email2: undefined,
-        },
-      }));
-      setCompanies(mappedCompanies);
-    }).catch(console.error).finally(() => setLoading(false));
-  }, [])
+  const { data: vehicles = [], isLoading } = useQuery({
+    queryKey: ['gps-vehicles'],
+    queryFn: fetchGpsVehicles,
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  })
+
+  // Local state for persistence in current session
+  const [localCompanies, setLocalCompanies] = useState<OilCompany[]>([])
+
+  const companies = useMemo(() => {
+    const groups = Array.from(new Set(vehicles.map((v) => v.group).filter(Boolean))) as string[];
+    const apiCompanies: OilCompany[] = groups.map((group) => ({
+      id: `OC-${group}`,
+      name: group,
+      contacts: {
+        person1: undefined,
+        person2: undefined,
+        phone1: undefined,
+        phone2: undefined,
+        email1: undefined,
+        email2: undefined,
+      },
+    }));
+
+    // Merge with localCompanies
+    const combined = [...apiCompanies]
+    localCompanies.forEach(lc => {
+      if (!combined.find(c => c.id === lc.id)) {
+        combined.push(lc)
+      }
+    })
+    return combined
+  }, [vehicles, localCompanies])
   return (
     <div>
       <PageHeader
@@ -45,13 +57,13 @@ export default function OilCompaniesPage() {
         <NewOilCompanyForm
           onClose={() => setShowForm(false)}
           onSubmit={(newCompany) => {
-            setCompanies([...companies, newCompany])
+            setLocalCompanies([...localCompanies, newCompany])
             setShowForm(false)
           }}
         />
       </ModalOverlay>
 
-      {loading ? (
+      {isLoading ? (
         <div className="overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
           <table className="min-w-225 w-full text-left text-sm">
             <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">

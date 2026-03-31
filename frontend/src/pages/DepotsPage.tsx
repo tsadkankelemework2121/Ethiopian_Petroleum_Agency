@@ -7,32 +7,32 @@ import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon } from '@heroicons/react/
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { useAuth } from '../context/AuthContext'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 export default function DepotsPage() {
   const { user } = useAuth()
-  const [items, setItems] = useState<Depot[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
 
-  useEffect(() => {
-    void api.get('/depots', { params: { oil_company_id: user?.companyId } })
-      .then((res) => {
-        const mappedDepots = res.data.map((d: any) => ({
-          ...d,
-          location: { region: d.region, city: d.city, address: d.address },
-          contacts: {
-            person1: d.person1, person2: d.person2,
-            phone1: d.phone1, phone2: d.phone2,
-            email1: d.email1, email2: d.email2
-          },
-          mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
-          mapLink: d.map_link
-        }))
-        setItems(mappedDepots)
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false))
-  }, [user?.companyId])
+  const { data: items = [], isLoading } = useQuery<Depot[]>({
+    queryKey: ['depots', user?.companyId],
+    queryFn: async () => {
+      const res = await api.get('/depots', { params: { oil_company_id: user?.companyId } });
+      return res.data.map((d: any) => ({
+        ...d,
+        location: { region: d.region, city: d.city, address: d.address },
+        contacts: {
+          person1: d.person1, person2: d.person2,
+          phone1: d.phone1, phone2: d.phone2,
+          email1: d.email1, email2: d.email2
+        },
+        mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
+        mapLink: d.map_link
+      }));
+    },
+    enabled: !!user?.companyId || user?.role === 'EPA_ADMIN', // Enable for EPA or if companyId is present
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
+  })
 
   const openGoogleMaps = (depot: Depot) => {
     if (depot.mapLink) {
@@ -77,22 +77,10 @@ export default function DepotsPage() {
           onSubmit={(newDepot) => {
             // Note: newDepot here is the raw formData payload we passed from the form
             api.post('/depots', newDepot)
-              .then((res) => {
-                const d = res.data;
-                const mappedObj = {
-                  ...d,
-                  location: { region: d.region, city: d.city, address: d.address },
-                  contacts: {
-                    person1: d.person1, person2: d.person2,
-                    phone1: d.phone1, phone2: d.phone2,
-                    email1: d.email1, email2: d.email2
-                  },
-                  mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
-                  mapLink: d.map_link,
-                  oilCompanyId: d.oil_company_id,
-                };
-                setItems([...items, mappedObj])
+              .then(() => {
                 setShowForm(false)
+                // Invalidate query to refetch fresh data
+                queryClient.invalidateQueries({ queryKey: ['depots', user?.companyId] })
               })
               .catch(console.error)
           }}
@@ -101,7 +89,7 @@ export default function DepotsPage() {
 
 
 
-      {loading ? (
+      {isLoading ? (
         <div className="rounded-xl border border-[#D1D5DB] bg-white overflow-x-auto">
           <table className="min-w-[800px] w-full divide-y divide-[#D1D5DB]">
             <thead className="bg-muted/50">

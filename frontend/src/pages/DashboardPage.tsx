@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import type { RegionFuelSummary } from '../data/types'
 import {
   getDashboardCharts,
@@ -14,6 +14,7 @@ import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
 import { useAuth } from '../context/AuthContext'
+import { useQuery } from '@tanstack/react-query'
 import {
   Bar,
   BarChart,
@@ -36,48 +37,44 @@ import {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [kpis, setKpis] = useState<{
-    vehiclesOnTransit: number
-    gpsOfflineOver24h: number
-    exceededEta: number
-    stoppedOver5h: number
-  } | null>(null)
-  const [regions, setRegions] = useState<RegionFuelSummary[]>([])
-  const [, setOnTransit] = useState<Awaited<ReturnType<typeof getVehiclesOnTransit>>>([])
-  const [tasks, setTasks] = useState<DispatchTask[]>([])
-  const [companies, setCompanies] = useState<OilCompany[]>([])
-  const [transporters, setTransporters] = useState<Transporter[]>([])
-  const [charts, setCharts] = useState<Awaited<ReturnType<typeof getDashboardCharts>> | null>(null)
+  
+  const companyId = user?.companyId
 
-  useEffect(() => {
-    void Promise.all([
-      getDashboardKpis(user?.companyId), 
-      getRegionalFuelDispatchedThisWeek(user?.companyId), 
-      getDashboardCharts(user?.companyId)
-    ]).then(
-      ([k, r, ch]) => {
-        setKpis(k)
-        setRegions(r)
-        setCharts(ch)
-      },
-    )
-  }, [user?.companyId])
+  const { data: kpis = null, isLoading: kpisLoading } = useQuery({
+    queryKey: ['dashboard-kpis', companyId],
+    queryFn: () => getDashboardKpis(companyId),
+    refetchInterval: 5 * 60 * 1000,
+  })
 
-  useEffect(() => {
-    void Promise.all([
-      getVehiclesOnTransit(user?.companyId), 
-      getDispatchTasks(user?.companyId), 
-      getOilCompanies(), 
-      getTransporters(user?.companyId)
-    ]).then(
-      ([vt, t, c, tr]) => {
-        setOnTransit(vt)
-        setTasks(t)
-        setCompanies(c)
-        setTransporters(tr)
-      },
-    )
-  }, [user?.companyId])
+  const { data: regions = [], isLoading: regionsLoading } = useQuery({
+    queryKey: ['regional-fuel-summary', companyId],
+    queryFn: () => getRegionalFuelDispatchedThisWeek(companyId),
+    refetchInterval: 5 * 60 * 1000,
+  })
+
+  const { data: charts = null, isLoading: chartsLoading } = useQuery({
+    queryKey: ['dashboard-charts', companyId],
+    queryFn: () => getDashboardCharts(companyId),
+    refetchInterval: 5 * 60 * 1000,
+  })
+
+  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
+    queryKey: ['dispatch-tasks', companyId],
+    queryFn: () => getDispatchTasks(companyId),
+    refetchInterval: 5 * 60 * 1000,
+  })
+
+  const { data: companies = [], isLoading: companiesLoading } = useQuery({
+    queryKey: ['oil-companies'],
+    queryFn: getOilCompanies,
+    refetchInterval: 5 * 60 * 1000,
+  })
+
+  const { data: transporters = [], isLoading: transportersLoading } = useQuery({
+    queryKey: ['transporters', companyId],
+    queryFn: () => getTransporters(companyId),
+    refetchInterval: 5 * 60 * 1000,
+  })
 
   const companiesById = useMemo(() => new Map(companies.map((c) => [c.id, c] as const)), [companies])
   const transportersById = useMemo(
@@ -166,7 +163,7 @@ export default function DashboardPage() {
         {/* KPIs */}
         <div className="md:col-span-12 min-w-0">
           <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-            {kpis === null ? (
+            {kpisLoading ? (
               <>
                 {[1, 2, 3, 4].map((i) => (
                   <SkeletonCard key={i} />
@@ -221,7 +218,7 @@ export default function DashboardPage() {
               }
             />
             <CardBody className="h-[360px]">
-              {regions.length === 0 ? (
+              {regionsLoading ? (
                 <SkeletonChart className="h-full" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
@@ -262,9 +259,8 @@ export default function DashboardPage() {
 
         <div className="md:col-span-12 lg:col-span-4 min-w-0">
           <Card>
-            <CardHeader title="Dispatch Events" subtitle="Distribution of current dispatch tasks" />
             <CardBody className="h-80">
-              {charts ? (
+              {!chartsLoading && charts ? (
                 <div className="grid h-full grid-rows-[1fr_auto] gap-3">
                   <div className="h-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -339,7 +335,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
             <CardBody className="h-48">
-              {charts ? (
+              {!chartsLoading && charts ? (
                 <div className="space-y-4 h-full flex flex-col justify-center">
                   {/* Calculate totals for each fuel type */}
                   {(() => {

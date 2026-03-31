@@ -3,6 +3,7 @@ import { List as VirtualList, type RowComponentProps } from 'react-window'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { GpsVehicle } from '../data/types'
 import MapView from '../components/map/MapView'
+import { useQuery } from '@tanstack/react-query'
 
 const COLORS = {
   blue: '#067cc1',
@@ -16,9 +17,13 @@ const COLORS = {
 export default function TrackingPage() {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
-  const [items, setItems] = useState<GpsVehicle[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  
+  const { data: items = [], isLoading, error: queryError } = useQuery<GpsVehicle[]>({
+    queryKey: ['gps-vehicles'],
+    queryFn: fetchGpsVehicles,
+    refetchInterval: 30000, // 30 seconds for tracking
+  });
+
   const [isClustered, setIsClustered] = useState(false)
   const [hasFitBounds, setHasFitBounds] = useState(false)
   const [isListOpen, setIsListOpen] = useState(false) // Start hidden on mobile
@@ -51,28 +56,6 @@ export default function TrackingPage() {
   }
 
   const plateFromName = (name: string) => name.trim().split(/\s+/)[0] ?? name
-
-  useEffect(() => {
-    let cancelled = false
-      ; (async () => {
-        try {
-          if (!cancelled) {
-            setLoading(true)
-            setError(null)
-          }
-          const data = await fetchGpsVehicles()
-          if (!cancelled) setItems(data)
-        } catch (err: unknown) {
-          if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load GPS data')
-        } finally {
-          if (!cancelled) setLoading(false)
-        }
-      })()
-
-    return () => {
-      cancelled = true
-    }
-  }, [])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -311,10 +294,10 @@ export default function TrackingPage() {
         </div>
 
         <div ref={listHostRef} className="flex-1 overflow-hidden">
-          {loading ? (
+          {isLoading ? (
             <div className="p-4 text-sm text-slate-600">Loading…</div>
-          ) : error ? (
-            <div className="p-4 text-sm text-red-600">{error}</div>
+          ) : queryError ? (
+            <div className="p-4 text-sm text-red-600">{(queryError as Error).message}</div>
           ) : listSize.height > 0 && listSize.width > 0 ? (
             <VirtualList
               style={{ height: listSize.height, width: listSize.width }}
