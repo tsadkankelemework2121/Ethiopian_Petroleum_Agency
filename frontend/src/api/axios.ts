@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  // Default to 127.0.0.1:8000, fallback to current window location if needed
-  baseURL: 'http://127.0.0.1:8000/api', 
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api', 
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -19,6 +18,19 @@ api.interceptors.request.use(
     return config;
   },
   (error: any) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add a response interceptor to handle session expiration (401)
+api.interceptors.response.use(
+  (response: any) => response,
+  (error: any) => {
+    if (error.response && error.response.status === 401) {
+      // Clear storage and redirect to login if unauthorized
+      localStorage.clear();
+      window.location.href = '/login';
+    }
     return Promise.reject(error);
   }
 );
