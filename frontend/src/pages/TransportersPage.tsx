@@ -5,6 +5,45 @@ import PageHeader from '../components/layout/PageHeader'
 import { useAuth } from '../context/AuthContext'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { PlusIcon } from '@heroicons/react/24/outline'
+import { Skeleton } from '../components/ui/Skeleton'
+
+function TransporterSkeleton() {
+  return (
+    <div className="flex flex-col rounded-xl border border-[#D1D5DB] bg-white shadow-card max-h-[600px] overflow-hidden">
+      <div className="border-b border-[#D1D5DB] p-4 shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+          <div className="min-w-0">
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="mt-2 h-3 w-32" />
+          </div>
+          <Skeleton className="h-6 w-20 rounded-full" />
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-6 w-20 rounded-full" />
+          ))}
+        </div>
+      </div>
+
+      <div className="p-4 shrink-0 border-b border-[#D1D5DB]">
+        <div className="flex items-center justify-between gap-3">
+          <Skeleton className="h-4 w-24" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-7 w-40 rounded-md" />
+            <Skeleton className="h-7 w-20 rounded-md" />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 p-4 space-y-2">
+        <Skeleton className="h-10 w-full rounded-md" />
+        {[1, 2, 3, 4].map((i) => (
+          <Skeleton key={i} className="h-8 w-full rounded-md" />
+        ))}
+      </div>
+    </div>
+  )
+}
 
 function TransporterCard({ t, onAddTruck, userRole }: { t: Transporter, onAddTruck: (tId: string) => void, userRole: string }) {
   const [search, setSearch] = useState('')
@@ -241,6 +280,7 @@ function NewTruckForm({ onClose, onSubmit }: { onClose: () => void; onSubmit: (v
 export default function TransportersPage() {
   const { user } = useAuth()
   const [items, setItems] = useState<Transporter[]>([])
+  const [loading, setLoading] = useState(true)
   const [showTransporterForm, setShowTransporterForm] = useState(false)
   const [showTruckFormForTransporter, setShowTruckFormForTransporter] = useState<string | null>(null)
 
@@ -282,6 +322,7 @@ export default function TransportersPage() {
         setItems(Array.from(transportersMap.values()))
       })
       .catch(console.error)
+      .finally(() => setLoading(false))
   }, [])
 
   const handleCreateTransporter = (t: Transporter) => {
@@ -328,11 +369,19 @@ export default function TransportersPage() {
          <NewTruckForm onClose={() => setShowTruckFormForTransporter(null)} onSubmit={handleAddTruck} />
       </ModalOverlay>
 
-      <div className="grid gap-6 lg:grid-cols-2 mt-2">
-        {items.map((t) => (
-          <TransporterCard key={t.id} t={t} onAddTruck={setShowTruckFormForTransporter} userRole={user?.role || 'EPA_ADMIN'} />
-        ))}
-      </div>
+      {loading ? (
+        <div className="grid gap-6 lg:grid-cols-2 mt-2">
+          {[1, 2, 3, 4].map((i) => (
+            <TransporterSkeleton key={i} />
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-6 lg:grid-cols-2 mt-2">
+          {items.map((t) => (
+            <TransporterCard key={t.id} t={t} onAddTruck={setShowTruckFormForTransporter} userRole={user?.role || 'EPA_ADMIN'} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

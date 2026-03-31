@@ -24,6 +24,9 @@ class AuthController extends Controller
             ]);
         }
 
+        // Revoke all existing tokens for the user
+        $user->tokens()->delete();
+
         $token = $user->createToken('auth_token', expiresAt: now()->addHours(24))->plainTextToken;
 
         return response()->json([
@@ -53,7 +56,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        // Revoke ALL tokens for the user
+        $request->user()->tokens()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
     }

@@ -4,9 +4,12 @@ import { ModalOverlay } from '../components/ui/ModelOverlay'
 // import { PlusIcon } from '@heroicons/react/24/outline'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import { useEffect } from 'react'
+import { Skeleton } from '../components/ui/Skeleton'
+import PageHeader from '../components/layout/PageHeader'
 
 export default function OilCompaniesPage() {
   const [companies, setCompanies] = useState<OilCompany[]>([])
+  const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
 
   useEffect(() => {
@@ -25,22 +28,14 @@ export default function OilCompaniesPage() {
         },
       }));
       setCompanies(mappedCompanies);
-    }).catch(console.error);
+    }).catch(console.error).finally(() => setLoading(false));
   }, [])
-
   return (
     <div>
-      {/* <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-end sm:justify-end">
-          <button
-            type="button"
-            onClick={() => setShowForm(!showForm)}
-            className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-          >
-            <PlusIcon className="size-4" />
-            New Oil Company
-          </button>
-        
-        </div> */}
+      <PageHeader
+        title="Oil Companies"
+        subtitle="List of oil companies and their contact information."
+      />
 
       <ModalOverlay
         isOpen={showForm}
@@ -55,34 +50,64 @@ export default function OilCompaniesPage() {
           }}
         />
       </ModalOverlay>
-      <div className="overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
-        <table className="min-w-225 w-full text-left text-sm">
-          <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
-            <tr>
-              {['Company', 'Contact person 1', 'Contact person 2', 'Phone 1', 'Phone 2', 'Email 1', 'Email 2'].map(
-                (h) => (
-                  <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold">
-                    {h}
-                  </th>
-                ),
-              )}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#D1D5DB]">
-            {companies.map((c) => (
-              <tr key={c.id} className="hover:bg-muted/40">
-                <td className="whitespace-nowrap px-3 py-3 text-text">{c.name}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person1 ?? '—'}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person2 ?? '—'}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone1 ?? '—'}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone2 ?? '—'}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email1 ?? '—'}</td>
-                <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email2 ?? '—'}</td>
+
+      {loading ? (
+        <div className="overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
+          <table className="min-w-225 w-full text-left text-sm">
+            <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
+              <tr>
+                {['Company', 'Contact person 1', 'Contact person 2', 'Phone 1', 'Phone 2', 'Email 1', 'Email 2'].map(
+                  (h) => (
+                    <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold uppercase tracking-wider">
+                      {h}
+                    </th>
+                  ),
+                )}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody className="divide-y divide-[#D1D5DB]">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <tr key={i}>
+                  {Array.from({ length: 7 }).map((_, j) => (
+                    <td key={j} className="px-3 py-4 text-left">
+                      <Skeleton className="h-4 w-full max-w-[120px]" />
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
+          <table className="min-w-225 w-full text-left text-sm">
+            <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
+              <tr>
+                {['Company', 'Contact person 1', 'Contact person 2', 'Phone 1', 'Phone 2', 'Email 1', 'Email 2'].map(
+                  (h) => (
+                    <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold">
+                      {h}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#D1D5DB]">
+              {companies.map((c) => (
+                <tr key={c.id} className="hover:bg-muted/40">
+                  <td className="whitespace-nowrap px-3 py-3 text-text font-medium">{c.name}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person1 ?? '—'}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person2 ?? '—'}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone1 ?? '—'}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone2 ?? '—'}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email1 ?? '—'}</td>
+                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email2 ?? '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }
