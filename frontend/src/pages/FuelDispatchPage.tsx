@@ -9,115 +9,107 @@ import { ModalOverlay } from '../components/ui/ModelOverlay'
 import MapView from '../components/map/MapView'
 import { MapPinIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../context/AuthContext'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import type { GpsVehicle } from '../data/types'
 
 export default function FuelDispatchPage() {
   const { user } = useAuth()
-  const [tasks, setTasks] = useState<DispatchTask[]>([])
-  const [depots, setDepots] = useState<Depot[]>([])
-  const [transporters, setTransporters] = useState<Transporter[]>([])
-  const [oilCompanies, setOilCompanies] = useState<OilCompany[]>([])
+  const queryClient = useQueryClient()
   const [showNewDispatchForm, setShowNewDispatchForm] = useState(false)
   const [trackingTask, setTrackingTask] = useState<DispatchTask | null>(null)
-
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
 
-  // Derive if current user can add dispatches
   const canAddDispatch = user?.role?.toUpperCase() === 'EPA_ADMIN' || user?.role?.toUpperCase() === 'SUPER_ADMIN'
 
-  // Fetch tasks
-  const fetchTasks = () => {
-    api.get('/dispatches', { params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {} })
-      .then((res) => {
-        const fetchedTasks = res.data.map((d: any) => ({
-          peaDispatchNo: d.pea_dispatch_no,
-          oilCompanyId: d.oil_company_id,
-          transporterId: d.transporter_id,
-          vehicleId: d.vehicle_id,
-          dispatchDateTime: d.dispatch_datetime.replace(' ', 'T'),
-          dispatchLocation: d.dispatch_location,
-          destinationDepotId: d.destination_depot_id?.toString() || '',
-          etaDateTime: d.eta_datetime.replace(' ', 'T'),
-          dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
-          fuelType: d.fuel_type,
-          dispatchedLiters: Number(d.dispatched_liters),
-          status: d.status,
-        }))
-        setTasks(fetchedTasks)
-      })
-      .catch(console.error)
-  }
+  // Fetch Dispatches
+  const { data: rawTasks = [], refetch: refetchTasks } = useQuery({
+    queryKey: ['dispatches'],
+    queryFn: async () => {
+      const res = await api.get('/dispatches', { 
+        params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {} 
+      });
+      return res.data.map((d: any) => ({
+        peaDispatchNo: d.pea_dispatch_no,
+        oilCompanyId: d.oil_company_id,
+        transporterId: d.transporter_id,
+        vehicleId: d.vehicle_id,
+        dispatchDateTime: d.dispatch_datetime.replace(' ', 'T'),
+        dispatchLocation: d.dispatch_location,
+        destinationDepotId: d.destination_depot_id?.toString() || '',
+        etaDateTime: d.eta_datetime.replace(' ', 'T'),
+        dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+        fuelType: d.fuel_type,
+        dispatchedLiters: Number(d.dispatched_liters),
+        status: d.status,
+      }));
+    },
+    refetchInterval: 5 * 60 * 1000,
+  });
 
-  useEffect(() => {
-    fetchTasks()
-    
-    // Fetch all Depots to resolve addresses in the list
-    api.get('/depots')
-      .then((res) => {
-         const mappedDepots = res.data.map((d: any) => ({
-          ...d,
-          id: d.id.toString(),
-          location: { region: d.region, city: d.city, address: d.address },
-          contacts: {
-            person1: d.person1, person2: d.person2,
-            phone1: d.phone1, phone2: d.phone2,
-            email1: d.email1, email2: d.email2
-          },
-          mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
-          mapLink: d.map_link,
-          oilCompanyId: d.oil_company_id,
-        }))
-        setDepots(mappedDepots)
-      })
-      .catch(console.error)
+  // Fetch Depots
+  const { data: depots = [] } = useQuery<Depot[]>({
+    queryKey: ['depots'],
+    queryFn: async () => {
+      const res = await api.get('/depots');
+      return res.data.map((d: any) => ({
+        ...d,
+        id: d.id.toString(),
+        location: { region: d.region, city: d.city, address: d.address },
+        contacts: {
+          person1: d.person1, person2: d.person2,
+          phone1: d.phone1, phone2: d.phone2,
+          email1: d.email1, email2: d.email2
+        },
+        mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
+        mapLink: d.map_link,
+        oilCompanyId: d.oil_company_id,
+      }));
+    }
+  });
 
-    fetchGpsVehicles()
-      .then((vehicles) => {
-        const transportersMap = new Map<string, Transporter>()
-        const oilCompaniesSet = new Set<string>()
+  // Fetch GPS Vehicles
+  const { data: vehicles = [] } = useQuery<GpsVehicle[]>({
+    queryKey: ['gps-vehicles'],
+    queryFn: fetchGpsVehicles,
+    refetchInterval: 5 * 60 * 1000,
+  });
 
-        vehicles.forEach((v) => {
-          const transName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
-          const groupName = v.group || ''
-          
-          if (groupName) oilCompaniesSet.add(groupName)
-          
-          if (!transName) return // Skip vehicles with no transporter
+  // Derived Mappings
+  const oilCompanies = useMemo(() => {
+    const names = Array.from(new Set(vehicles.map(v => v.group).filter(Boolean))) as string[];
+    return names.map(name => ({ id: name, name: name, contacts: {} }));
+  }, [vehicles]);
 
-          let transporter = transportersMap.get(transName)
-          if (!transporter) {
-            transporter = {
-              id: transName,
-              name: transName,
-              location: { region: '—', city: '—', address: '—' },
-              contacts: {},
-              vehicles: [],
-              oilCompanyId: groupName || undefined,
-            }
-            transportersMap.set(transName, transporter)
-          }
-
-          transporter.vehicles.push({
-            id: v.imei,
-            plateRegNo: v.name,
-            trailerRegNo: '—',
-            sideNo: '—',
-            driverName: '—',
-            manufacturer: '—',
-            model: '—',
-            yearOfManufacture: new Date().getFullYear(),
-            driverPhone: '—',
-          })
-        })
-        setTransporters(Array.from(transportersMap.values()))
-        setOilCompanies(Array.from(oilCompaniesSet).map(name => ({
-          id: name,
-          name: name,
-          contacts: {}
-        })))
-      })
-      .catch(console.error)
-  }, [user?.companyId])
+  const transporters = useMemo(() => {
+    const transportersMap = new Map<string, Transporter>();
+    vehicles.forEach((v) => {
+      const transName = typeof v.custom_fields === 'string' ? v.custom_fields : '';
+      if (!transName) return;
+      if (!transportersMap.has(transName)) {
+        transportersMap.set(transName, {
+          id: transName,
+          name: transName,
+          location: { region: '—', city: '—', address: '—' },
+          contacts: {},
+          vehicles: [],
+          oilCompanyId: v.group || undefined,
+        });
+      }
+      transportersMap.get(transName)?.vehicles.push({
+        id: v.imei,
+        plateRegNo: v.name,
+        trailerRegNo: '—',
+        sideNo: '—',
+        driverName: '—',
+        manufacturer: '—',
+        model: '—',
+        yearOfManufacture: new Date().getFullYear(),
+        driverPhone: '—',
+      });
+    });
+    return Array.from(transportersMap.values());
+  }, [vehicles]);
 
   const transportersById = useMemo(() => new Map(transporters.map((t) => [t.id, t] as const)), [transporters])
   const depotsById = useMemo(() => new Map(depots.map((d) => [d.id, d] as const)), [depots])
@@ -129,7 +121,7 @@ export default function FuelDispatchPage() {
   }, [transporters])
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter((t) => {
+    return rawTasks.filter((t) => {
       const matchesStatus = statusFilter === 'All' ? true : t.status === statusFilter
 
       const transporter = transportersById.get(t.transporterId)?.name ?? t.transporterId
@@ -145,7 +137,6 @@ export default function FuelDispatchPage() {
       return matchesStatus && matchesSearch
     })
   }, [
-    tasks,
     search,
     statusFilter,
     transportersById,
@@ -154,6 +145,7 @@ export default function FuelDispatchPage() {
     oilCompaniesById,
     user?.role,
     user?.companyId,
+    rawTasks
   ])
 
   return (
@@ -164,15 +156,14 @@ export default function FuelDispatchPage() {
         title="Add New Dispatch"
       >
         <NewDispatchForm
-          oilCompanies={oilCompanies}
-          transporters={transporters}
-          depots={depots}
-          onClose={() => setShowNewDispatchForm(false)}
-          onSubmit={() => {
-             // Let the hook re-fetch to resolve ID display
-             fetchTasks()
-             setShowNewDispatchForm(false)
-          }}
+           oilCompanies={oilCompanies}
+           vehicles={vehicles}
+           depots={depots}
+           onClose={() => setShowNewDispatchForm(false)}
+           onSubmit={() => {
+              queryClient.invalidateQueries({ queryKey: ['dispatches'] })
+              setShowNewDispatchForm(false)
+           }}
         />
       </ModalOverlay>
 
@@ -350,19 +341,18 @@ export default function FuelDispatchPage() {
 
 function NewDispatchForm({
   oilCompanies,
-  transporters,
+  vehicles,
   depots,
   onClose,
   onSubmit,
 }: {
   oilCompanies: OilCompany[]
-  transporters: Transporter[]
+  vehicles: GpsVehicle[]
   depots: Depot[]
   onClose: () => void
   onSubmit: (task: DispatchTask) => void
 }) {
   const [formData, setFormData] = useState({
-    peaDispatchNo: '',
     oilCompanyId: '',
     transporterId: '',
     vehicleId: '',
@@ -373,43 +363,49 @@ function NewDispatchForm({
     fuelType: 'Benzine' as FuelType,
     dispatchedLiters: '',
   })
-  
+
+  const [vehicleSearch, setVehicleSearch] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // Filter transporters by selected oil company
-  // Note: the original mapping allowed multiple companies per transporter, but here we can just 
-  // show all transporters or filter them if the GPS mapping links them. 
-  // Let's just show transporters that have vehicles belonging to this oilCompany group.
-  const availableTransporters = useMemo(() => {
-    if (!formData.oilCompanyId) return transporters
-    return transporters.filter(t => t.oilCompanyId === formData.oilCompanyId || !t.oilCompanyId)
-  }, [formData.oilCompanyId, transporters])
-
+  // Filter valid vehicles for this company
   const availableVehicles = useMemo(() => {
-    if (!formData.transporterId) return []
-    const transporter = transporters.find((t) => t.id === formData.transporterId)
-    return transporter?.vehicles ?? []
-  }, [formData.transporterId, transporters])
-  
+    if (!formData.oilCompanyId) return []
+    return vehicles.filter(v => v.group === formData.oilCompanyId)
+  }, [formData.oilCompanyId, vehicles])
+
+  // Apply search filter locally
+  const searchedVehicles = useMemo(() => {
+    const q = vehicleSearch.trim().toLowerCase()
+    return availableVehicles.filter(v => 
+      v.name.toLowerCase().includes(q) || 
+      v.imei.includes(q)
+    )
+  }, [availableVehicles, vehicleSearch])
+
   // Update available depots dynamically 
-  const [availableDepots, setAvailableDepots] = useState<Depot[]>([])
-  
-  useEffect(() => {
-     if (formData.oilCompanyId) {
-         setAvailableDepots(depots.filter(d => d.oilCompanyId === formData.oilCompanyId))
-     } else {
-         setAvailableDepots([])
-     }
+  const availableDepots = useMemo(() => {
+    if (!formData.oilCompanyId) return []
+    return depots.filter(d => d.oilCompanyId === formData.oilCompanyId)
   }, [formData.oilCompanyId, depots])
+
+  // Auto-fill transporter when vehicle changes
+  const handleVehicleChange = (vId: string) => {
+    const vehicle = vehicles.find(v => v.imei === vId)
+    const transporterName = typeof vehicle?.custom_fields === 'string' ? vehicle.custom_fields : ''
+    setFormData(prev => ({
+      ...prev,
+      vehicleId: vId,
+      transporterId: transporterName || '' // Using name as ID here as per existing logic
+    }))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setSaving(true)
 
     const payload = {
-      pea_dispatch_no: formData.peaDispatchNo,
       oil_company_id: formData.oilCompanyId,
-      transporter_id: formData.transporterId,
+      transporter_id: formData.transporterId || null,
       vehicle_id: formData.vehicleId,
       dispatch_datetime: formData.dispatchDateTime,
       dispatch_location: formData.dispatchLocation,
@@ -419,10 +415,9 @@ function NewDispatchForm({
       dispatched_liters: Number(formData.dispatchedLiters),
     }
 
-    api.post('/dispatches', payload).then(() => {
-         // Create task shape to notify parent
-         const newTask: DispatchTask = {
-          peaDispatchNo: formData.peaDispatchNo,
+    api.post('/dispatches', payload).then((res) => {
+         onSubmit({
+          peaDispatchNo: res.data.pea_dispatch_no,
           oilCompanyId: formData.oilCompanyId,
           transporterId: formData.transporterId,
           vehicleId: formData.vehicleId,
@@ -433,11 +428,10 @@ function NewDispatchForm({
           fuelType: formData.fuelType,
           dispatchedLiters: Number(formData.dispatchedLiters),
           status: 'On transit',
-        }
-        onSubmit(newTask)
+        })
     }).catch(err => {
          console.error('Failed to create dispatch:', err)
-         alert('Error creating dispatch. Ensure Dispatch No is unique.')
+         alert('Error creating dispatch. Please ensure all required fields are filled.')
     }).finally(() => setSaving(false))
   }
 
@@ -446,26 +440,14 @@ function NewDispatchForm({
       <div className="grid gap-4 sm:grid-cols-2">
 
         <div>
-          <label className="block text-sm font-semibold mb-1">PEA Dispatch No.</label>
-          <input
-            type="text"
-            required
-            placeholder="e.g. PEA001"
-            value={formData.peaDispatchNo}
-            onChange={(e) => setFormData({ ...formData, peaDispatchNo: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
-          />
-        </div>
-
-        <div>
-           <label className="block text-sm font-semibold mb-1">Oil Company</label>
+           <label className="block text-sm font-semibold mb-1">Oil Company *</label>
           <select
             required
             value={formData.oilCompanyId}
             onChange={(e) => setFormData({ ...formData, oilCompanyId: e.target.value, destinationDepotId: '', transporterId: '', vehicleId: '' })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
           >
-            <option value="">Select...</option>
+            <option value="">Select Company...</option>
             {oilCompanies.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -473,39 +455,85 @@ function NewDispatchForm({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Transporter</label>
+          <label className="block text-sm font-semibold mb-1">Fuel Type</label>
+          <select
+            required
+            value={formData.fuelType}
+            onChange={(e) => setFormData({ ...formData, fuelType: e.target.value as FuelType })}
+            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+          >
+            <option value="Benzine">Benzine</option>
+            <option value="Diesel">Diesel</option>
+            <option value="Jet Fuel">Jet Fuel</option>
+          </select>
+        </div>
+
+        <div className="sm:col-span-2 space-y-2">
+          <label className="block text-sm font-semibold mb-1">Select Vehicle *</label>
+          <div className="flex flex-col gap-2">
+            <input
+              type="text"
+              placeholder="Search plate number..."
+              disabled={!formData.oilCompanyId}
+              value={vehicleSearch}
+              onChange={(e) => setVehicleSearch(e.target.value)}
+              className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            />
+            <select
+              required
+              size={5}
+              value={formData.vehicleId}
+              onChange={(e) => handleVehicleChange(e.target.value)}
+              disabled={!formData.oilCompanyId}
+              className="w-full rounded-lg border border-[#D1D5DB] bg-white px-1 py-1 text-sm overflow-y-auto"
+            >
+              {searchedVehicles.length === 0 ? (
+                <option value="" disabled>No vehicles found</option>
+              ) : (
+                searchedVehicles.map((v) => (
+                  <option key={v.imei} value={v.imei} className="px-2 py-1.5 hover:bg-muted rounded text-xs">
+                    {v.name}
+                  </option>
+                ))
+              )}
+            </select>
+            {formData.transporterId && (
+              <div className="text-[10px] text-text-muted italic">
+                Detected Transporter: <span className="font-semibold">{formData.transporterId}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold mb-1">Destination Depot</label>
           <select
             required
             disabled={!formData.oilCompanyId}
-            value={formData.transporterId}
-            onChange={(e) =>
-              setFormData({ ...formData, transporterId: e.target.value, vehicleId: '' })
-            }
+            value={formData.destinationDepotId}
+            onChange={(e) => setFormData({ ...formData, destinationDepotId: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
           >
-            <option value="">Select...</option>
-            {availableTransporters.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
+            <option value="">Select Depot...</option>
+            {availableDepots.map((d) => (
+              <option key={d.id} value={d.id}>
+                {d.name} ({d.location.city})
+              </option>
+             ))}
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Vehicle</label>
-          <select
+          <label className="block text-sm font-semibold mb-1">Dispatched Liters</label>
+          <input
+            type="number"
             required
-            value={formData.vehicleId}
-            onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-            disabled={!formData.transporterId}
+            min="1"
+            placeholder="e.g. 45000"
+            value={formData.dispatchedLiters}
+            onChange={(e) => setFormData({ ...formData, dispatchedLiters: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
-          >
-            <option value="">Select...</option>
-            {availableVehicles.map((v) => (
-              <option key={v.id} value={v.id}>
-                {v.plateRegNo} - {v.manufacturer} {v.model}
-              </option>
-            ))}
-          </select>
+          />
         </div>
 
         <div>
@@ -524,34 +552,14 @@ function NewDispatchForm({
           <input
             type="text"
             required
-            placeholder="Enter dispatch location"
+            placeholder="e.g. Sululta"
             value={formData.dispatchLocation}
             onChange={(e) => setFormData({ ...formData, dispatchLocation: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold mb-1">Destination Depot</label>
-          <select
-            required
-            value={formData.destinationDepotId}
-            onChange={(e) => setFormData({ ...formData, destinationDepotId: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
-          >
-            <option value="">Select...</option>
-            {availableDepots.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name} ({d.location.city})
-              </option>
-             ))}
-             {availableDepots.length === 0 && (
-                <option value="" disabled>No depots found for this company</option>
-             )}
-          </select>
-        </div>
-
-        <div>
+        <div className="sm:col-span-2">
           <label className="block text-sm font-semibold mb-1">ETA Date & Time</label>
           <input
             type="datetime-local"
@@ -562,47 +570,20 @@ function NewDispatchForm({
           />
         </div>
 
-        <div>
-          <label className="block text-sm font-semibold mb-1">Fuel Type</label>
-          <select
-            required
-            value={formData.fuelType}
-            onChange={(e) => setFormData({ ...formData, fuelType: e.target.value as FuelType })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
-          >
-            <option value="Benzine">Benzine</option>
-            <option value="Diesel">Diesel</option>
-            <option value="Jet Fuel">Jet Fuel</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-semibold mb-1">Dispatched Liters</label>
-          <input
-            type="number"
-            required
-            min="1"
-            placeholder="e.g. 45000"
-            value={formData.dispatchedLiters}
-            onChange={(e) => setFormData({ ...formData, dispatchedLiters: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
-          />
-        </div>
-
       </div>
 
       <div className="flex justify-end gap-3 pt-4">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-[#D1D5DB] px-4 py-2 text-sm"
+          className="rounded-lg border border-[#D1D5DB] px-4 py-2 text-sm font-medium hover:bg-muted"
         >
           Cancel
         </button>
 
         <button
           type="submit"
-          disabled={saving}
+          disabled={saving || !formData.vehicleId}
           className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition disabled:opacity-50"
         >
           {saving ? 'Creating...' : 'Create Dispatch'}

@@ -32,9 +32,8 @@ class DispatchController extends Controller
         }
 
         $validated = $request->validate([
-            'pea_dispatch_no' => 'required|string|unique:dispatches,pea_dispatch_no',
             'oil_company_id' => 'required|string',
-            'transporter_id' => 'required|string',
+            'transporter_id' => 'nullable|string',
             'vehicle_id' => 'required|string',
             'dispatch_datetime' => 'required|date',
             'dispatch_location' => 'required|string',
@@ -44,6 +43,21 @@ class DispatchController extends Controller
             'fuel_type' => 'required|string',
             'dispatched_liters' => 'required|numeric',
         ]);
+
+        // Auto-generate Dispatch No: PEA-YYYY-0001
+        $year = date('Y');
+        $lastDispatch = Dispatch::where('pea_dispatch_no', 'like', "PEA-$year-%")
+            ->orderBy('pea_dispatch_no', 'desc')
+            ->first();
+
+        $nextNumber = 1;
+        if ($lastDispatch) {
+            $parts = explode('-', $lastDispatch->pea_dispatch_no);
+            $lastNumber = (int) end($parts);
+            $nextNumber = $lastNumber + 1;
+        }
+
+        $validated['pea_dispatch_no'] = 'PEA-' . $year . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
 
         $dispatch = Dispatch::create($validated);
         return response()->json($dispatch, 201);
