@@ -17,14 +17,14 @@ class UserSeeder extends Seeder
             'name' => 'EPA Admin',
             'email' => 'admin@epa.com',
             'password' => Hash::make('admin123'),
-            'role' => 'epa_admin',
+            'role' => 'EPA_ADMIN',
         ]);
 
         User::create([
             'name' => 'OLA Admin',
             'email' => 'admin@ola.com',
             'password' => Hash::make('admin123'),
-            'role' => 'oil_company',
+            'role' => 'OIL_COMPANY',
             'company_id' => 'OLA',
         ]);
     }

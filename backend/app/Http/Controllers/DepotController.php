@@ -10,8 +10,9 @@ class DepotController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if ($user->role === 'OIL_COMPANY_ADMIN' || $user->role === 'OIL_COMPANY') {
-            $depots = Depot::where('oil_company_id', $user->companyId)->get();
+        $role = strtoupper($user->role);
+        if ($role === 'OIL_COMPANY_ADMIN' || $role === 'OIL_COMPANY') {
+            $depots = Depot::where('oil_company_id', $user->company_id)->get();
         } else {
             // EPA can see all, or filter if provided
             $companyId = $request->query('oil_company_id');
@@ -27,6 +28,12 @@ class DepotController extends Controller
 
     public function store(Request $request)
     {
+        $user = $request->user();
+        $role = strtoupper($user->role);
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string',
             'region' => 'required|string',
@@ -55,11 +62,22 @@ class DepotController extends Controller
 
     public function update(Request $request, Depot $depot)
     {
-        //
+        $user = $request->user();
+        $role = strtoupper($user->role);
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+        // ... rest of update logic if needed
     }
 
-    public function destroy(Depot $depot)
+    public function destroy(Request $request, Depot $depot)
     {
+        $user = $request->user();
+        $role = strtoupper($user->role);
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
         $depot->delete();
         return response()->json(null, 204);
     }

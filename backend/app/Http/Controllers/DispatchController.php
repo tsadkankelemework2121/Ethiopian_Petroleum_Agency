@@ -10,8 +10,9 @@ class DispatchController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        if ($user->role === 'OIL_COMPANY_ADMIN' || $user->role === 'OIL_COMPANY') {
-            $dispatches = Dispatch::where('oil_company_id', $user->companyId)->with('depot')->get();
+        $role = strtoupper($user->role);
+        if ($role === 'OIL_COMPANY_ADMIN' || $role === 'OIL_COMPANY') {
+            $dispatches = Dispatch::where('oil_company_id', $user->company_id)->with('depot')->get();
         } else {
             $companyId = $request->query('oil_company_id');
             if ($companyId) {
@@ -27,7 +28,8 @@ class DispatchController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        if ($user->role !== 'EPA_ADMIN' && $user->role !== 'SUPER_ADMIN') {
+        $role = strtoupper($user->role);
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
 
