@@ -18,7 +18,8 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route index element={<DashboardPage />} />
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/tracking" element={<TrackingPage />} />
           <Route path="/fuel-dispatch" element={<FuelDispatchPage />} />
           <Route path="/reports" element={<ReportsPage />} />

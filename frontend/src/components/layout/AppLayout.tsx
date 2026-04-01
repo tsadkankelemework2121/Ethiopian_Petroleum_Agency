@@ -26,7 +26,7 @@ type NavItem = {
 }
 
 const primaryNav: NavItem[] = [
-  { to: '/', label: 'Dashboard', icon: Squares2X2Icon, end: true },
+  { to: '/dashboard', label: 'Dashboard', icon: Squares2X2Icon },
   { to: '/tracking', label: 'GPS Tracking', icon: MapIcon },
   { to: '/fuel-dispatch', label: 'Fuel Dispatch', icon: ClipboardDocumentListIcon },
   { to: '/reports', label: 'Reports', icon: ChartBarSquareIcon },
@@ -124,7 +124,7 @@ export default function AppLayout() {
   }
 
   const getPageTitle = (pathname: string): string => {
-    if (pathname === '/' || pathname === '') return 'Operations Overview'
+    if (pathname === '/dashboard' || pathname === '/') return 'Operations Overview'
     if (pathname === '/tracking') return 'GPS Real-time Tracking'
     if (pathname === '/fuel-dispatch') return 'Fuel Dispatch'
     if (pathname === '/reports') return 'Reports'
