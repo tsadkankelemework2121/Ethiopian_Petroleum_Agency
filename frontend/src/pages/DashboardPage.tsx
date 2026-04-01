@@ -1,15 +1,7 @@
-import { useMemo, useState } from 'react'
-import type { RegionFuelSummary } from '../data/types'
-import {
-  getDashboardCharts,
-  getDashboardKpis,
-  getDispatchTasks,
-  getOilCompanies,
-  getTransporters,
-  getVehiclesOnTransit,
-  getRegionalFuelDispatchedThisWeek,
-} from '../data/mockApi'
-import type { DispatchTask, OilCompany, Transporter } from '../data/types'
+import { useMemo } from 'react'
+import api from '../api/axios'
+import { fetchGpsVehicles } from '../data/gpsApi'
+import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
@@ -37,120 +29,128 @@ import {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  
   const companyId = user?.companyId
 
-  const { data: kpis = null, isLoading: kpisLoading } = useQuery({
-    queryKey: ['dashboard-kpis', companyId],
-    queryFn: () => getDashboardKpis(companyId),
+  // 1. Fetch Dispatches
+  const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery<DispatchTask[]>({
+    queryKey: ['dispatches'],
+    queryFn: () => api.get('/dispatches', { params: companyId ? { oil_company_id: companyId } : {} }).then(res => res.data.map((d: any) => ({
+        peaDispatchNo: d.pea_dispatch_no,
+        oilCompanyId: d.oil_company_id,
+        transporterId: d.transporter_id,
+        vehicleId: d.vehicle_id,
+        dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
+        dispatchLocation: d.dispatch_location,
+        destinationDepotId: d.destination_depot_id?.toString() || '',
+        etaDateTime: d.eta_datetime?.replace(' ', 'T'),
+        dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+        fuelType: d.fuel_type,
+        dispatchedLiters: Number(d.dispatched_liters || 0),
+        status: d.status,
+    })))
+  });
+
+  // 2. Fetch Depots
+  const { data: depots = [], isLoading: depotsLoading } = useQuery<Depot[]>({
+    queryKey: ['depots'],
+    queryFn: () => api.get('/depots').then(res => res.data.map((d: any) => ({
+        ...d,
+        id: d.id.toString(),
+        location: { region: d.region, city: d.city, address: d.address },
+        oilCompanyId: d.oil_company_id,
+    })))
+  });
+
+  // 3. Fetch GPS Vehicles
+  const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
+    queryKey: ['gps-vehicles'],
+    queryFn: fetchGpsVehicles,
     refetchInterval: 5 * 60 * 1000,
-  })
+  });
 
-  const { data: regions = [], isLoading: regionsLoading } = useQuery({
-    queryKey: ['regional-fuel-summary', companyId],
-    queryFn: () => getRegionalFuelDispatchedThisWeek(companyId),
-    refetchInterval: 5 * 60 * 1000,
-  })
-
-  const { data: charts = null, isLoading: chartsLoading } = useQuery({
-    queryKey: ['dashboard-charts', companyId],
-    queryFn: () => getDashboardCharts(companyId),
-    refetchInterval: 5 * 60 * 1000,
-  })
-
-  const { data: tasks = [], isLoading: tasksLoading } = useQuery({
-    queryKey: ['dispatch-tasks', companyId],
-    queryFn: () => getDispatchTasks(companyId),
-    refetchInterval: 5 * 60 * 1000,
-  })
-
-  const { data: companies = [], isLoading: companiesLoading } = useQuery({
-    queryKey: ['oil-companies'],
-    queryFn: getOilCompanies,
-    refetchInterval: 5 * 60 * 1000,
-  })
-
-  const { data: transporters = [], isLoading: transportersLoading } = useQuery({
-    queryKey: ['transporters', companyId],
-    queryFn: () => getTransporters(companyId),
-    refetchInterval: 5 * 60 * 1000,
-  })
-
-  const companiesById = useMemo(() => new Map(companies.map((c) => [c.id, c] as const)), [companies])
-  const transportersById = useMemo(
-    () => new Map(transporters.map((t) => [t.id, t] as const)),
-    [transporters],
-  )
-
-  const recentDispatches = useMemo(() => {
-    return [...tasks]
-      .sort((a, b) => (a.dispatchDateTime < b.dispatchDateTime ? 1 : -1))
-      .slice(0, 6)
-      .map((t) => ({
-        ...t,
-        oilCompany: companiesById.get(t.oilCompanyId)?.name ?? '—',
-        transporter: transportersById.get(t.transporterId)?.name ?? '—',
-        eta: t.etaDateTime.replace('T', ' ').replace('Z', ''),
-      }))
-  }, [companiesById, tasks, transportersById])
-
-  const kpiCards = useMemo(() => {
-    return [
-      {
-        label: 'Vehicles on transit',
-        value: kpis ? String(kpis.vehiclesOnTransit) : '—',
-        hint: 'Active dispatches now',
-        icon: TruckIcon,
-      },
-      {
-        label: 'GPS offline > 24 hrs',
-        value: kpis ? String(kpis.gpsOfflineOver24h) : '—',
-        hint: 'Inside Ethiopia',
-        icon: SignalSlashIcon,
-      },
-      {
-        label: 'Exceeded ETA',
-        value: kpis ? String(kpis.exceededEta) : '—',
-        hint: 'Needs attention',
-        icon: ExclamationTriangleIcon,
-      },
-      {
-        label: 'Stops > 5 hours',
-        value: kpis ? String(kpis.stoppedOver5h) : '—',
-        hint: 'Out of Addis Ababa',
-        icon: StopCircleIcon,
-      },
-    ] as const
-  }, [kpis])
-
-  const statusPie = useMemo(() => {
-    if (!charts) return []
-
-    return charts.statusCounts.reduce(
-      (acc, s) => {
-        if (s.status === 'Delivered') {
-          acc.push({ name: 'Delivered', value: s.count })
-        } else if (s.status === 'On transit') {
-          acc.push({ name: 'In Transit', value: s.count })
-        } else {
-          const alertEntry = acc.find((item) => item.name === 'Alerts')
-          if (alertEntry) {
-            alertEntry.value += s.count
-          } else {
-            acc.push({ name: 'Alerts', value: s.count })
-          }
-        }
-        return acc
-      },
-      [] as Array<{ name: string; value: number }>,
-    )
-  }, [charts])
+  const isLoading = dispatchesLoading || depotsLoading || gpsLoading;
 
   const chartColors = {
     blue: '#067cc1',
     gray: '#cbd5e1',
     gold: '#f59e0b',
   }
+
+  // 4. Compute KPIs
+  const kpiCards = useMemo(() => {
+    const transit = dispatches.filter(d => d.status === 'On transit').length;
+    const offline = gpsVehicles.filter(v => v.engine === 'off').length;
+    
+    const now = new Date();
+    const exceeded = dispatches.filter(d => 
+        d.status !== 'Delivered' && 
+        d.etaDateTime && 
+        new Date(d.etaDateTime) < now
+    ).length;
+
+    const stopped = gpsVehicles.filter(v => v.status === 'stopped').length;
+
+    return [
+      { label: 'Vehicles on transit', value: String(transit), hint: 'Active dispatches now', icon: TruckIcon },
+      { label: 'GPS offline > 24 hrs', value: String(offline), hint: 'Check connectivity', icon: SignalSlashIcon },
+      { label: 'Exceeded ETA', value: String(exceeded), hint: 'Needs attention', icon: ExclamationTriangleIcon },
+      { label: 'Stops > 5 hours', value: String(stopped), hint: 'Out of Addis Ababa', icon: StopCircleIcon },
+    ] as const
+  }, [dispatches, gpsVehicles]);
+
+  // 5. Compute Regional Fuel Summary
+  const regionalSummary = useMemo(() => {
+    const regionMap = new Map<string, { region: string, benzineM3: number, dieselM3: number, jetFuelM3: number }>();
+    const depotsById = new Map(depots.map(d => [d.id, d]));
+
+    dispatches.forEach(d => {
+      const depot = depotsById.get(d.destinationDepotId);
+      if (!depot) return;
+      
+      const region = depot.location.region || 'Unknown';
+      if (!regionMap.has(region)) {
+        regionMap.set(region, { region, benzineM3: 0, dieselM3: 0, jetFuelM3: 0 });
+      }
+
+      const row = regionMap.get(region)!;
+      if (d.fuelType === 'Benzine') row.benzineM3 += d.dispatchedLiters;
+      else if (d.fuelType === 'Diesel') row.dieselM3 += d.dispatchedLiters;
+      else if (d.fuelType === 'Jet Fuel') row.jetFuelM3 += d.dispatchedLiters;
+    });
+
+    return Array.from(regionMap.values());
+  }, [dispatches, depots]);
+
+  // 6. Compute Pie Chart (Status Counts)
+  const statusPie = useMemo(() => {
+    const counts = dispatches.reduce((acc, d) => {
+      const s = d.status || 'On transit';
+      if (s === 'Delivered') acc.Delivered = (acc.Delivered || 0) + 1;
+      else if (s === 'On transit') acc['In Transit'] = (acc['In Transit'] || 0) + 1;
+      else acc.Alerts = (acc.Alerts || 0) + 1;
+      return acc;
+    }, { Delivered: 0, 'In Transit': 0, Alerts: 0 } as Record<string, number>);
+
+    return [
+      { name: 'Delivered', value: counts.Delivered },
+      { name: 'In Transit', value: counts['In Transit'] },
+      { name: 'Alerts', value: counts.Alerts },
+    ].filter(s => s.value > 0);
+  }, [dispatches]);
+
+  // 7. Recent Dispatches
+  const recentDispatches = useMemo(() => {
+    return [...dispatches]
+      .sort((a, b) => new Date(b.dispatchDateTime).getTime() - new Date(a.dispatchDateTime).getTime())
+      .slice(0, 6)
+      .map(d => ({
+          ...d,
+          oilCompany: d.oilCompanyId, 
+          transporter: d.transporterId || '—',
+          eta: d.etaDateTime?.replace('T', ' ').replace('Z', '') || '—'
+      }));
+  }, [dispatches]);
+
   const pieColors: Record<string, string> = {
     Delivered: chartColors.blue,
     'In Transit': chartColors.gray,
@@ -163,13 +163,13 @@ export default function DashboardPage() {
         {/* KPIs */}
         <div className="md:col-span-12 min-w-0">
           <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-            {kpisLoading ? (
-              <>
-                {[1, 2, 3, 4].map((i) => (
-                  <SkeletonCard key={i} />
-                ))}
-              </>
-            ) : (
+            {isLoading ? (
+                <>
+                  {[1, 2, 3, 4].map((i) => (
+                    <SkeletonCard key={i} />
+                  ))}
+                </>
+              ) : (
               kpiCards.map((k, i) => {
                 const Icon = k.icon
                 return (
@@ -218,11 +218,11 @@ export default function DashboardPage() {
               }
             />
             <CardBody className="h-[360px]">
-              {regionsLoading ? (
+              {isLoading ? (
                 <SkeletonChart className="h-full" />
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={regions} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                  <BarChart data={regionalSummary} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
                     <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
                     <XAxis
                       dataKey="region"
@@ -260,7 +260,7 @@ export default function DashboardPage() {
         <div className="md:col-span-12 lg:col-span-4 min-w-0">
           <Card>
             <CardBody className="h-80">
-              {!chartsLoading && charts ? (
+              {!isLoading ? (
                 <div className="grid h-full grid-rows-[1fr_auto] gap-3">
                   <div className="h-full">
                     <ResponsiveContainer width="100%" height="100%">
@@ -279,7 +279,7 @@ export default function DashboardPage() {
                           dominantBaseline="middle"
                           className="fill-text text-2xl font-bold"
                         >
-                          {statusPie.reduce((sum, s) => sum + s.value, 0).toLocaleString()}
+                          {dispatches.length.toLocaleString()}
                         </text>
                         <text
                           x="50%"
@@ -335,24 +335,24 @@ export default function DashboardPage() {
           <Card>
             <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
             <CardBody className="h-48">
-              {!chartsLoading && charts ? (
+              {!isLoading ? (
                 <div className="space-y-4 h-full flex flex-col justify-center">
                   {/* Calculate totals for each fuel type */}
                   {(() => {
                     const fuelData = [
                       {
                         name: 'Benzine',
-                        volume: regions.reduce((sum, r) => sum + r.benzineM3, 0),
+                        volume: regionalSummary.reduce((sum, r) => sum + r.benzineM3, 0),
                         color: chartColors.blue,
                       },
                       {
                         name: 'Diesel',
-                        volume: regions.reduce((sum, r) => sum + r.dieselM3, 0),
+                        volume: regionalSummary.reduce((sum, r) => sum + r.dieselM3, 0),
                         color: chartColors.gold,
                       },
                       {
                         name: 'Jet Fuel',
-                        volume: regions.reduce((sum, r) => sum + r.jetFuelM3, 0),
+                        volume: regionalSummary.reduce((sum, r) => sum + r.jetFuelM3, 0),
                         color: chartColors.gray,
                       },
                     ]
@@ -418,7 +418,7 @@ export default function DashboardPage() {
                   {recentDispatches.length === 0 ? (
                     <tr>
                       <td className="px-5 py-6 text-sm text-text-muted" colSpan={5}>
-                        No dispatch tasks in mock data.
+                        No dispatch tasks found.
                       </td>
                     </tr>
                   ) : null}
@@ -431,4 +431,3 @@ export default function DashboardPage() {
     </div>
   )
 }
-
