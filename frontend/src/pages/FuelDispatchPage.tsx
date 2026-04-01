@@ -23,36 +23,37 @@ export default function FuelDispatchPage() {
   const canAddDispatch = user?.role?.toUpperCase() === 'EPA_ADMIN' || user?.role?.toUpperCase() === 'SUPER_ADMIN'
 
   // Fetch Dispatches
-  const { data: rawTasks = [] } = useQuery({
+  const { data: rawTasks = [], isLoading: isDispatchesLoading } = useQuery({
     queryKey: ['dispatches'],
     queryFn: async () => {
       const res = await api.get('/dispatches', { 
         params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {} 
       });
-      return res.data.map((d: any) => ({
+      return res.data?.map((d: any) => ({
         peaDispatchNo: d.pea_dispatch_no,
         oilCompanyId: d.oil_company_id,
         transporterId: d.transporter_id,
         vehicleId: d.vehicle_id,
-        dispatchDateTime: d.dispatch_datetime.replace(' ', 'T'),
+        dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
         dispatchLocation: d.dispatch_location,
         destinationDepotId: d.destination_depot_id?.toString() || '',
-        etaDateTime: d.eta_datetime.replace(' ', 'T'),
+        etaDateTime: d.eta_datetime?.replace(' ', 'T'),
         dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
         fuelType: d.fuel_type,
-        dispatchedLiters: Number(d.dispatched_liters),
+        dispatchedLiters: Number(d.dispatched_liters || 0),
         status: d.status,
-      }));
+      })) || [];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes cache
     refetchInterval: 5 * 60 * 1000,
   });
 
   // Fetch Depots
-  const { data: depots = [] } = useQuery<Depot[]>({
+  const { data: depots = [], isLoading: isDepotsLoading } = useQuery<Depot[]>({
     queryKey: ['depots'],
     queryFn: async () => {
       const res = await api.get('/depots');
-      return res.data.map((d: any) => ({
+      return res.data?.map((d: any) => ({
         ...d,
         id: d.id.toString(),
         location: { region: d.region, city: d.city, address: d.address },
@@ -64,16 +65,20 @@ export default function FuelDispatchPage() {
         mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
         mapLink: d.map_link,
         oilCompanyId: d.oil_company_id,
-      }));
-    }
+      })) || [];
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes cache
   });
 
   // Fetch GPS Vehicles
-  const { data: vehicles = [] } = useQuery<GpsVehicle[]>({
+  const { data: vehicles = [], isLoading: isVehiclesLoading } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: fetchGpsVehicles,
+    staleTime: 60 * 1000, // 1 minute cache
     refetchInterval: 5 * 60 * 1000,
   });
+
+  const isInitialLoading = isDispatchesLoading || isDepotsLoading || isVehiclesLoading;
 
   // Derived Mappings
   const oilCompanies = useMemo(() => {
@@ -147,6 +152,15 @@ export default function FuelDispatchPage() {
     user?.companyId,
     rawTasks
   ])
+
+  if (isInitialLoading && rawTasks.length === 0) {
+    return (
+      <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
+        <div className="size-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        <p className="text-sm font-medium text-text-muted">Loading dispatch data...</p>
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -287,9 +301,9 @@ export default function FuelDispatchPage() {
                         <td className="whitespace-nowrap px-4 py-4">{oilCompany}</td>
                         <td className="whitespace-nowrap px-4 py-4">{transporter}</td>
                         <td className="whitespace-nowrap px-4 py-4">{vehicle}</td>
-                        <td className="whitespace-nowrap px-4 py-4">{t.fuelType}</td>
+                        <td className="whitespace-nowrap px-4 py-4">{t.fuelType || '—'}</td>
                         <td className="whitespace-nowrap px-4 py-4">
-                          {t.dispatchedLiters.toLocaleString()}
+                          {(t.dispatchedLiters || 0).toLocaleString()} L
                         </td>
                         <td className="whitespace-nowrap px-4 py-4 text-slate-600">{t.dispatchLocation}</td>
                         <td className="whitespace-nowrap px-4 py-4">{depot}</td>
