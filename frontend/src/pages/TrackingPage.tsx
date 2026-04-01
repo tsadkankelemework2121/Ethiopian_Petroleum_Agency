@@ -19,7 +19,9 @@ const COLORS = {
 export default function TrackingPage() {
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
-  
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [assignmentFilter, setAssignmentFilter] = useState('All')
+
   const { data: items = [], isLoading, error: queryError } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: fetchGpsVehicles,
@@ -53,18 +55,22 @@ export default function TrackingPage() {
 
   const activeDispatchesByVehicle = useMemo(() => {
     const map = new Map<string, any>();
-    // Sort by date desc to get the latest dispatch
     const sorted = [...dispatches].sort((a, b) => 
       new Date(b.dispatch_datetime).getTime() - new Date(a.dispatch_datetime).getTime()
     );
     
+    // We want to find the GPS vehicle that corresponds to each dispatch
+    // Dispatches store either IMEI or Plate Number in 'vehicle_id'
     sorted.forEach(d => {
-      if (!map.has(d.vehicle_id) && d.status !== 'Delivered') {
-        map.set(d.vehicle_id, d);
+      if (d.status !== 'Delivered') {
+        const match = items.find(v => v.imei === d.vehicle_id || v.name === d.vehicle_id);
+        if (match && !map.has(match.imei)) {
+          map.set(match.imei, d);
+        }
       }
     });
     return map;
-  }, [dispatches]);
+  }, [dispatches, items]);
 
   const [isClustered, setIsClustered] = useState(false)
   const [hasFitBounds, setHasFitBounds] = useState(false)
@@ -101,12 +107,27 @@ export default function TrackingPage() {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    if (!q) return items
+    
     return items.filter((t) => {
-      const hay = [t.name, t.imei, t.group ?? '', t.status, t.engine].join(' ').toLowerCase()
-      return hay.includes(q)
+      // 1. Text Search
+      const searchHay = [t.name, t.imei, t.group ?? '', t.status, t.engine].join(' ').toLowerCase()
+      const searchMatch = !q || searchHay.includes(q)
+
+      // 2. Status Filtering
+      const tag = statusTag(t)
+      const statusMatch = statusFilter === 'All' || tag.label.toUpperCase() === statusFilter.toUpperCase()
+
+      // 3. Assignment Filtering
+      const isAssigned = activeDispatchesByVehicle.has(t.imei)
+      const assignmentMatch = assignmentFilter === 'All' 
+        ? true 
+        : assignmentFilter === 'Assigned' 
+          ? isAssigned 
+          : !isAssigned
+
+      return searchMatch && statusMatch && assignmentMatch
     })
-  }, [items, search])
+  }, [items, search, statusFilter, assignmentFilter, activeDispatchesByVehicle])
 
   // Do not slice, show all filtered vehicles
   const fleetListItems = useMemo(() => filtered, [filtered])
@@ -123,7 +144,7 @@ export default function TrackingPage() {
 
         const tag = statusTag(t)
         const dispatch = activeDispatchesByVehicle.get(t.imei);
-        
+
         let markerColor =
           tag.label === 'MOVING'
             ? '#22c55e'
@@ -189,7 +210,7 @@ export default function TrackingPage() {
       // Zoom in to show roads clearly
       mapApiRef.current?.flyTo({ lat, lng }, 18)
     }
-    
+
     // Hide list on mobile when a truck is selected
     if (window.innerWidth < 768) {
       setIsListOpen(false)
@@ -263,8 +284,8 @@ export default function TrackingPage() {
                 {v.status}
               </span>
               {dispatch && (
-                <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
-                  Dispatched
+                <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider animate-pulse border border-blue-200">
+                  Task Assigned
                 </span>
               )}
             </div>
@@ -290,6 +311,10 @@ export default function TrackingPage() {
               <div className="rounded border bg-white p-2 shadow-sm">
                 <div className="text-slate-500">Fuel</div>
                 <div className="font-semibold text-slate-900">{v.fuel_1}</div>
+              </div>
+              <div className="rounded border border-blue-200 bg-blue-50/30 p-2 shadow-sm col-span-2">
+                <div className="text-blue-600 font-bold uppercase tracking-widest text-[8px] mb-0.5">Oil Company</div>
+                <div className="font-bold text-slate-900">{v.group || '—'}</div>
               </div>
             </div>
             <div className="rounded border bg-white p-2 text-[10px] shadow-sm">
@@ -356,7 +381,7 @@ export default function TrackingPage() {
       />
 
       {/* Mobile Menu Toggle */}
-      <button 
+      <button
         className="md:hidden absolute top-4 left-4 z-20 p-2.5 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-[#D1D5DB] text-slate-700 hover:bg-slate-50 transition"
         onClick={() => setIsListOpen(!isListOpen)}
       >
@@ -382,6 +407,30 @@ export default function TrackingPage() {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
+            >
+                <option value="All">MOVEMENT: ALL</option>
+                <option value="Moving">MOVING</option>
+                <option value="Idle">IDLE</option>
+                <option value="Stopped">STOPPED</option>
+                <option value="Offline">OFFLINE</option>
+            </select>
+
+            <select
+                value={assignmentFilter}
+                onChange={(e) => setAssignmentFilter(e.target.value)}
+                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
+            >
+                <option value="All">TASK: ALL</option>
+                <option value="Assigned">ASSIGNED</option>
+                <option value="Unassigned">NOT ASSIGNED</option>
+            </select>
+          </div>
         </div>
 
         <div ref={listHostRef} className="flex-1 overflow-hidden">
@@ -392,17 +441,17 @@ export default function TrackingPage() {
           ) : listSize.height > 0 && listSize.width > 0 ? (
             <VirtualList
               style={{ height: listSize.height, width: listSize.width }}
-            rowCount={fleetListItems.length}
+              rowCount={fleetListItems.length}
               rowHeight={(index) => getItemSize(index)}
               rowComponent={Row}
-            rowProps={{
-              items: fleetListItems,
-              selectedId,
-              onSelect: (v: GpsVehicle) => handleSelectVehicle(v),
-            }}
+              rowProps={{
+                items: fleetListItems,
+                selectedId,
+                onSelect: (v: GpsVehicle) => handleSelectVehicle(v),
+              }}
             >
               {/* List renders through rowComponent */}
-          </VirtualList>
+            </VirtualList>
           ) : (
             <div className="p-4 text-sm text-slate-600">Loading list…</div>
           )}
@@ -425,8 +474,8 @@ export default function TrackingPage() {
             type="button"
             onClick={() => setIsClustered(!isClustered)}
             className={`rounded-full px-3 py-1.5 text-[11px] font-bold border transition ${isClustered
-                ? 'bg-[#067cc1] text-white border-[#067cc1] shadow-md hover:bg-[#056096]'
-                : 'bg-white text-slate-600 border-[#E5E7EB] hover:bg-slate-50'
+              ? 'bg-[#067cc1] text-white border-[#067cc1] shadow-md hover:bg-[#056096]'
+              : 'bg-white text-slate-600 border-[#E5E7EB] hover:bg-slate-50'
               }`}
           >
             CLUSTER {isClustered && 'ON'}
