@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { PlusIcon } from 'lucide-react'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
@@ -23,7 +23,7 @@ export default function FuelDispatchPage() {
   const canAddDispatch = user?.role?.toUpperCase() === 'EPA_ADMIN' || user?.role?.toUpperCase() === 'SUPER_ADMIN'
 
   // Fetch Dispatches
-  const { data: rawTasks = [], refetch: refetchTasks } = useQuery({
+  const { data: rawTasks = [] } = useQuery({
     queryKey: ['dispatches'],
     queryFn: async () => {
       const res = await api.get('/dispatches', { 
@@ -121,7 +121,7 @@ export default function FuelDispatchPage() {
   }, [transporters])
 
   const filteredTasks = useMemo(() => {
-    return rawTasks.filter((t) => {
+    return rawTasks.filter((t: any) => {
       const matchesStatus = statusFilter === 'All' ? true : t.status === statusFilter
 
       const transporter = transportersById.get(t.transporterId)?.name ?? t.transporterId
@@ -159,6 +159,7 @@ export default function FuelDispatchPage() {
            oilCompanies={oilCompanies}
            vehicles={vehicles}
            depots={depots}
+           dispatches={rawTasks}
            onClose={() => setShowNewDispatchForm(false)}
            onSubmit={() => {
               queryClient.invalidateQueries({ queryKey: ['dispatches'] })
@@ -272,7 +273,7 @@ export default function FuelDispatchPage() {
                 </thead>
 
                 <tbody className="divide-y divide-[#D1D5DB]">
-                  {filteredTasks.map((t) => {
+                  {filteredTasks.map((t: any) => {
                     const transporter = transportersById.get(t.transporterId)?.name ?? t.transporterId
                     const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? t.vehicleId
                     const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
@@ -343,12 +344,14 @@ function NewDispatchForm({
   oilCompanies,
   vehicles,
   depots,
+  dispatches,
   onClose,
   onSubmit,
 }: {
   oilCompanies: OilCompany[]
   vehicles: GpsVehicle[]
   depots: Depot[]
+  dispatches: any[]
   onClose: () => void
   onSubmit: (task: DispatchTask) => void
 }) {
@@ -370,8 +373,19 @@ function NewDispatchForm({
   // Filter valid vehicles for this company
   const availableVehicles = useMemo(() => {
     if (!formData.oilCompanyId) return []
-    return vehicles.filter(v => v.group === formData.oilCompanyId)
-  }, [formData.oilCompanyId, vehicles])
+    
+    // Identify vehicles already on an active dispatch
+    const occupiedVehicleIds = new Set(
+      dispatches
+        .filter(d => d.status !== 'Delivered')
+        .map(d => d.vehicleId)
+    )
+
+    return vehicles.filter(v => 
+      v.group === formData.oilCompanyId && 
+      !occupiedVehicleIds.has(v.imei)
+    )
+  }, [formData.oilCompanyId, vehicles, dispatches])
 
   // Apply search filter locally
   const searchedVehicles = useMemo(() => {
@@ -485,21 +499,36 @@ function NewDispatchForm({
               value={formData.vehicleId}
               onChange={(e) => handleVehicleChange(e.target.value)}
               disabled={!formData.oilCompanyId}
-              className="w-full rounded-lg border border-[#D1D5DB] bg-white px-1 py-1 text-sm overflow-y-auto"
+              className="w-full rounded-lg border border-[#D1D5DB] bg-white px-1 py-1 text-sm overflow-y-auto focus:border-primary focus:ring-1 focus:ring-primary shadow-sm outline-none"
             >
               {searchedVehicles.length === 0 ? (
-                <option value="" disabled>No vehicles found</option>
+                <option value="" disabled className="italic p-2">
+                  {formData.oilCompanyId ? 'No available vehicles found' : 'Select company first'}
+                </option>
               ) : (
                 searchedVehicles.map((v) => (
-                  <option key={v.imei} value={v.imei} className="px-2 py-1.5 hover:bg-muted rounded text-xs">
+                  <option 
+                    key={v.imei} 
+                    value={v.imei} 
+                    className="px-3 py-2 cursor-pointer hover:bg-primary/10 selected:bg-primary selected:text-white border-b border-slate-50 last:border-0"
+                  >
                     {v.name}
                   </option>
                 ))
               )}
             </select>
+            {formData.vehicleId && (
+               <div className="flex items-center gap-2 mt-1 px-1">
+                 <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+                 <span className="text-[11px] font-medium text-slate-700">
+                   Selected: <span className="text-primary font-bold">{vehicles.find(v => v.imei === formData.vehicleId)?.name}</span>
+                 </span>
+               </div>
+            )}
             {formData.transporterId && (
-              <div className="text-[10px] text-text-muted italic">
-                Detected Transporter: <span className="font-semibold">{formData.transporterId}</span>
+              <div className="text-[10px] text-text-muted italic bg-slate-50 p-1.5 rounded-md mt-1 border border-slate-100 flex justify-between items-center">
+                <span>Transporter Info: <span className="font-semibold text-slate-700">{formData.transporterId}</span></span>
+                <span className="text-[9px] bg-slate-200 px-1.5 rounded uppercase font-bold">Auto-detected</span>
               </div>
             )}
           </div>

@@ -4,6 +4,8 @@ import { fetchGpsVehicles } from '../data/gpsApi'
 import type { GpsVehicle } from '../data/types'
 import MapView from '../components/map/MapView'
 import { useQuery } from '@tanstack/react-query'
+import api from '../api/axios'
+import type { Depot } from '../data/types'
 
 const COLORS = {
   blue: '#067cc1',
@@ -23,6 +25,46 @@ export default function TrackingPage() {
     queryFn: fetchGpsVehicles,
     refetchInterval: 30000, // 30 seconds for tracking
   });
+
+  // Fetch Dispatches
+  const { data: dispatches = [] } = useQuery({
+    queryKey: ['dispatches'],
+    queryFn: async () => {
+      const res = await api.get('/dispatches');
+      return res.data;
+    },
+    refetchInterval: 30000,
+  });
+
+  // Fetch Depots for names
+  const { data: depots = [] } = useQuery<Depot[]>({
+    queryKey: ['depots'],
+    queryFn: async () => {
+      const res = await api.get('/depots');
+      return res.data;
+    }
+  });
+
+  const depotsById = useMemo(() => {
+    const map = new Map<string, any>();
+    depots.forEach(d => map.set(d.id.toString(), d));
+    return map;
+  }, [depots]);
+
+  const activeDispatchesByVehicle = useMemo(() => {
+    const map = new Map<string, any>();
+    // Sort by date desc to get the latest dispatch
+    const sorted = [...dispatches].sort((a, b) => 
+      new Date(b.dispatch_datetime).getTime() - new Date(a.dispatch_datetime).getTime()
+    );
+    
+    sorted.forEach(d => {
+      if (!map.has(d.vehicle_id) && d.status !== 'Delivered') {
+        map.set(d.vehicle_id, d);
+      }
+    });
+    return map;
+  }, [dispatches]);
 
   const [isClustered, setIsClustered] = useState(false)
   const [hasFitBounds, setHasFitBounds] = useState(false)
@@ -80,7 +122,9 @@ export default function TrackingPage() {
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null
 
         const tag = statusTag(t)
-        const markerColor =
+        const dispatch = activeDispatchesByVehicle.get(t.imei);
+        
+        let markerColor =
           tag.label === 'MOVING'
             ? '#22c55e'
             : tag.label === 'IDLE'
@@ -89,12 +133,16 @@ export default function TrackingPage() {
                 ? COLORS.gray
                 : '#ef4444'
 
+        // If dispatched, maybe use a distinct color or label
+        const statusLabel = dispatch ? `Dispatch: ${dispatch.status}` : t.status;
+        if (dispatch && dispatch.status === 'On transit') markerColor = '#067cc1';
+
         return {
           id: t.imei,
           position: { lat, lng },
           label: t.name,
-          subtitle: t.status,
-          status: t.status,
+          subtitle: statusLabel,
+          status: statusLabel,
           angle,
           color: markerColor,
         }
@@ -185,6 +233,7 @@ export default function TrackingPage() {
     const tag = statusTag(v)
     const plate = plateFromName(v.name)
     const isSelected = v.imei === rowSelectedId
+    const dispatch = activeDispatchesByVehicle.get(v.imei)
 
     return (
       <div style={style} className="border-b border-[#EEF2F7]">
@@ -195,15 +244,30 @@ export default function TrackingPage() {
           style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
         >
           <div className="flex items-center justify-between gap-3">
-            <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
-              {plate}
+            <div className="flex flex-col">
+              <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+                {plate}
+              </div>
+              {dispatch && (
+                <div className="text-[10px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
+                  <div className="size-1.5 rounded-full bg-blue-500 animate-pulse" />
+                  {dispatch.status} → {depotsById.get(dispatch.destination_depot_id?.toString())?.name || 'Unknown Depot'}
+                </div>
+              )}
             </div>
-            <span
-              className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
-              style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
-            >
-              {v.status}
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span
+                className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
+                style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
+              >
+                {v.status}
+              </span>
+              {dispatch && (
+                <span className="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">
+                  Dispatched
+                </span>
+              )}
+            </div>
           </div>
         </button>
 
@@ -234,6 +298,33 @@ export default function TrackingPage() {
               <div><span className="font-medium text-slate-700">Latest update:</span> {v.dt_tracker}</div>
               <div><span className="font-medium text-slate-700">Latest server:</span> {v.dt_server}</div>
             </div>
+
+            {dispatch && (
+              <div className="mt-3 rounded-lg border border-blue-100 bg-blue-50/50 p-3 shadow-sm">
+                <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wider mb-2 flex justify-between">
+                  <span>Current Dispatch</span>
+                  <span className="bg-blue-600 text-white px-1.5 py-0.5 rounded text-[8px]">{dispatch.status}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
+                  <div>
+                    <div className="text-slate-500 text-[9px]">Destination</div>
+                    <div className="font-semibold text-slate-900">{depotsById.get(dispatch.destination_depot_id?.toString())?.name || '—'}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-[9px]">Fuel Type</div>
+                    <div className="font-semibold text-slate-900">{dispatch.fuel_type}</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-[9px]">Liters</div>
+                    <div className="font-semibold text-slate-900">{Number(dispatch.dispatched_liters).toLocaleString()} L</div>
+                  </div>
+                  <div>
+                    <div className="text-slate-500 text-[9px]">ETA</div>
+                    <div className="font-semibold text-slate-900">{dispatch.eta_datetime?.split(' ')[0]}</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
