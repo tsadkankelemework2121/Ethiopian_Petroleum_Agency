@@ -53,7 +53,7 @@ export default function DepotsPage() {
         title="Depots"
         subtitle="Depots with contact details and map location."
         right={
-          user?.role === 'OIL_COMPANY_ADMIN' && (
+          (user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY') && (
             <button
               type="button"
               onClick={() => setShowForm(!showForm)}
@@ -135,7 +135,7 @@ export default function DepotsPage() {
           title="No depots yet"
           description="Add your first depot to get started with contact details and map locations."
           action={
-            user?.role === 'OIL_COMPANY_ADMIN' ? (
+            (user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY') ? (
               <button
                 type="button"
                 onClick={() => setShowForm(true)}

@@ -65,6 +65,24 @@ class DispatchController extends Controller
         return response()->json($dispatch, 201);
     }
 
+    public function markAsDelivered(Request $request, Dispatch $dispatch)
+    {
+        $user = $request->user();
+        $role = strtoupper($user->role);
+
+        // Only the assigned Oil Company can mark as delivered
+        if ($role === 'OIL_COMPANY' || $role === 'OIL_COMPANY_ADMIN') {
+            if ($dispatch->oil_company_id !== $user->company_id) {
+                return response()->json(['message' => 'Forbidden: This dispatch belongs to another company'], 403);
+            }
+        } elseif ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $dispatch->update(['status' => 'Delivered']);
+        return response()->json($dispatch);
+    }
+
     public function show(Dispatch $dispatch)
     {
         return response()->json($dispatch->load('depot'));

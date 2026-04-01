@@ -45,7 +45,7 @@ export default function FuelDispatchPage() {
         status: d.status,
       })) || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes cache
+    staleTime: 5 * 60 * 1000, 
     refetchInterval: 5 * 60 * 1000,
   });
 
@@ -68,14 +68,14 @@ export default function FuelDispatchPage() {
         oilCompanyId: d.oil_company_id,
       })) || [];
     },
-    staleTime: 10 * 60 * 1000, // 10 minutes cache
+    staleTime: 10 * 60 * 1000, 
   });
 
   // Fetch GPS Vehicles
   const { data: vehicles = [], isLoading: isVehiclesLoading } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: fetchGpsVehicles,
-    staleTime: 60 * 1000, // 1 minute cache
+    staleTime: 60 * 1000, 
     refetchInterval: 5 * 60 * 1000,
   });
 
@@ -106,6 +106,18 @@ export default function FuelDispatchPage() {
     }
   };
 
+  const handleConfirmReceipt = async (peaDispatchNo: string) => {
+    if (!window.confirm("Are you sure you have received this dispatch? This will mark it as Delivered.")) return;
+
+    try {
+      await api.post(`/dispatches/${peaDispatchNo}/deliver`);
+      queryClient.invalidateQueries({ queryKey: ['dispatches'] });
+    } catch (err) {
+      console.error('Failed to confirm delivery:', err);
+      alert('Error confirming delivery. Ensure you have authorized access.');
+    }
+  };
+
   const filteredTasks = useMemo(() => {
     return rawTasks.filter((t: any) => {
       const matchesStatus = statusFilter === 'All' ? true : t.status === statusFilter
@@ -122,13 +134,7 @@ export default function FuelDispatchPage() {
 
       return matchesStatus && matchesSearch
     })
-  }, [
-    search,
-    statusFilter,
-    vehicles,
-    depotsById,
-    rawTasks
-  ])
+  }, [search, statusFilter, vehicles, depotsById, rawTasks])
 
   if (isInitialLoading && rawTasks.length === 0) {
     return (
@@ -322,6 +328,17 @@ export default function FuelDispatchPage() {
                           >
                             <MapPinIcon className="size-3.5" />
                           </button>
+
+                          {(user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') && t.status !== 'Delivered' && (
+                             <button
+                               type="button"
+                               onClick={() => handleConfirmReceipt(t.peaDispatchNo)}
+                               className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition"
+                             >
+                               Confirm Receipt
+                             </button>
+                          )}
+
                           {canAddDispatch && (
                             <>
                               <button
@@ -381,6 +398,7 @@ function DispatchForm({
   onClose: () => void
   onSubmit: (task: DispatchTask) => void
 }) {
+  const { user } = useAuth()
   const [formData, setFormData] = useState({
     oilCompanyId: editingTask?.oilCompanyId || '',
     transporterId: editingTask?.transporterId || '',
@@ -393,6 +411,13 @@ function DispatchForm({
     dispatchedLiters: editingTask?.dispatchedLiters || '',
     status: editingTask?.status || 'On transit'
   })
+
+  // Set default company if user is Oil Company
+  useEffect(() => {
+    if (!editingTask && (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN')) {
+      setFormData(prev => ({ ...prev, oilCompanyId: user.companyId || '' }));
+    }
+  }, [user, editingTask]);
 
   const [vehicleSearch, setVehicleSearch] = useState('')
   const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
@@ -499,6 +524,7 @@ function DispatchForm({
            <label className="block text-sm font-semibold mb-1 text-slate-700">Oil Company *</label>
           <select
             required
+            disabled={user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN'}
             value={formData.oilCompanyId}
             onChange={(e) => {
                 setFormData({ ...formData, oilCompanyId: e.target.value, destinationDepotId: '', transporterId: '', vehicleId: '' });
@@ -560,14 +586,6 @@ function DispatchForm({
                         ))
                     )}
                 </div>
-            )}
-            {formData.vehicleId && (
-               <div className="flex items-center gap-2 mt-1.5 px-1 animate-in fade-in slide-in-from-top-1">
-                 <div className="size-2 rounded-full bg-green-500" />
-                 <span className="text-[11px] font-medium text-slate-600">
-                   Locked: <span className="text-primary font-bold">{vehicles.find(v => v.imei === formData.vehicleId)?.name}</span>
-                 </span>
-               </div>
             )}
           </div>
         </div>
@@ -681,6 +699,3 @@ function DispatchForm({
     </form>
   )
 }
-
-
-

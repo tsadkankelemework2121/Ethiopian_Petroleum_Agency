@@ -10,5 +10,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('depots', App\Http\Controllers\DepotController::class);
+    Route::post('/dispatches/{dispatch}/deliver', [App\Http\Controllers\DispatchController::class, 'markAsDelivered']);
     Route::apiResource('dispatches', App\Http\Controllers\DispatchController::class);
 });
