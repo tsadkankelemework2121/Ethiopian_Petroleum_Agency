@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { PlusIcon } from 'lucide-react'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
-import type { Depot, DispatchTask, FuelType, OilCompany, Transporter } from '../data/types'
+import type { Depot, DispatchTask, FuelType, OilCompany } from '../data/types'
 import StatusPill from '../components/ui/StatusPill'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
@@ -87,44 +87,7 @@ export default function FuelDispatchPage() {
     return names.map(name => ({ id: name, name: name, contacts: {} }));
   }, [vehicles]);
 
-  const transporters = useMemo(() => {
-    const transportersMap = new Map<string, Transporter>();
-    vehicles.forEach((v) => {
-      const transName = typeof v.custom_fields === 'string' ? v.custom_fields : '';
-      if (!transName) return;
-      if (!transportersMap.has(transName)) {
-        transportersMap.set(transName, {
-          id: transName,
-          name: transName,
-          location: { region: '—', city: '—', address: '—' },
-          contacts: {},
-          vehicles: [],
-          oilCompanyId: v.group || undefined,
-        });
-      }
-      transportersMap.get(transName)?.vehicles.push({
-        id: v.imei,
-        plateRegNo: v.name,
-        trailerRegNo: '—',
-        sideNo: '—',
-        driverName: '—',
-        manufacturer: '—',
-        model: '—',
-        yearOfManufacture: new Date().getFullYear(),
-        driverPhone: '—',
-      });
-    });
-    return Array.from(transportersMap.values());
-  }, [vehicles]);
-
-  const transportersById = useMemo(() => new Map(transporters.map((t) => [t.id, t] as const)), [transporters])
   const depotsById = useMemo(() => new Map(depots.map((d) => [d.id, d] as const)), [depots])
-  const oilCompaniesById = useMemo(() => new Map(oilCompanies.map((c) => [c.id, c] as const)), [oilCompanies])
-
-  const vehiclesById = useMemo(() => {
-    const vehicles = transporters.flatMap((t) => t.vehicles)
-    return new Map(vehicles.map((v) => [v.id, v] as const))
-  }, [transporters])
 
   const handleEdit = (task: any) => {
     setEditingTask(task);
@@ -132,14 +95,14 @@ export default function FuelDispatchPage() {
   };
 
   const handleDelete = async (peaDispatchNo: string) => {
-    if (!window.confirm('Are you sure you want to delete this dispatch?')) return;
+    if (!window.confirm(`Are you sure you want to delete dispatch ${peaDispatchNo}?`)) return;
     
     try {
       await api.delete(`/dispatches/${peaDispatchNo}`);
       queryClient.invalidateQueries({ queryKey: ['dispatches'] });
     } catch (err) {
       console.error('Failed to delete dispatch:', err);
-      alert('Error deleting dispatch.');
+      alert('Error deleting dispatch. Only EPA admins are authorized.');
     }
   };
 
@@ -147,10 +110,10 @@ export default function FuelDispatchPage() {
     return rawTasks.filter((t: any) => {
       const matchesStatus = statusFilter === 'All' ? true : t.status === statusFilter
 
-      const transporter = transportersById.get(t.transporterId)?.name ?? t.transporterId
-      const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? t.vehicleId
+      const transporter = t.transporterId || '—'
+      const vehicle = vehicles.find(v => v.imei === t.vehicleId || v.name === t.vehicleId)?.name ?? t.vehicleId
       const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
-      const oilCompany = oilCompaniesById.get(t.oilCompanyId)?.name ?? t.oilCompanyId
+      const oilCompany = t.oilCompanyId
 
       const text =
         `${t.peaDispatchNo} ${transporter} ${vehicle} ${depot} ${oilCompany} ${t.fuelType}`.toLowerCase()
@@ -162,12 +125,8 @@ export default function FuelDispatchPage() {
   }, [
     search,
     statusFilter,
-    transportersById,
-    vehiclesById,
+    vehicles,
     depotsById,
-    oilCompaniesById,
-    user?.role,
-    user?.companyId,
     rawTasks
   ])
 
@@ -212,30 +171,38 @@ export default function FuelDispatchPage() {
       <ModalOverlay
         isOpen={trackingTask !== null}
         onClose={() => setTrackingTask(null)}
-        title={trackingTask ? `Tracking ${vehiclesById.get(trackingTask.vehicleId)?.plateRegNo ?? ''}` : 'Tracking'}
+        title={trackingTask ? `Tracking: ${trackingTask.vehicleId}` : 'Tracking'}
         noPadding
       >
         <div className="h-[65vh] min-h-[500px] w-full relative">
-          {trackingTask?.lastGpsPoint ? (
-            <MapView
-              center={{ lat: trackingTask.lastGpsPoint.position.lat, lng: trackingTask.lastGpsPoint.position.lng }}
-              zoom={13}
-              markers={[
-                {
-                  id: trackingTask.vehicleId,
-                  position: { lat: trackingTask.lastGpsPoint.position.lat, lng: trackingTask.lastGpsPoint.position.lng },
-                  label: vehiclesById.get(trackingTask.vehicleId)?.plateRegNo ?? 'Vehicle',
-                  status: trackingTask.status,
-                  color: trackingTask.status === 'On transit' ? '#067cc1' : trackingTask.status === 'Delivered' ? '#22c55e' : '#f59f0a'
-                }
-              ]}
-              className="absolute inset-0"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-500 text-sm">
-              No recent GPS coordinates available for this vehicle.
-            </div>
-          )}
+          {(() => {
+            const gpsVehicle = vehicles.find(v => v.name === trackingTask?.vehicleId || v.imei === trackingTask?.vehicleId);
+             if (gpsVehicle && gpsVehicle.lat && gpsVehicle.lng) {
+                 const lat = Number(gpsVehicle.lat);
+                 const lng = Number(gpsVehicle.lng);
+                 return (
+                    <MapView
+                      center={{ lat, lng }}
+                      zoom={13}
+                      markers={[
+                        {
+                          id: gpsVehicle.imei,
+                          position: { lat, lng },
+                          label: gpsVehicle.name,
+                          status: trackingTask?.status || 'On transit',
+                          color: trackingTask?.status === 'Delivered' ? '#22c55e' : '#067cc1'
+                        }
+                      ]}
+                      className="absolute inset-0"
+                    />
+                 )
+             }
+             return (
+                    <div className="absolute inset-0 flex items-center justify-center bg-slate-50 text-slate-500 text-sm">
+                      No live GPS coordinates available for this vehicle.
+                    </div>
+             )
+          })()}
         </div>
       </ModalOverlay>
 
@@ -314,10 +281,9 @@ export default function FuelDispatchPage() {
 
                 <tbody className="divide-y divide-[#D1D5DB]">
                   {filteredTasks.map((t: any) => {
-                    const transporter = transportersById.get(t.transporterId)?.name ?? t.transporterId
-                    const vehicle = vehiclesById.get(t.vehicleId)?.plateRegNo ?? t.vehicleId
+                    const vehicle = vehicles.find(v => v.imei === t.vehicleId || v.name === t.vehicleId)?.name ?? t.vehicleId
                     const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
-                    const oilCompany = oilCompaniesById.get(t.oilCompanyId)?.name ?? t.oilCompanyId
+                    const oilCompany = t.oilCompanyId
 
                     return (
                       <tr key={t.peaDispatchNo} className="hover:bg-muted/30">
@@ -325,7 +291,7 @@ export default function FuelDispatchPage() {
                           {t.peaDispatchNo}
                         </td>
                         <td className="whitespace-nowrap px-4 py-4">{oilCompany}</td>
-                        <td className="whitespace-nowrap px-4 py-4">{transporter}</td>
+                        <td className="whitespace-nowrap px-4 py-4">{t.transporterId || '—'}</td>
                         <td className="whitespace-nowrap px-4 py-4">{vehicle}</td>
                         <td className="whitespace-nowrap px-4 py-4">{t.fuelType || '—'}</td>
                         <td className="whitespace-nowrap px-4 py-4">
@@ -477,7 +443,7 @@ function DispatchForm({
     const transporterName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
     setFormData(prev => ({
       ...prev,
-      vehicleId: v.imei,
+      vehicleId: v.name,
       transporterId: transporterName || '' 
     }))
     setVehicleSearch(v.name);
