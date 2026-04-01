@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { PlusIcon } from 'lucide-react'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
@@ -15,7 +15,8 @@ import type { GpsVehicle } from '../data/types'
 export default function FuelDispatchPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
-  const [showNewDispatchForm, setShowNewDispatchForm] = useState(false)
+  const [showDispatchForm, setShowDispatchForm] = useState(false)
+  const [editingTask, setEditingTask] = useState<any | null>(null)
   const [trackingTask, setTrackingTask] = useState<DispatchTask | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
@@ -125,6 +126,23 @@ export default function FuelDispatchPage() {
     return new Map(vehicles.map((v) => [v.id, v] as const))
   }, [transporters])
 
+  const handleEdit = (task: any) => {
+    setEditingTask(task);
+    setShowDispatchForm(true);
+  };
+
+  const handleDelete = async (peaDispatchNo: string) => {
+    if (!window.confirm('Are you sure you want to delete this dispatch?')) return;
+    
+    try {
+      await api.delete(`/dispatches/${peaDispatchNo}`);
+      queryClient.invalidateQueries({ queryKey: ['dispatches'] });
+    } catch (err) {
+      console.error('Failed to delete dispatch:', err);
+      alert('Error deleting dispatch.');
+    }
+  };
+
   const filteredTasks = useMemo(() => {
     return rawTasks.filter((t: any) => {
       const matchesStatus = statusFilter === 'All' ? true : t.status === statusFilter
@@ -165,19 +183,27 @@ export default function FuelDispatchPage() {
   return (
     <div>
       <ModalOverlay
-        isOpen={showNewDispatchForm}
-        onClose={() => setShowNewDispatchForm(false)}
-        title="Add New Dispatch"
+        isOpen={showDispatchForm}
+        onClose={() => {
+            setShowDispatchForm(false)
+            setEditingTask(null)
+        }}
+        title={editingTask ? `Edit Dispatch: ${editingTask.peaDispatchNo}` : "Add New Dispatch"}
       >
-        <NewDispatchForm
+        <DispatchForm
            oilCompanies={oilCompanies}
            vehicles={vehicles}
            depots={depots}
            dispatches={rawTasks}
-           onClose={() => setShowNewDispatchForm(false)}
+           editingTask={editingTask}
+           onClose={() => {
+                setShowDispatchForm(false)
+                setEditingTask(null)
+           }}
            onSubmit={() => {
               queryClient.invalidateQueries({ queryKey: ['dispatches'] })
-              setShowNewDispatchForm(false)
+              setShowDispatchForm(false)
+              setEditingTask(null)
            }}
         />
       </ModalOverlay>
@@ -250,7 +276,7 @@ export default function FuelDispatchPage() {
                {canAddDispatch && (
                  <button
                    type="button"
-                   onClick={() => setShowNewDispatchForm(true)}
+                   onClick={() => setShowDispatchForm(true)}
                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
                  >
                    <PlusIcon className="size-4" />
@@ -321,15 +347,33 @@ export default function FuelDispatchPage() {
                         <td className="whitespace-nowrap px-4 py-4">
                           <StatusPill status={t.status} task={t} />
                         </td>
-                        <td className="whitespace-nowrap px-4 py-4 text-right">
+                        <td className="whitespace-nowrap px-4 py-4 text-right space-x-2">
                           <button
                             type="button"
                             onClick={() => setTrackingTask(t)}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
+                            title="Follow Map"
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
                           >
                             <MapPinIcon className="size-3.5" />
-                            Follow
                           </button>
+                          {canAddDispatch && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => handleEdit(t)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(t.peaDispatchNo)}
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition"
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </td>
                       </tr>
                     )
@@ -354,11 +398,12 @@ export default function FuelDispatchPage() {
   )
 }
 
-function NewDispatchForm({
+function DispatchForm({
   oilCompanies,
   vehicles,
   depots,
   dispatches,
+  editingTask,
   onClose,
   onSubmit,
 }: {
@@ -366,32 +411,43 @@ function NewDispatchForm({
   vehicles: GpsVehicle[]
   depots: Depot[]
   dispatches: any[]
+  editingTask?: any
   onClose: () => void
   onSubmit: (task: DispatchTask) => void
 }) {
   const [formData, setFormData] = useState({
-    oilCompanyId: '',
-    transporterId: '',
-    vehicleId: '',
-    dispatchDateTime: '',
-    dispatchLocation: '',
-    destinationDepotId: '',
-    etaDateTime: '',
-    fuelType: 'Benzine' as FuelType,
-    dispatchedLiters: '',
+    oilCompanyId: editingTask?.oilCompanyId || '',
+    transporterId: editingTask?.transporterId || '',
+    vehicleId: editingTask?.vehicleId || '',
+    dispatchDateTime: (editingTask?.dispatchDateTime || '').split('.')[0],
+    dispatchLocation: editingTask?.dispatchLocation || '',
+    destinationDepotId: editingTask?.destinationDepotId || '',
+    etaDateTime: (editingTask?.etaDateTime || '').split('.')[0],
+    fuelType: (editingTask?.fuelType || 'Benzine') as FuelType,
+    dispatchedLiters: editingTask?.dispatchedLiters || '',
+    status: editingTask?.status || 'On transit'
   })
 
   const [vehicleSearch, setVehicleSearch] = useState('')
+  const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Initialization: if editing, set the search text to the plate number
+  useEffect(() => {
+    if (editingTask?.vehicleId) {
+       const v = vehicles.find(veh => veh.imei === editingTask.vehicleId);
+       if (v) setVehicleSearch(v.name);
+    }
+  }, [editingTask, vehicles]);
 
   // Filter valid vehicles for this company
   const availableVehicles = useMemo(() => {
     if (!formData.oilCompanyId) return []
     
-    // Identify vehicles already on an active dispatch
+    // Identify vehicles already on an active dispatch (EXCLUDING current one if editing)
     const occupiedVehicleIds = new Set(
       dispatches
-        .filter(d => d.status !== 'Delivered')
+        .filter(d => d.status !== 'Delivered' && d.peaDispatchNo !== editingTask?.peaDispatchNo)
         .map(d => d.vehicleId)
     )
 
@@ -399,7 +455,7 @@ function NewDispatchForm({
       v.group === formData.oilCompanyId && 
       !occupiedVehicleIds.has(v.imei)
     )
-  }, [formData.oilCompanyId, vehicles, dispatches])
+  }, [formData.oilCompanyId, vehicles, dispatches, editingTask])
 
   // Apply search filter locally
   const searchedVehicles = useMemo(() => {
@@ -417,14 +473,15 @@ function NewDispatchForm({
   }, [formData.oilCompanyId, depots])
 
   // Auto-fill transporter when vehicle changes
-  const handleVehicleChange = (vId: string) => {
-    const vehicle = vehicles.find(v => v.imei === vId)
-    const transporterName = typeof vehicle?.custom_fields === 'string' ? vehicle.custom_fields : ''
+  const handleVehicleSelect = (v: GpsVehicle) => {
+    const transporterName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
     setFormData(prev => ({
       ...prev,
-      vehicleId: vId,
-      transporterId: transporterName || '' // Using name as ID here as per existing logic
+      vehicleId: v.imei,
+      transporterId: transporterName || '' 
     }))
+    setVehicleSearch(v.name);
+    setShowVehicleDropdown(false);
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -441,9 +498,14 @@ function NewDispatchForm({
       eta_datetime: formData.etaDateTime,
       fuel_type: formData.fuelType,
       dispatched_liters: Number(formData.dispatchedLiters),
+      status: formData.status
     }
 
-    api.post('/dispatches', payload).then((res) => {
+    const request = editingTask 
+        ? api.put(`/dispatches/${editingTask.peaDispatchNo}`, payload)
+        : api.post('/dispatches', payload);
+
+    request.then((res) => {
          onSubmit({
           peaDispatchNo: res.data.pea_dispatch_no,
           oilCompanyId: formData.oilCompanyId,
@@ -455,11 +517,11 @@ function NewDispatchForm({
           etaDateTime: formData.etaDateTime,
           fuelType: formData.fuelType,
           dispatchedLiters: Number(formData.dispatchedLiters),
-          status: 'On transit',
+          status: (formData.status || 'On transit') as any,
         })
     }).catch(err => {
-         console.error('Failed to create dispatch:', err)
-         alert('Error creating dispatch. Please ensure all required fields are filled.')
+         console.error('Failed to save dispatch:', err)
+         alert('Error saving dispatch. Please check your data.')
     }).finally(() => setSaving(false))
   }
 
@@ -468,12 +530,15 @@ function NewDispatchForm({
       <div className="grid gap-4 sm:grid-cols-2">
 
         <div>
-           <label className="block text-sm font-semibold mb-1">Oil Company *</label>
+           <label className="block text-sm font-semibold mb-1 text-slate-700">Oil Company *</label>
           <select
             required
             value={formData.oilCompanyId}
-            onChange={(e) => setFormData({ ...formData, oilCompanyId: e.target.value, destinationDepotId: '', transporterId: '', vehicleId: '' })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            onChange={(e) => {
+                setFormData({ ...formData, oilCompanyId: e.target.value, destinationDepotId: '', transporterId: '', vehicleId: '' });
+                setVehicleSearch('');
+            }}
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           >
             <option value="">Select Company...</option>
             {oilCompanies.map((c) => (
@@ -483,12 +548,12 @@ function NewDispatchForm({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Fuel Type</label>
+           <label className="block text-sm font-semibold mb-1 text-slate-700">Fuel Type</label>
           <select
             required
             value={formData.fuelType}
             onChange={(e) => setFormData({ ...formData, fuelType: e.target.value as FuelType })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           >
             <option value="Benzine">Benzine</option>
             <option value="Diesel">Diesel</option>
@@ -496,66 +561,59 @@ function NewDispatchForm({
           </select>
         </div>
 
-        <div className="sm:col-span-2 space-y-2">
-          <label className="block text-sm font-semibold mb-1">Select Vehicle *</label>
-          <div className="flex flex-col gap-2">
+        <div className="sm:col-span-2 relative">
+          <label className="block text-sm font-semibold mb-1 text-slate-700">Vehicle (Plate Registration) *</label>
+          <div className="relative">
             <input
               type="text"
-              placeholder="Search plate number..."
+              placeholder={formData.oilCompanyId ? "Search plate number..." : "Select company first..."}
               disabled={!formData.oilCompanyId}
               value={vehicleSearch}
-              onChange={(e) => setVehicleSearch(e.target.value)}
-              className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+              onFocus={() => setShowVehicleDropdown(true)}
+              onChange={(e) => {
+                  setVehicleSearch(e.target.value);
+                  setShowVehicleDropdown(true);
+                  if (formData.vehicleId) setFormData({...formData, vehicleId: '', transporterId: ''});
+              }}
+              className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
             />
-            <select
-              required
-              size={5}
-              value={formData.vehicleId}
-              onChange={(e) => handleVehicleChange(e.target.value)}
-              disabled={!formData.oilCompanyId}
-              className="w-full rounded-lg border border-[#D1D5DB] bg-white px-1 py-1 text-sm overflow-y-auto focus:border-primary focus:ring-1 focus:ring-primary shadow-sm outline-none"
-            >
-              {searchedVehicles.length === 0 ? (
-                <option value="" disabled className="italic p-2">
-                  {formData.oilCompanyId ? 'No available vehicles found' : 'Select company first'}
-                </option>
-              ) : (
-                searchedVehicles.map((v) => (
-                  <option 
-                    key={v.imei} 
-                    value={v.imei} 
-                    className="px-3 py-2 cursor-pointer hover:bg-primary/10 selected:bg-primary selected:text-white border-b border-slate-50 last:border-0"
-                  >
-                    {v.name}
-                  </option>
-                ))
-              )}
-            </select>
+            {showVehicleDropdown && formData.oilCompanyId && (
+                <div className="absolute z-[100] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white shadow-xl">
+                    {searchedVehicles.length === 0 ? (
+                        <div className="p-3 text-sm text-slate-500 italic">No available vehicles match your search.</div>
+                    ) : (
+                        searchedVehicles.map((v) => (
+                            <div 
+                                key={v.imei}
+                                onClick={() => handleVehicleSelect(v)}
+                                className="cursor-pointer px-4 py-2 text-sm hover:bg-slate-100 transition-colors flex justify-between items-center"
+                            >
+                                <span className="font-semibold text-slate-700">{v.name}</span>
+                                <span className="text-[10px] text-slate-400">{v.imei}</span>
+                            </div>
+                        ))
+                    )}
+                </div>
+            )}
             {formData.vehicleId && (
-               <div className="flex items-center gap-2 mt-1 px-1">
-                 <div className="size-2 rounded-full bg-green-500 animate-pulse" />
-                 <span className="text-[11px] font-medium text-slate-700">
-                   Selected: <span className="text-primary font-bold">{vehicles.find(v => v.imei === formData.vehicleId)?.name}</span>
+               <div className="flex items-center gap-2 mt-1.5 px-1 animate-in fade-in slide-in-from-top-1">
+                 <div className="size-2 rounded-full bg-green-500" />
+                 <span className="text-[11px] font-medium text-slate-600">
+                   Locked: <span className="text-primary font-bold">{vehicles.find(v => v.imei === formData.vehicleId)?.name}</span>
                  </span>
                </div>
-            )}
-            {formData.transporterId && (
-              <div className="text-[10px] text-text-muted italic bg-slate-50 p-1.5 rounded-md mt-1 border border-slate-100 flex justify-between items-center">
-                <span>Transporter Info: <span className="font-semibold text-slate-700">{formData.transporterId}</span></span>
-                <span className="text-[9px] bg-slate-200 px-1.5 rounded uppercase font-bold">Auto-detected</span>
-              </div>
             )}
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Destination Depot</label>
+           <label className="block text-sm font-semibold mb-1 text-slate-700">Destination Depot *</label>
           <select
             required
             disabled={!formData.oilCompanyId}
             value={formData.destinationDepotId}
             onChange={(e) => setFormData({ ...formData, destinationDepotId: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           >
             <option value="">Select Depot...</option>
             {availableDepots.map((d) => (
@@ -567,7 +625,7 @@ function NewDispatchForm({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Dispatched Liters</label>
+          <label className="block text-sm font-semibold mb-1 text-slate-700">Dispatched Liters *</label>
           <input
             type="number"
             required
@@ -575,51 +633,68 @@ function NewDispatchForm({
             placeholder="e.g. 45000"
             value={formData.dispatchedLiters}
             onChange={(e) => setFormData({ ...formData, dispatchedLiters: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Dispatch Date & Time</label>
+          <label className="block text-sm font-semibold mb-1 text-slate-700">Dispatch Date & Time *</label>
           <input
             type="datetime-local"
             required
             value={formData.dispatchDateTime}
             onChange={(e) => setFormData({ ...formData, dispatchDateTime: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1">Dispatch Location</label>
+          <label className="block text-sm font-semibold mb-1 text-slate-700">Dispatch Location *</label>
           <input
             type="text"
             required
             placeholder="e.g. Sululta"
             value={formData.dispatchLocation}
             onChange={(e) => setFormData({ ...formData, dispatchLocation: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
-        <div className="sm:col-span-2">
-          <label className="block text-sm font-semibold mb-1">ETA Date & Time</label>
+        <div>
+          <label className="block text-sm font-semibold mb-1 text-slate-700">ETA Date & Time *</label>
           <input
             type="datetime-local"
             required
             value={formData.etaDateTime}
             onChange={(e) => setFormData({ ...formData, etaDateTime: e.target.value })}
-            className="w-full rounded-lg border border-[#D1D5DB] px-3 py-2 text-sm"
+            className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           />
         </div>
 
+        {editingTask && (
+             <div>
+               <label className="block text-sm font-semibold mb-1 text-slate-700">Status</label>
+               <select
+                 value={formData.status}
+                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                 className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
+               >
+                 <option value="On transit">On transit</option>
+                 <option value="Delivered">Delivered</option>
+                 <option value="Exceeded ETA">Exceeded ETA</option>
+                 <option value="Stopped >5h">Stopped &gt;5h</option>
+                 <option value="GPS Offline >24h">GPS Offline &gt;24h</option>
+               </select>
+             </div>
+        )}
+
       </div>
 
-      <div className="flex justify-end gap-3 pt-4">
+      <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 mt-4">
         <button
           type="button"
           onClick={onClose}
-          className="rounded-lg border border-[#D1D5DB] px-4 py-2 text-sm font-medium hover:bg-muted"
+          className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
         >
           Cancel
         </button>
@@ -627,12 +702,19 @@ function NewDispatchForm({
         <button
           type="submit"
           disabled={saving || !formData.vehicleId}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-strong transition disabled:opacity-50"
+          className="rounded-lg bg-primary px-6 py-2 text-sm font-semibold text-white shadow-lg shadow-primary/20 hover:bg-primary-strong transition disabled:opacity-50 flex items-center gap-2"
         >
-          {saving ? 'Creating...' : 'Create Dispatch'}
+          {saving ? (
+              <>
+                <div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Saving...
+              </>
+          ) : editingTask ? 'Update Dispatch' : 'Create Dispatch'}
         </button>
       </div>
     </form>
   )
 }
+
+
 

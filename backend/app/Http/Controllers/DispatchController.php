@@ -72,11 +72,39 @@ class DispatchController extends Controller
 
     public function update(Request $request, Dispatch $dispatch)
     {
-        //
+        $user = $request->user();
+        $role = strtoupper($user->role);
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $validated = $request->validate([
+            'oil_company_id' => 'required|string',
+            'transporter_id' => 'nullable|string',
+            'vehicle_id' => 'required|string',
+            'dispatch_datetime' => 'required|date',
+            'dispatch_location' => 'required|string',
+            'destination_depot_id' => 'required|exists:depots,id',
+            'eta_datetime' => 'required|date',
+            'drop_off_datetime' => 'nullable|date',
+            'fuel_type' => 'required|string',
+            'dispatched_liters' => 'required|numeric',
+            'status' => 'nullable|string',
+        ]);
+
+        $dispatch->update($validated);
+        return response()->json($dispatch);
     }
 
-    public function destroy(Dispatch $dispatch)
+    public function destroy(Request $request, Dispatch $dispatch)
     {
-        //
+        $user = $request->user();
+        $role = strtoupper($user->role);
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        $dispatch->delete();
+        return response()->json(null, 204);
     }
 }
