@@ -44,7 +44,7 @@ export default function TrackingPage() {
 
   // Fetch Dispatches
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery({
-    queryKey: ['dispatches'],
+    queryKey: ['dispatches-tracking'],
     queryFn: async () => {
       const res = await api.get('/dispatches');
       return res.data;
@@ -459,7 +459,7 @@ export default function TrackingPage() {
           </div>
         </div>
 
-        <div ref={listHostRef} className="flex-1 overflow-hidden">
+        <div ref={listHostRef} className={`flex-1 overflow-hidden transition-opacity duration-200 ${isPendingFilter ? 'opacity-50 pointer-events-none' : ''}`}>
           {isListLoading ? (
             <div className="p-8 flex items-center justify-center flex-col space-y-3">
               <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

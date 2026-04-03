@@ -113,6 +113,20 @@ export default function FuelDispatchPage() {
     }
   };
 
+  const statusTag = (v?: GpsVehicle) => {
+    if (!v) return null;
+    const status = v.status.toLowerCase()
+    if (status.includes('offline')) return { label: 'OFFLINE', color: '#cbd5e1' }
+    if (status.includes('alert')) return { label: 'ALERT', color: '#ef4444' }
+    if (status.includes('idle') || (Number.isFinite(Number(v.speed)) && Number(v.speed) === 0 && v.engine === 'on')) {
+      return { label: 'IDLE', color: '#f59f0a' }
+    }
+    if (status.includes('moving') || (Number.isFinite(Number(v.speed)) && Number(v.speed) > 0)) {
+      return { label: 'MOVING', color: '#22c55e' }
+    }
+    return { label: 'STOPPED', color: '#ef4444' }
+  }
+
   const filteredTasks = useMemo(() => {
     return rawTasks.filter((t: any) => {
       const matchesStatus = statusFilter === 'All' ? true : t.status === statusFilter
@@ -322,9 +336,11 @@ export default function FuelDispatchPage() {
 
                 <tbody className="divide-y divide-[#D1D5DB]">
                   {filteredTasks.map((t: any) => {
-                    const vehicle = vehicles.find(v => v.imei === t.vehicleId || v.name === t.vehicleId)?.name ?? t.vehicleId
+                    const gpsVehicle = vehicles.find(v => v.imei === t.vehicleId || v.name === t.vehicleId)
+                    const vehicle = gpsVehicle?.name ?? t.vehicleId
                     const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
                     const oilCompany = t.oilCompanyId
+                    const vTag = statusTag(gpsVehicle)
 
                     return (
                       <tr key={t.peaDispatchNo} className="hover:bg-muted/30">
@@ -333,7 +349,19 @@ export default function FuelDispatchPage() {
                         </td>
                         <td className="whitespace-nowrap px-4 py-4">{oilCompany}</td>
                         <td className="whitespace-nowrap px-4 py-4">{t.transporterId || '—'}</td>
-                        <td className="whitespace-nowrap px-4 py-4">{vehicle}</td>
+                        <td className="whitespace-nowrap px-4 py-4">
+                          <div className="flex flex-col items-start gap-1">
+                            <span className="font-medium text-slate-800">{vehicle}</span>
+                            {vTag && (
+                              <span 
+                                className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-wider"
+                                style={{ backgroundColor: `${vTag.color}1A`, color: vTag.color }}
+                              >
+                                {vTag.label}
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="whitespace-nowrap px-4 py-4">{t.fuelType || '—'}</td>
                         <td className="whitespace-nowrap px-4 py-4">
                           {(t.dispatchedLiters || 0).toLocaleString()} L
