@@ -74,7 +74,13 @@ export default function FuelDispatchPage() {
   // Fetch GPS Vehicles
   const { data: vehicles = [], isLoading: isVehiclesLoading } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
-    queryFn: fetchGpsVehicles,
+    queryFn: async () => {
+      let data = await fetchGpsVehicles()
+      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
+        data = data.filter(v => v.group === user.companyId)
+      }
+      return data
+    },
     staleTime: 60 * 1000, 
     refetchInterval: 5 * 60 * 1000,
   });
@@ -92,18 +98,6 @@ export default function FuelDispatchPage() {
   const handleEdit = (task: any) => {
     setEditingTask(task);
     setShowDispatchForm(true);
-  };
-
-  const handleDelete = async (peaDispatchNo: string) => {
-    if (!window.confirm(`Are you sure you want to delete dispatch ${peaDispatchNo}?`)) return;
-    
-    try {
-      await api.delete(`/dispatches/${peaDispatchNo}`);
-      queryClient.invalidateQueries({ queryKey: ['dispatches'] });
-    } catch (err) {
-      console.error('Failed to delete dispatch:', err);
-      alert('Error deleting dispatch. Only EPA admins are authorized.');
-    }
   };
 
   const handleConfirmReceipt = async (peaDispatchNo: string) => {
@@ -340,7 +334,6 @@ export default function FuelDispatchPage() {
                           )}
 
                           {canAddDispatch && (
-                            <>
                               <button
                                 type="button"
                                 onClick={() => handleEdit(t)}
@@ -348,14 +341,6 @@ export default function FuelDispatchPage() {
                               >
                                 Edit
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(t.peaDispatchNo)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 transition"
-                              >
-                                Delete
-                              </button>
-                            </>
                           )}
                         </td>
                       </tr>

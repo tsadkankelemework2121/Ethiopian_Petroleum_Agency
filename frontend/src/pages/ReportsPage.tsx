@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
-import { getDepots, getDispatchTasks, getOilCompanies, getTransporters } from '../data/mockApi'
-import type { Depot, DispatchTask, OilCompany, Transporter } from '../data/types'
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import api from '../api/axios'
+import { fetchGpsVehicles } from '../data/gpsApi'
+import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import StatusPill from '../components/ui/StatusPill'
+import { useAuth } from '../context/AuthContext'
 
 type FilterType = 'dispatch' | 'vehicle' | 'depot'
 
@@ -28,11 +31,10 @@ function formatDurationMs(ms: number) {
 }
 
 export default function ReportsPage() {
+  const { user } = useAuth()
+  const companyId = user?.companyId
+
   const [filterType, setFilterType] = useState<FilterType>('dispatch')
-  const [tasks, setTasks] = useState<DispatchTask[]>([])
-  const [companies, setCompanies] = useState<OilCompany[]>([])
-  const [transporters, setTransporters] = useState<Transporter[]>([])
-  const [depots, setDepots] = useState<Depot[]>([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
 
   const [query, setQuery] = useState('')
@@ -44,27 +46,65 @@ export default function ReportsPage() {
     to: '',
   })
 
-  useEffect(() => {
-    void Promise.all([getDispatchTasks(), getOilCompanies(), getTransporters(), getDepots()]).then(
-      ([t, c, tr, d]) => {
-        setTasks(t)
-        setCompanies(c)
-        setTransporters(tr)
-        setDepots(d)
-      },
-    )
-  }, [])
+  // 1. Fetch Dispatches
+  const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery<any[]>({
+    queryKey: ['dispatches'],
+    queryFn: () => api.get('/dispatches', { params: companyId ? { oil_company_id: companyId } : {} }).then(res => res.data.map((d: any) => ({
+      peaDispatchNo: d.pea_dispatch_no,
+      oilCompanyId: d.oil_company_id,
+      transporterId: d.transporter_id,
+      vehicleId: d.vehicle_id,
+      dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
+      dispatchLocation: d.dispatch_location,
+      destinationDepotId: d.destination_depot_id?.toString() || '',
+      etaDateTime: d.eta_datetime?.replace(' ', 'T'),
+      dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+      fuelType: d.fuel_type,
+      dispatchedLiters: Number(d.dispatched_liters || 0),
+      status: d.status,
+    })))
+  });
 
-  const companiesById = useMemo(() => new Map(companies.map((c) => [c.id, c] as const)), [companies])
-  const transportersById = useMemo(
-    () => new Map(transporters.map((t) => [t.id, t] as const)),
-    [transporters],
-  )
+  // 2. Fetch Depots
+  const { data: depots = [], isLoading: depotsLoading } = useQuery<Depot[]>({
+    queryKey: ['depots'],
+    queryFn: () => api.get('/depots').then(res => res.data.map((d: any) => ({
+      ...d,
+      id: d.id.toString(),
+      location: { region: d.region, city: d.city, address: d.address },
+      oilCompanyId: d.oil_company_id,
+    })))
+  });
+
+  // 3. Fetch GPS Vehicles
+  const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
+    queryKey: ['gps-vehicles'],
+    queryFn: async () => {
+      let data = await fetchGpsVehicles();
+      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
+        data = data.filter(v => v.group === user.companyId);
+      }
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+
+  const isLoading = dispatchesLoading || depotsLoading || gpsLoading;
+
   const depotsById = useMemo(() => new Map(depots.map((d) => [d.id, d] as const)), [depots])
-  const vehiclesById = useMemo(() => {
-    const vehicles = transporters.flatMap((t) => t.vehicles)
-    return new Map(vehicles.map((v) => [v.id, v] as const))
-  }, [transporters])
+
+  const vehiclesByImeiOrName = useMemo(() => {
+    const map = new Map<string, GpsVehicle>()
+    gpsVehicles.forEach(v => {
+      map.set(v.imei, v)
+      map.set(v.name, v)
+    })
+    return map
+  }, [gpsVehicles])
+
+  const getVehicleName = (vid: string) => {
+    return vehiclesByImeiOrName.get(vid)?.name || vid;
+  }
 
   const title = useMemo(() => {
     switch (filterType) {
@@ -84,16 +124,19 @@ export default function ReportsPage() {
       case 'vehicle':
         return 'Vehicle Plate (e.g., 3-11111 ET)'
       case 'depot':
-        return 'Depot ID (e.g., ID8548)'
+        return 'Depot Name/ID (e.g., ID8548)'
     }
   }
 
   const result = useMemo(() => {
+    if (isLoading) return { columns: [], rows: [] }
+
     const q = applied.query.trim().toLowerCase()
     const fromDate = parseYmd(applied.from)
     const toDate = parseYmd(applied.to)
 
     const inRange = (iso: string) => {
+      if (!iso) return true
       const d = new Date(iso)
       if (Number.isNaN(d.getTime())) return true
       if (fromDate && d < fromDate) return false
@@ -105,26 +148,21 @@ export default function ReportsPage() {
       return true
     }
 
-    const filtered = tasks.filter((t) => inRange(t.dispatchDateTime))
+    const filtered = dispatches.filter((t: any) => inRange(t.dispatchDateTime))
 
     if (filterType === 'dispatch') {
       const rows = filtered
-        .filter((t) => {
-          const match = t.peaDispatchNo.toLowerCase().includes(q)
-          return match
-        })
-        .map((t) => {
-          const oilCompany = companiesById.get(t.oilCompanyId)?.name ?? '—'
-          const transporter = transportersById.get(t.transporterId)?.name ?? '—'
-          const plate = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
-          const dispatchDt = t.dispatchDateTime.replace('T', ' ').replace('Z', '')
+        .filter((t: any) => t.peaDispatchNo.toLowerCase().includes(q))
+        .map((t: any) => {
+          const plate = getVehicleName(t.vehicleId);
+          const dispatchDt = t.dispatchDateTime?.replace('T', ' ').replace('Z', '') || '—'
           const dropDt = t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'
           const duration =
             t.dropOffDateTime ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime()) : '—'
 
           return {
             task: t,
-            cells: [t.peaDispatchNo, plate, oilCompany, transporter, dispatchDt, dropDt, duration],
+            cells: [t.peaDispatchNo, plate, t.oilCompanyId, t.transporterId || '—', dispatchDt, dropDt, duration],
           }
         })
 
@@ -136,16 +174,14 @@ export default function ReportsPage() {
 
     if (filterType === 'vehicle') {
       const rows = filtered
-        .filter((t) => {
+        .filter((t: any) => {
           if (!q) return true
-          const plate = vehiclesById.get(t.vehicleId)?.plateRegNo ?? ''
+          const plate = getVehicleName(t.vehicleId);
           return plate.toLowerCase().includes(q)
         })
-        .map((t) => {
-          const plate = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
-          const oilCompany = companiesById.get(t.oilCompanyId)?.name ?? '—'
-          const transporter = transportersById.get(t.transporterId)?.name ?? '—'
-          const dispatchDt = t.dispatchDateTime.replace('T', ' ').replace('Z', '')
+        .map((t: any) => {
+          const plate = getVehicleName(t.vehicleId);
+          const dispatchDt = t.dispatchDateTime?.replace('T', ' ').replace('Z', '') || '—'
           const dropDt = t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'
           const duration =
             t.dropOffDateTime ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime()) : '—'
@@ -154,12 +190,12 @@ export default function ReportsPage() {
             task: t,
             cells: [
               plate,
-              transporter,
-              oilCompany,
+              t.transporterId || '—',
+              t.oilCompanyId,
               t.peaDispatchNo,
               dispatchDt,
               t.dispatchLocation,
-              t.dropOffLocation ?? '—',
+              depotsById.get(t.destinationDepotId)?.name || t.destinationDepotId,
               dropDt,
               duration,
             ],
@@ -174,7 +210,7 @@ export default function ReportsPage() {
           'Dispatch ID',
           'Dispatch Date/Time',
           'Dispatch Location',
-          'Drop Off Location',
+          'Depot Name',
           'Drop Off Date/Time',
           'Duration',
           'Event',
@@ -185,20 +221,23 @@ export default function ReportsPage() {
 
     // depot
     const rows = filtered
-      .filter((t) => (q ? t.destinationDepotId.toLowerCase().includes(q) : true))
-      .map((t) => {
+      .filter((t: any) => {
+         const depot = depotsById.get(t.destinationDepotId)
+         const name = depot?.name || t.destinationDepotId
+         if (!q) return true;
+         return name.toLowerCase().includes(q) || t.destinationDepotId.toLowerCase().includes(q);
+      })
+      .map((t: any) => {
         const depot = depotsById.get(t.destinationDepotId)
         const depotName = depot?.name ?? '—'
-        const plate = vehiclesById.get(t.vehicleId)?.plateRegNo ?? '—'
-        const oilCompany = companiesById.get(t.oilCompanyId)?.name ?? '—'
-        const transporter = transportersById.get(t.transporterId)?.name ?? '—'
+        const plate = getVehicleName(t.vehicleId)
         const dropDt = t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'
         const duration =
           t.dropOffDateTime ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime()) : '—'
 
         return {
           task: t,
-          cells: [t.destinationDepotId, depotName, dropDt, plate, oilCompany, transporter, duration],
+          cells: [t.destinationDepotId, depotName, dropDt, plate, t.oilCompanyId, t.transporterId || '—', duration],
         }
       })
 
@@ -206,16 +245,15 @@ export default function ReportsPage() {
       columns: ['Depot ID', 'Depot Name', 'Drop Off Date/Time', 'Vehicle', 'Oil Company', 'Transporter', 'Duration', 'Event'],
       rows,
     }
-  }, [applied.from, applied.query, applied.to, companiesById, depotsById, filterType, tasks, transportersById, vehiclesById])
+  }, [applied, filterType, dispatches, depotsById, vehiclesByImeiOrName, isLoading])
 
   return (
     <div>
       <PageHeader
         title="Reports"
-        subtitle="Generate report tables using period + identifiers (mock data for now)."
+        subtitle="Generate report tables using period filters and identifiers."
       />
       
-      {/* Single Formal Tab with Dropdown */}
       <div className="flex items-center gap-2 mt-6 relative">
         <div 
           className="relative"
@@ -237,7 +275,6 @@ export default function ReportsPage() {
             </svg>
           </button>
 
-          {/* Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute top-full left-0 mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-10 animate-fade-in">
               {[
@@ -251,7 +288,6 @@ export default function ReportsPage() {
                   onClick={() => {
                     setFilterType(option.id)
                     setIsDropdownOpen(false)
-                    // Clear query when switching filter type
                     setQuery('')
                     setApplied(prev => ({ ...prev, query: '' }))
                   }}
@@ -270,7 +306,6 @@ export default function ReportsPage() {
           )}
         </div>
 
-        {/* Active Filter Indicator */}
         <span className="text-sm text-gray-500">
           Active filter: {filterType === 'dispatch' ? 'Dispatch' : filterType === 'vehicle' ? 'Vehicle' : 'Depot'}
         </span>
@@ -311,7 +346,12 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
+      <div className="mt-4 overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white min-h-[300px]">
+        {isLoading ? (
+            <div className="p-8 flex items-center justify-center">
+                 <div className="size-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            </div>
+        ) : (
         <table className="min-w-[980px] w-full text-left text-sm">
           <thead className="bg-muted/50 text-xs text-text-muted">
             <tr>
@@ -331,23 +371,24 @@ export default function ReportsPage() {
                   </td>
                 ))}
                 <td className="whitespace-nowrap px-3 py-3">
-                  <StatusPill status={row.task.status} task={row.task} />
+                   {/* Typecasting for mock/real status logic */}
+                  <StatusPill status={row.task.status} task={row.task as DispatchTask} />
                 </td>
               </tr>
             ))}
 
             {result.rows.length === 0 ? (
               <tr>
-                <td className="px-3 py-6 text-sm text-text-muted" colSpan={result.columns.length}>
+                <td className="px-3 py-6 text-sm text-text-muted text-center" colSpan={result.columns.length || 7}>
                   No results for the selected filters.
                 </td>
               </tr>
             ) : null}
           </tbody>
         </table>
+        )}
       </div>
 
-      {/* Add custom animations */}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(-10px); }
@@ -360,4 +401,4 @@ export default function ReportsPage() {
       `}</style>
     </div>
   )
-}
+}
