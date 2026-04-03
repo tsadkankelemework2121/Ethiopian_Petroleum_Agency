@@ -20,12 +20,15 @@ const COLORS = {
 export default function TrackingPage() {
   const { user } = useAuth()
   const [search, setSearch] = useState('')
-  const deferredSearch = useDeferredValue(search)
-  const isPendingFilter = search !== deferredSearch
-
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [statusFilter, setStatusFilter] = useState('All')
   const [assignmentFilter, setAssignmentFilter] = useState('All')
+  
+  const deferredSearch = useDeferredValue(search)
+  const deferredStatus = useDeferredValue(statusFilter)
+  const deferredAssignment = useDeferredValue(assignmentFilter)
+  
+  const isPendingFilter = search !== deferredSearch || statusFilter !== deferredStatus || assignmentFilter !== deferredAssignment
 
   const { data: items = [], isLoading: itemsLoading, error: queryError } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
@@ -128,19 +131,19 @@ export default function TrackingPage() {
 
       // 2. Status Filtering
       const tag = statusTag(t)
-      const statusMatch = statusFilter === 'All' || tag.label.toUpperCase() === statusFilter.toUpperCase()
+      const statusMatch = deferredStatus === 'All' || tag.label.toUpperCase() === deferredStatus.toUpperCase()
 
       // 3. Assignment Filtering
       const isAssigned = activeDispatchesByVehicle.has(t.imei)
-      const assignmentMatch = assignmentFilter === 'All' 
+      const assignmentMatch = deferredAssignment === 'All' 
         ? true 
-        : assignmentFilter === 'Assigned' 
+        : deferredAssignment === 'Assigned' 
           ? isAssigned 
           : !isAssigned
 
       return searchMatch && statusMatch && assignmentMatch
     })
-  }, [items, deferredSearch, statusFilter, assignmentFilter, activeDispatchesByVehicle])
+  }, [items, deferredSearch, deferredStatus, deferredAssignment, activeDispatchesByVehicle])
 
   // Do not slice, show all filtered vehicles
   const fleetListItems = useMemo(() => filtered, [filtered])
@@ -437,15 +440,22 @@ export default function TrackingPage() {
                 <option value="Offline">OFFLINE</option>
             </select>
 
-            <select
-                value={assignmentFilter}
-                onChange={(e) => setAssignmentFilter(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
-            >
-                <option value="All">TASK: ALL</option>
-                <option value="Assigned">ASSIGNED</option>
-                <option value="Unassigned">NOT ASSIGNED</option>
-            </select>
+            <div className="relative">
+              <select
+                  value={assignmentFilter}
+                  onChange={(e) => setAssignmentFilter(e.target.value)}
+                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-[11px] font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-primary/20 appearance-none"
+              >
+                  <option value="All">TASK: ALL</option>
+                  <option value="Assigned">ASSIGNED</option>
+                  <option value="Unassigned">NOT ASSIGNED</option>
+              </select>
+              {isPendingFilter && assignmentFilter !== deferredAssignment && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                   <div className="size-3 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
