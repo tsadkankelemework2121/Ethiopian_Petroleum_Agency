@@ -1,5 +1,5 @@
 import type { ComponentType, SVGProps } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import logo from "../../assets/logo.png"
 import {
@@ -11,12 +11,14 @@ import {
   Squares2X2Icon,
   TruckIcon,
 } from '@heroicons/react/24/outline'
-import { getDashboardKpis } from '../../data/mockApi'
 import { cn } from '../../lib/cn'
 
 import profileImg from '../../assets/profile.jpg'
 import { useAuth } from '../../context/AuthContext'
-import type { UserRole } from '../../data/types'
+import type { UserRole, DispatchTask, GpsVehicle } from '../../data/types'
+import { useQuery } from '@tanstack/react-query'
+import api from '../../api/axios'
+import { fetchGpsVehicles } from '../../data/gpsApi'
 
 type NavItem = {
   to: string
@@ -115,7 +117,6 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, logout } = useAuth()
-  const [alertsCount, setAlertsCount] = useState(0)
   const [globalSearch, setGlobalSearch] = useState('')
 
   const handleLogout = () => {
@@ -140,12 +141,63 @@ export default function AppLayout() {
   const isTracking = location.pathname === '/tracking'
   const role = user?.role || 'EPA_ADMIN'
 
-  useEffect(() => {
-    void getDashboardKpis(user?.companyId).then((kpis) => {
-      const total = kpis.exceededEta + kpis.gpsOfflineOver24h + kpis.stoppedOver5h
-      setAlertsCount(total)
-    })
-  }, [user?.companyId])
+  // 1. Fetch Dispatches
+  const { data: dispatches = [] } = useQuery<DispatchTask[]>({
+    queryKey: ['dispatches'],
+    queryFn: () => api.get('/dispatches', { params: user?.companyId ? { oil_company_id: user.companyId } : {} }).then(res => res.data.map((d: any) => ({
+        peaDispatchNo: d.pea_dispatch_no,
+        oilCompanyId: d.oil_company_id,
+        transporterId: d.transporter_id,
+        vehicleId: d.vehicle_id,
+        dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
+        dispatchLocation: d.dispatch_location,
+        destinationDepotId: d.destination_depot_id?.toString() || '',
+        etaDateTime: d.eta_datetime?.replace(' ', 'T'),
+        dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+        fuelType: d.fuel_type,
+        dispatchedLiters: Number(d.dispatched_liters || 0),
+        status: d.status,
+    })))
+  });
+
+  // 2. Fetch GPS Vehicles
+  const { data: gpsVehicles = [] } = useQuery<GpsVehicle[]>({
+    queryKey: ['gps-vehicles'],
+    queryFn: async () => {
+      let data = await fetchGpsVehicles()
+      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
+        data = data.filter(v => v.group === user.companyId)
+      }
+      return data
+    },
+    refetchInterval: 5 * 60 * 1000,
+  });
+
+  const alertsCount = useMemo(() => {
+    const offline = gpsVehicles.filter(v => v.engine === 'off').length;
+    
+    const now = new Date();
+    const exceeded = dispatches.filter(d => 
+        d.status !== 'Delivered' && 
+        d.etaDateTime && 
+        new Date(d.etaDateTime) < now
+    ).length;
+
+    const stopped = gpsVehicles.filter(v => {
+      if (v.status.toLowerCase().includes('stopped')) return true;
+      if (v.speed === "0" || Number(v.speed) === 0 || v.engine === 'off') {
+        if (!v.dt_tracker) return false;
+        const dtTracker = new Date(v.dt_tracker.replace(' ', 'T') + 'Z'); 
+        if (!isNaN(dtTracker.getTime())) {
+          const diffHours = (now.getTime() - dtTracker.getTime()) / (1000 * 60 * 60);
+          if (diffHours > 5) return true;
+        }
+      }
+      return false;
+    }).length;
+
+    return offline + exceeded + stopped;
+  }, [dispatches, gpsVehicles]);
 
   return (
     <div className="h-full bg-bg">

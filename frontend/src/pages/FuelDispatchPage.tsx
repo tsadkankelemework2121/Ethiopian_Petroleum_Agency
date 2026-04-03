@@ -4,6 +4,7 @@ import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Depot, DispatchTask, FuelType, OilCompany } from '../data/types'
 import StatusPill from '../components/ui/StatusPill'
+import { Skeleton } from '../components/ui/Skeleton'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import MapView from '../components/map/MapView'
@@ -132,9 +133,49 @@ export default function FuelDispatchPage() {
 
   if (isInitialLoading && rawTasks.length === 0) {
     return (
-      <div className="flex h-[60vh] flex-col items-center justify-center space-y-4">
-        <div className="size-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-        <p className="text-sm font-medium text-text-muted">Loading dispatch data...</p>
+      <div className="space-y-6">
+        <Card>
+          <CardHeader title="Fuel Dispatches" subtitle="Loading dispatch records..." />
+          <CardBody>
+            <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <Skeleton className="h-10 w-full md:w-72 rounded-lg" />
+              <Skeleton className="h-10 w-full md:w-56 rounded-lg" />
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-[1200px] w-full text-left text-sm divide-y divide-[#D1D5DB]">
+                <thead className="bg-muted/50 text-xs text-text-muted">
+                  <tr>
+                    {[
+                      'PEA Dispatch No.', 'Oil Company', 'Transporter', 'Vehicle Plate',
+                      'Fuel Type', 'Liters', 'Dispatch Location', 'Destination Depot',
+                      'Dispatch Date', 'ETA', 'Drop-off', 'Event'
+                    ].map((h) => (
+                      <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#D1D5DB]">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <tr key={i}>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-32" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-28" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-20" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-16" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-16" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-32" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="px-4 py-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardBody>
+        </Card>
       </div>
     )
   }

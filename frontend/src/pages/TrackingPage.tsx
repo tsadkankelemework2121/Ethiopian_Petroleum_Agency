@@ -27,7 +27,7 @@ export default function TrackingPage() {
   const [statusFilter, setStatusFilter] = useState('All')
   const [assignmentFilter, setAssignmentFilter] = useState('All')
 
-  const { data: items = [], isLoading, error: queryError } = useQuery<GpsVehicle[]>({
+  const { data: items = [], isLoading: itemsLoading, error: queryError } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: async () => {
       let data = await fetchGpsVehicles()
@@ -40,7 +40,7 @@ export default function TrackingPage() {
   });
 
   // Fetch Dispatches
-  const { data: dispatches = [] } = useQuery({
+  const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery({
     queryKey: ['dispatches'],
     queryFn: async () => {
       const res = await api.get('/dispatches');
@@ -97,6 +97,8 @@ export default function TrackingPage() {
   const collapsedRowHeight = 82
   const expandedRowHeight = 360
   const expandedDetailsMaxHeight = expandedRowHeight - collapsedRowHeight + 2
+
+  const isListLoading = itemsLoading || dispatchesLoading;
 
   // Define statusTag function first (hoisted with function declaration)
   const statusTag = (v: GpsVehicle): { label: string; color: string } => {
@@ -448,8 +450,11 @@ export default function TrackingPage() {
         </div>
 
         <div ref={listHostRef} className="flex-1 overflow-hidden">
-          {isLoading ? (
-            <div className="p-4 text-sm text-slate-600">Loading…</div>
+          {isListLoading ? (
+            <div className="p-8 flex items-center justify-center flex-col space-y-3">
+              <div className="size-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+              <div className="text-xs font-medium text-slate-500">Loading assignments...</div>
+            </div>
           ) : queryError ? (
             <div className="p-4 text-sm text-red-600">{(queryError as Error).message}</div>
           ) : listSize.height > 0 && listSize.width > 0 ? (
