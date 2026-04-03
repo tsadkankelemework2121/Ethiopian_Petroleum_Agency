@@ -1,10 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, useDeferredValue } from 'react'
 import { List as VirtualList, type RowComponentProps } from 'react-window'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { GpsVehicle } from '../data/types'
 import MapView from '../components/map/MapView'
 import { useQuery } from '@tanstack/react-query'
 import api from '../api/axios'
+import { useAuth } from '../context/AuthContext'
 import type { Depot } from '../data/types'
 
 const COLORS = {
@@ -17,14 +18,24 @@ const COLORS = {
 
 
 export default function TrackingPage() {
+  const { user } = useAuth()
   const [search, setSearch] = useState('')
+  const deferredSearch = useDeferredValue(search)
+  const isPendingFilter = search !== deferredSearch
+
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [statusFilter, setStatusFilter] = useState('All')
   const [assignmentFilter, setAssignmentFilter] = useState('All')
 
   const { data: items = [], isLoading, error: queryError } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
-    queryFn: fetchGpsVehicles,
+    queryFn: async () => {
+      let data = await fetchGpsVehicles()
+      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
+        data = data.filter(v => v.group === user.companyId)
+      }
+      return data
+    },
     refetchInterval: 30000, // 30 seconds for tracking
   });
 
@@ -106,7 +117,7 @@ export default function TrackingPage() {
   const plateFromName = (name: string) => name.trim().split(/\s+/)[0] ?? name
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase()
+    const q = deferredSearch.trim().toLowerCase()
     
     return items.filter((t) => {
       // 1. Text Search
@@ -127,7 +138,7 @@ export default function TrackingPage() {
 
       return searchMatch && statusMatch && assignmentMatch
     })
-  }, [items, search, statusFilter, assignmentFilter, activeDispatchesByVehicle])
+  }, [items, deferredSearch, statusFilter, assignmentFilter, activeDispatchesByVehicle])
 
   // Do not slice, show all filtered vehicles
   const fleetListItems = useMemo(() => filtered, [filtered])
@@ -406,6 +417,9 @@ export default function TrackingPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            {isPendingFilter && (
+              <div className="size-3 animate-spin rounded-full border-2 border-primary border-t-transparent shrink-0" />
+            )}
           </div>
 
           <div className="mt-3 grid grid-cols-2 gap-2">

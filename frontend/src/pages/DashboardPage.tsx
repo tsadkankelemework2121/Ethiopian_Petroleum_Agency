@@ -64,7 +64,13 @@ export default function DashboardPage() {
   // 3. Fetch GPS Vehicles
   const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
-    queryFn: fetchGpsVehicles,
+    queryFn: async () => {
+      let data = await fetchGpsVehicles()
+      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
+        data = data.filter(v => v.group === companyId)
+      }
+      return data
+    },
     refetchInterval: 5 * 60 * 1000,
   });
 
@@ -88,7 +94,19 @@ export default function DashboardPage() {
         new Date(d.etaDateTime) < now
     ).length;
 
-    const stopped = gpsVehicles.filter(v => v.status === 'stopped').length;
+    const stopped = gpsVehicles.filter(v => {
+      if (v.status.toLowerCase().includes('stopped')) return true;
+      if (v.speed === "0" || Number(v.speed) === 0 || v.engine === 'off') {
+        if (!v.dt_tracker) return false;
+        // GPS API usually provides format like "YYYY-MM-DD HH:mm:ss"
+        const dtTracker = new Date(v.dt_tracker.replace(' ', 'T') + 'Z'); 
+        if (!isNaN(dtTracker.getTime())) {
+          const diffHours = (now.getTime() - dtTracker.getTime()) / (1000 * 60 * 60);
+          if (diffHours > 5) return true;
+        }
+      }
+      return false;
+    }).length;
 
     return [
       { label: 'Vehicles on transit', value: String(transit), hint: 'Active dispatches now', icon: TruckIcon },
