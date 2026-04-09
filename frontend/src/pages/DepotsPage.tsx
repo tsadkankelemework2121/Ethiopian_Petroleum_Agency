@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import api from '../api/axios'
 import type { Depot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
