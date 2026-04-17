@@ -29,7 +29,7 @@ api.interceptors.response.use(
     if (error.response && error.response.status === 401) {
       // Clear storage and redirect to login if unauthorized
       localStorage.clear();
-      window.location.href = '/login';
+      window.location.href = '/pea/login';
     }
     return Promise.reject(error);
   }
