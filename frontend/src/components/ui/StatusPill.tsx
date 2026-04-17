@@ -4,7 +4,7 @@ import { getStatusDetails } from '../../lib/statusDetails'
 
 const tones: Record<DispatchStatus, string> = {
   'On transit': 'bg-slate-500/15 text-slate-700',
-  Delivered: 'bg-[#067cc1]/15 text-[#067cc1]',
+  Delivered: 'bg-[#1c8547]/15 text-[#1c8547]',
   'Exceeded ETA': 'bg-[#f59e0b]/15 text-[#f59e0b]',
   'GPS Offline >24h': 'bg-[#f59e0b]/15 text-[#f59e0b]',
   'Stopped >5h': 'bg-[#f59e0b]/15 text-[#f59e0b]',

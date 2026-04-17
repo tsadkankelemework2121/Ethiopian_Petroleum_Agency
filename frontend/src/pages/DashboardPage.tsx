@@ -77,7 +77,7 @@ export default function DashboardPage() {
   const isLoading = dispatchesLoading || depotsLoading || gpsLoading;
 
   const chartColors = {
-    blue: '#067cc1',
+    blue: '#1c8547',
     gray: '#cbd5e1',
     gold: '#f59e0b',
   }

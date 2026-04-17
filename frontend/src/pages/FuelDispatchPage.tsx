@@ -245,7 +245,7 @@ export default function FuelDispatchPage() {
                           position: { lat, lng },
                           label: gpsVehicle.name,
                           status: trackingTask?.status || 'On transit',
-                          color: trackingTask?.status === 'Delivered' ? '#22c55e' : '#067cc1'
+                          color: trackingTask?.status === 'Delivered' ? '#22c55e' : '#1c8547'
                         }
                       ]}
                       className="absolute inset-0"

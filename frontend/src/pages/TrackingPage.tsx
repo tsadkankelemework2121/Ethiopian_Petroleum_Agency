@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext'
 import type { Depot } from '../data/types'
 
 const COLORS = {
-  blue: '#067cc1',
+  blue: '#1c8547',
   gold: '#f59f0a',
   gray: '#cbd5e1',
   bg: '#f3f4f6',
@@ -172,7 +172,7 @@ export default function TrackingPage() {
 
         // If dispatched, maybe use a distinct color or label
         const statusLabel = dispatch ? `Dispatch: ${dispatch.status}` : t.status;
-        if (dispatch && dispatch.status === 'On transit') markerColor = '#067cc1';
+        if (dispatch && dispatch.status === 'On transit') markerColor = '#1c8547';
 
         return {
           id: t.imei,
@@ -278,7 +278,7 @@ export default function TrackingPage() {
           type="button"
           onClick={() => onSelect(v)}
           className="w-full px-5 py-4 text-left hover:bg-slate-50 transition"
-          style={isSelected ? { backgroundColor: 'rgba(6,124,193,0.08)' } : undefined}
+          style={isSelected ? { backgroundColor: 'rgba(28,133,71,0.08)' } : undefined}
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">
@@ -503,7 +503,7 @@ export default function TrackingPage() {
             type="button"
             onClick={() => setIsClustered(!isClustered)}
             className={`rounded-full px-3 py-1.5 text-[11px] font-bold border transition ${isClustered
-              ? 'bg-[#067cc1] text-white border-[#067cc1] shadow-md hover:bg-[#056096]'
+              ? 'bg-[#1c8547] text-white border-[#1c8547] shadow-md hover:bg-[#166d3a]'
               : 'bg-white text-slate-600 border-[#E5E7EB] hover:bg-slate-50'
               }`}
           >

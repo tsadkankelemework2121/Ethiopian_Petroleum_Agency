@@ -213,7 +213,7 @@ const getClusterIcon = (cluster: unknown, supercluster: unknown) => {
       </div>
 
       <div style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s ease; display: flex; align-items: center; justify-content: center;" class="hover:scale-110">
-        <div style="background: #067cc1; color: white; border-radius: 999px; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 8px; font-size: 13px; font-weight: bold; border: 2.5px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+        <div style="background: #1c8547; color: white; border-radius: 999px; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 8px; font-size: 13px; font-weight: bold; border: 2.5px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
           ${count}
         </div>
       </div>

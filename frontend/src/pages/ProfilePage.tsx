@@ -11,7 +11,7 @@ export default function ProfilePage() {
 
   const [formData, setFormData] = useState({
     name: 'PEA Admin',
-    email: 'admin@epa.gov.et',
+    email: 'admin@pea.gov.et',
     currentPassword: '',
     password: '',
     confirmPassword: '',

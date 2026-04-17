@@ -53,8 +53,8 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
       className={({ isActive }) =>
         cn(
           'flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 relative',
-          'text-text-muted hover:bg-muted hover:text-text focus-visible:ring-[rgba(6,124,193,0.35)]',
-          isActive && 'bg-[#067cc1] text-white shadow-card',
+          'text-text-muted hover:bg-muted hover:text-text focus-visible:ring-[rgba(28,133,71,0.35)]',
+          isActive && 'bg-[#1c8547] text-white shadow-card',
         )
       }
     >
@@ -82,7 +82,7 @@ function Sidebar({ onNavigate, role }: { onNavigate?: () => void, role: UserRole
 
         <div className="min-w-0">
           <div className="truncate text-sm font-bold text-text">
-            {role === 'EPA_ADMIN' ? 'EPA ETHIOPIA' : 'OIL COMPANY'}
+            {role === 'EPA_ADMIN' ? 'PEA ETHIOPIA' : 'OIL COMPANY'}
           </div>
           <div className="truncate text-xs text-text-muted">Ops Command Center</div>
         </div>
@@ -279,7 +279,7 @@ export default function AppLayout() {
                   <button className="flex items-center gap-3 py-2 cursor-pointer">
                     <div className="text-right">
                       <div className="text-sm font-semibold text-text">Abebe B.</div>
-                      <div className="text-xs text-text-muted">{role === 'EPA_ADMIN' ? 'EPA Admin' : 'Company Admin'}</div>
+                      <div className="text-xs text-text-muted">{role === 'EPA_ADMIN' ? 'PEA Admin' : 'Company Admin'}</div>
                     </div>
 
                     <img

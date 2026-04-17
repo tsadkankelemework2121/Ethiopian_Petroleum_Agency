@@ -56,7 +56,7 @@ const LoginPage = () => {
             <img src={logo} alt="Company Logo" className="h-14 w-auto object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-white drop-shadow-md">
-            Ethiopian Petroleum Agency
+            Petroleum & Energy Authority
           </h1>
           <h2 className="mt-3 text-xl font-medium text-gray-200 drop-shadow-sm">
             Sign in to your account
