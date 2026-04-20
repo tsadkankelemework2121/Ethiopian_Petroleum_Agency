@@ -15,15 +15,14 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['*'],
 
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
+        'http://192.168.1.4',
         'http://localhost:5173', 
         'http://127.0.0.1:5173',
-        'https://*.vercel.app',
-        '*' // Keep wildcard for local development across different IPs
     ],
 
     'allowed_origins_patterns' => [],
