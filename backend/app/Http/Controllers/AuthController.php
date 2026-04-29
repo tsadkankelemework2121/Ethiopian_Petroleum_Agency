@@ -27,7 +27,7 @@ class AuthController extends Controller
         // Revoke all existing tokens for the user
         $user->tokens()->delete();
 
-        $token = $user->createToken('auth_token', expiresAt: now()->addHours(24))->plainTextToken;
+        $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
             'token' => $token,
@@ -37,6 +37,7 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'company_id' => $user->company_id,
+                'depot_id' => $user->depot_id,
             ],
         ]);
     }
@@ -51,6 +52,7 @@ class AuthController extends Controller
             'email' => $user->email,
             'role' => $user->role,
             'company_id' => $user->company_id,
+            'depot_id' => $user->depot_id,
         ]);
     }
 

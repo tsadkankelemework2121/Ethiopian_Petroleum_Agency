@@ -3,7 +3,7 @@ import api from '../api/axios'
 import type { Depot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
-import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { useAuth } from '../context/AuthContext'
@@ -13,6 +13,10 @@ export default function DepotsPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
+  const [editingDepot, setEditingDepot] = useState<any | null>(null)
+  const [deleting, setDeleting] = useState<string | null>(null)
+
+  const canManage = user?.role === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role === 'EPA_ADMIN'
 
   const { data: items = [], isLoading } = useQuery<Depot[]>({
     queryKey: ['depots', user?.companyId],
@@ -27,11 +31,12 @@ export default function DepotsPage() {
           email1: d.email1, email2: d.email2
         },
         mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
-        mapLink: d.map_link
+        mapLink: d.map_link,
+        hasDispatches: d.has_dispatches ?? false,
       }));
     },
-    enabled: !!user?.companyId || user?.role === 'EPA_ADMIN', // Enable for EPA or if companyId is present
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
+    enabled: !!user?.companyId || user?.role === 'EPA_ADMIN',
+    refetchInterval: 5 * 60 * 1000,
   })
 
   const openGoogleMaps = (depot: Depot) => {
@@ -41,9 +46,47 @@ export default function DepotsPage() {
       const { lat, lng } = depot.mapLocation
       window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank')
     } else {
-      // If no coordinates, search by address
       const query = encodeURIComponent(`${depot.location.address}, ${depot.location.city}, ${depot.location.region}`)
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank')
+    }
+  }
+
+  const handleDelete = async (depot: Depot) => {
+    if (depot.hasDispatches) {
+      alert('Cannot delete this depot — it has dispatches assigned to it.')
+      return
+    }
+    if (!window.confirm(`Are you sure you want to delete "${depot.name}"? This action cannot be undone.`)) return
+    setDeleting(depot.id)
+    try {
+      await api.delete(`/depots/${depot.id}`)
+      queryClient.invalidateQueries({ queryKey: ['depots'] })
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Failed to delete depot.'
+      alert(msg)
+    } finally {
+      setDeleting(null)
+    }
+  }
+
+  const handleEdit = (depot: any) => {
+    setEditingDepot(depot)
+    setShowForm(true)
+  }
+
+  const handleFormSubmit = async (payload: any) => {
+    try {
+      if (editingDepot) {
+        await api.put(`/depots/${editingDepot.id}`, payload)
+      } else {
+        await api.post('/depots', payload)
+      }
+      setShowForm(false)
+      setEditingDepot(null)
+      queryClient.invalidateQueries({ queryKey: ['depots'] })
+    } catch (err) {
+      console.error(err)
+      alert('Error saving depot. Please check your data.')
     }
   }
 
@@ -53,10 +96,10 @@ export default function DepotsPage() {
         title="Depots"
         subtitle="Depots with contact details and map location."
         right={
-          (user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY') && (
+          canManage && (
             <button
               type="button"
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => { setEditingDepot(null); setShowForm(!showForm) }}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <PlusIcon className="size-4" />
@@ -68,26 +111,16 @@ export default function DepotsPage() {
 
       <ModalOverlay
         isOpen={showForm}
-        onClose={() => setShowForm(false)}
-        title="Add New Depot"
+        onClose={() => { setShowForm(false); setEditingDepot(null) }}
+        title={editingDepot ? `Edit Depot: ${editingDepot.name}` : "Add New Depot"}
       >
-        <NewDepotForm
+        <DepotForm
           companyId={user?.companyId}
-          onClose={() => setShowForm(false)}
-          onSubmit={(newDepot) => {
-            // Note: newDepot here is the raw formData payload we passed from the form
-            api.post('/depots', newDepot)
-              .then(() => {
-                setShowForm(false)
-                // Invalidate query to refetch fresh data
-                queryClient.invalidateQueries({ queryKey: ['depots', user?.companyId] })
-              })
-              .catch(console.error)
-          }}
+          editingDepot={editingDepot}
+          onClose={() => { setShowForm(false); setEditingDepot(null) }}
+          onSubmit={handleFormSubmit}
         />
       </ModalOverlay>
-
-
 
       {isLoading ? (
         <div className="rounded-xl border border-[#D1D5DB] bg-white overflow-x-auto">
@@ -104,26 +137,12 @@ export default function DepotsPage() {
             <tbody className="divide-y divide-[#D1D5DB]">
               {[1, 2, 3, 4, 5].map((i) => (
                 <tr key={i}>
-                  <td className="px-6 py-4">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-24 mt-2" />
-                  </td>
-                  <td className="px-6 py-4">
-                    <Skeleton className="h-4 w-40" />
-                    <Skeleton className="h-3 w-32 mt-2" />
-                  </td>
-                  <td className="px-6 py-4">
-                    <Skeleton className="h-4 w-28" />
-                  </td>
-                  <td className="px-6 py-4">
-                    <Skeleton className="h-4 w-24" />
-                  </td>
-                  <td className="px-6 py-4">
-                    <Skeleton className="h-4 w-32" />
-                  </td>
-                  <td className="px-6 py-4">
-                    <Skeleton className="h-8 w-20 rounded-lg" />
-                  </td>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-24 mt-2" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-40" /><Skeleton className="h-3 w-32 mt-2" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-28" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-4 w-32" /></td>
+                  <td className="px-6 py-4"><Skeleton className="h-8 w-20 rounded-lg" /></td>
                 </tr>
               ))}
             </tbody>
@@ -135,10 +154,10 @@ export default function DepotsPage() {
           title="No depots yet"
           description="Add your first depot to get started with contact details and map locations."
           action={
-            (user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY') ? (
+            canManage ? (
               <button
                 type="button"
-                onClick={() => setShowForm(true)}
+                onClick={() => { setEditingDepot(null); setShowForm(true) }}
                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <PlusIcon className="size-4" />
@@ -224,8 +243,33 @@ export default function DepotsPage() {
                         title="Open in Google Maps"
                       >
                         <MapPinIcon className="size-4" />
-                        <span>Google Maps</span>
+                        <span>Map</span>
                       </button>
+                      {canManage && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => handleEdit(depot)}
+                            className="inline-flex items-center gap-1 rounded-lg bg-blue-50 px-2.5 py-1.5 text-sm font-medium text-blue-700 hover:bg-blue-100 transition"
+                            title="Edit Depot"
+                          >
+                            <PencilIcon className="size-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(depot)}
+                            disabled={!!depot.hasDispatches || deleting === depot.id}
+                            className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                            title={depot.hasDispatches ? "Cannot delete: has dispatches assigned" : "Delete Depot"}
+                          >
+                            {deleting === depot.id ? (
+                              <div className="size-3.5 border-2 border-red-300 border-t-red-700 rounded-full animate-spin" />
+                            ) : (
+                              <TrashIcon className="size-3.5" />
+                            )}
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -256,23 +300,29 @@ export default function DepotsPage() {
   )
 }
 
-function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; onSubmit: (depot: Depot) => void; companyId?: string }) {
+function DepotForm({ onClose, onSubmit, companyId, editingDepot }: { 
+  onClose: () => void; 
+  onSubmit: (depot: any) => void; 
+  companyId?: string;
+  editingDepot?: any;
+}) {
   const [formData, setFormData] = useState({
-    name: '',
-    region: '',
-    city: '',
-    address: '',
-    person1: '',
-    person2: '',
-    phone1: '',
-    phone2: '',
-    email1: '',
-    email2: '',
-    lat: '',
-    lng: '',
+    name: editingDepot?.name || '',
+    region: editingDepot?.location?.region || editingDepot?.region || '',
+    city: editingDepot?.location?.city || editingDepot?.city || '',
+    address: editingDepot?.location?.address || editingDepot?.address || '',
+    person1: editingDepot?.contacts?.person1 || editingDepot?.person1 || '',
+    person2: editingDepot?.contacts?.person2 || editingDepot?.person2 || '',
+    phone1: editingDepot?.contacts?.phone1 || editingDepot?.phone1 || '',
+    phone2: editingDepot?.contacts?.phone2 || editingDepot?.phone2 || '',
+    email1: editingDepot?.contacts?.email1 || editingDepot?.email1 || '',
+    email2: editingDepot?.contacts?.email2 || editingDepot?.email2 || '',
+    lat: editingDepot?.mapLocation?.lat?.toString() || editingDepot?.lat?.toString() || '',
+    lng: editingDepot?.mapLocation?.lng?.toString() || editingDepot?.lng?.toString() || '',
+    password: '',
   })
 
-  const [mapLink, setMapLink] = useState('')
+  const [mapLink, setMapLink] = useState(editingDepot?.mapLink || editingDepot?.map_link || '')
 
   const handleMapLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -294,8 +344,7 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
-    // Flat payload for backend
-    const payload = {
+    const payload: any = {
       name: formData.name,
       region: formData.region,
       city: formData.city,
@@ -310,7 +359,10 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
       lng: formData.lng ? Number(formData.lng) : null,
       map_link: mapLink || null,
       oil_company_id: companyId,
-    } as any
+    }
+    if (formData.password) {
+      payload.password = formData.password
+    }
     onSubmit(payload)
   }
 
@@ -421,6 +473,25 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
+
+        {/* Password for depot login */}
+        <div className="sm:col-span-2 pt-2 border-t border-[#D1D5DB] mt-2">
+          <label className="block text-sm font-semibold text-text mb-1">
+            Depot Login Password {editingDepot ? '(leave blank to keep current)' : ''}
+          </label>
+          <p className="text-xs text-text-muted mb-2">
+            If Email 1 and password are provided, a login account will be created for this depot to confirm deliveries.
+          </p>
+          <input
+            type="password"
+            placeholder={editingDepot ? "Leave blank to keep current password" : "Set depot login password (min 6 chars)"}
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            minLength={formData.password ? 6 : undefined}
+            className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+
         <div className="sm:col-span-2 pt-2 border-t border-[#D1D5DB] mt-2">
           <label className="block text-sm font-semibold text-text mb-1">Google Maps Link</label>
           <p className="text-xs text-text-muted mb-2">Paste a Google Maps link to auto-fill Latitude and Longitude.</p>
@@ -467,7 +538,7 @@ function NewDepotForm({ onClose, onSubmit, companyId }: { onClose: () => void; o
           type="submit"
           className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
-          Create Depot
+          {editingDepot ? 'Update Depot' : 'Create Depot'}
         </button>
       </div>
     </form>

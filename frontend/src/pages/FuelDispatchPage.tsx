@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { PlusIcon } from 'lucide-react'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
-import type { Depot, DispatchTask, FuelType, OilCompany } from '../data/types'
+import type { Depot, DispatchTask, FuelType, OilCompany, DeliveryConfirmation } from '../data/types'
 import StatusPill from '../components/ui/StatusPill'
 import { Skeleton } from '../components/ui/Skeleton'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import MapView from '../components/map/MapView'
-import { MapPinIcon } from '@heroicons/react/24/outline'
+import { MapPinIcon, CameraIcon, CheckCircleIcon, EyeIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '../context/AuthContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { GpsVehicle } from '../data/types'
@@ -19,10 +19,13 @@ export default function FuelDispatchPage() {
   const [showDispatchForm, setShowDispatchForm] = useState(false)
   const [editingTask, setEditingTask] = useState<any | null>(null)
   const [trackingTask, setTrackingTask] = useState<DispatchTask | null>(null)
+  const [confirmTask, setConfirmTask] = useState<any | null>(null)
+  const [viewConfirmation, setViewConfirmation] = useState<any | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
 
   const canAddDispatch = user?.role?.toUpperCase() === 'EPA_ADMIN' || user?.role?.toUpperCase() === 'SUPER_ADMIN'
+  const isDepotAdmin = user?.role === 'DEPOT_ADMIN'
 
   // Fetch Dispatches
   const { data: rawTasks = [], isLoading: isDispatchesLoading } = useQuery({
@@ -44,6 +47,7 @@ export default function FuelDispatchPage() {
         fuelType: d.fuel_type,
         dispatchedLiters: Number(d.dispatched_liters || 0),
         status: d.status,
+        confirmation: d.confirmation || null,
       })) || [];
     },
     staleTime: 5 * 60 * 1000, 
@@ -101,16 +105,12 @@ export default function FuelDispatchPage() {
     setShowDispatchForm(true);
   };
 
-  const handleConfirmReceipt = async (peaDispatchNo: string) => {
-    if (!window.confirm("Are you sure you have received this dispatch? This will mark it as Delivered.")) return;
-
-    try {
-      await api.post(`/dispatches/${peaDispatchNo}/deliver`);
-      queryClient.invalidateQueries({ queryKey: ['dispatches'] });
-    } catch (err) {
-      console.error('Failed to confirm delivery:', err);
-      alert('Error confirming delivery. Ensure you have authorized access.');
-    }
+  // Check if ETA day has arrived (confirm button only active on/after ETA date)
+  const isEtaDayReached = (etaDateTime?: string) => {
+    if (!etaDateTime) return true
+    const etaDate = new Date(etaDateTime)
+    const today = new Date()
+    return today.toDateString() >= etaDate.toDateString()
   };
 
   const statusTag = (v?: GpsVehicle) => {
@@ -261,6 +261,49 @@ export default function FuelDispatchPage() {
         </div>
       </ModalOverlay>
 
+      {/* Confirm Receipt Modal */}
+      <ModalOverlay
+        isOpen={confirmTask !== null}
+        onClose={() => setConfirmTask(null)}
+        title={`Confirm Receipt: ${confirmTask?.peaDispatchNo || ''}`}
+      >
+        {confirmTask && <ConfirmReceiptForm
+          peaDispatchNo={confirmTask.peaDispatchNo}
+          onClose={() => setConfirmTask(null)}
+          onSuccess={() => {
+            queryClient.invalidateQueries({ queryKey: ['dispatches'] })
+            setConfirmTask(null)
+          }}
+        />}
+      </ModalOverlay>
+
+      {/* View Confirmation Modal */}
+      <ModalOverlay
+        isOpen={viewConfirmation !== null}
+        onClose={() => setViewConfirmation(null)}
+        title={`Delivery Confirmation: ${viewConfirmation?.peaDispatchNo || ''}`}
+      >
+        {viewConfirmation?.confirmation && (
+          <div className="space-y-4">
+            <img
+              src={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api', '')}/storage/${viewConfirmation.confirmation.image_path}`}
+              alt="Delivery confirmation"
+              className="w-full rounded-lg border border-slate-200 max-h-[400px] object-contain bg-slate-50"
+            />
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div><span className="font-semibold text-slate-500">Confirmed At:</span><br/>{new Date(viewConfirmation.confirmation.confirmed_at).toLocaleString()}</div>
+              <div><span className="font-semibold text-slate-500">Confirmed By:</span><br/>{viewConfirmation.confirmation.confirmed_by_user?.name || 'N/A'}</div>
+              {viewConfirmation.confirmation.latitude && (
+                <div><span className="font-semibold text-slate-500">Location:</span><br/>{viewConfirmation.confirmation.latitude}, {viewConfirmation.confirmation.longitude}</div>
+              )}
+              {viewConfirmation.confirmation.vehicle_status && (
+                <div><span className="font-semibold text-slate-500">Vehicle Status:</span><br/>{viewConfirmation.confirmation.vehicle_status}</div>
+              )}
+            </div>
+          </div>
+        )}
+      </ModalOverlay>
+
       <div className="space-y-6">
 
         <Card>
@@ -383,33 +426,41 @@ export default function FuelDispatchPage() {
                           <StatusPill status={t.status} task={t} />
                         </td>
                         <td className="whitespace-nowrap px-4 py-4 text-right space-x-2">
-                          <button
-                            type="button"
-                            onClick={() => setTrackingTask(t)}
-                            title="Follow Map"
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
-                          >
-                            <MapPinIcon className="size-3.5" />
-                          </button>
+                          {!isDepotAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => setTrackingTask(t)}
+                              title="Follow Map"
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
+                            >
+                              <MapPinIcon className="size-3.5" />
+                            </button>
+                          )}
 
-                          {(user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') && t.status !== 'Delivered' && (
+                          {/* Confirm Receipt - for DEPOT_ADMIN or OIL_COMPANY */}
+                          {(isDepotAdmin || user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') && t.status !== 'Delivered' && (
                              <button
                                type="button"
-                               onClick={() => handleConfirmReceipt(t.peaDispatchNo)}
-                               className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition"
+                               disabled={!isEtaDayReached(t.etaDateTime)}
+                               onClick={() => setConfirmTask(t)}
+                               className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                               title={!isEtaDayReached(t.etaDateTime) ? 'Available on ETA date' : 'Confirm delivery'}
                              >
-                               Confirm Receipt
+                               <CheckCircleIcon className="size-3.5" />
+                               Confirm
                              </button>
                           )}
 
-                          {canAddDispatch && (
-                              <button
-                                type="button"
-                                onClick={() => handleEdit(t)}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition"
-                              >
-                                Edit
-                              </button>
+                          {/* View Confirmation - for delivered dispatches */}
+                          {t.status === 'Delivered' && t.confirmation && (
+                            <button
+                              type="button"
+                              onClick={() => setViewConfirmation(t)}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+                            >
+                              <EyeIcon className="size-3.5" />
+                              View
+                            </button>
                           )}
                         </td>
                       </tr>
@@ -748,6 +799,115 @@ function DispatchForm({
                 Saving...
               </>
           ) : editingTask ? 'Update Dispatch' : 'Create Dispatch'}
+        </button>
+      </div>
+    </form>
+  )
+}
+
+function ConfirmReceiptForm({ peaDispatchNo, onClose, onSuccess }: {
+  peaDispatchNo: string;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [image, setImage] = useState<File | null>(null)
+  const [preview, setPreview] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
+  const [geoStatus, setGeoStatus] = useState<string>('Acquiring location...')
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // Auto-capture geolocation on mount
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setGeoStatus('Geolocation not supported')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
+        setGeoStatus(`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`)
+      },
+      () => setGeoStatus('Location denied - will proceed without'),
+      { enableHighAccuracy: true, timeout: 10000 }
+    )
+  }, [])
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setImage(file)
+      setPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!image) { alert('Please upload an image.'); return }
+    setSaving(true)
+    try {
+      const fd = new FormData()
+      fd.append('image', image)
+      if (coords) {
+        fd.append('latitude', coords.lat.toString())
+        fd.append('longitude', coords.lng.toString())
+      }
+      fd.append('vehicle_status', 'Confirmed at depot')
+      await api.post(`/dispatches/${peaDispatchNo}/deliver`, fd, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      onSuccess()
+    } catch (err: any) {
+      console.error(err)
+      alert(err?.response?.data?.message || 'Error confirming delivery.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-slate-500">
+        Upload a photo of the delivery and your location will be automatically recorded.
+      </p>
+
+      {/* Image Upload */}
+      <div
+        onClick={() => fileRef.current?.click()}
+        className="border-2 border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer hover:border-primary/60 hover:bg-primary/5 transition min-h-[200px]"
+      >
+        {preview ? (
+          <img src={preview} alt="Preview" className="max-h-[250px] rounded-lg object-contain" />
+        ) : (
+          <>
+            <CameraIcon className="size-10 text-slate-400 mb-2" />
+            <span className="text-sm font-medium text-slate-500">Click to upload photo</span>
+            <span className="text-xs text-slate-400 mt-1">JPG, PNG — max 10MB</span>
+          </>
+        )}
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={handleImageChange} />
+
+      {/* Location Status */}
+      <div className="flex items-center gap-2 text-sm">
+        <MapPinIcon className="size-4 text-slate-400" />
+        <span className="text-slate-600">{geoStatus}</span>
+      </div>
+
+      <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+        <button type="button" onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+          Cancel
+        </button>
+        <button
+          type="submit"
+          disabled={saving || !image}
+          className="rounded-lg bg-green-600 px-6 py-2 text-sm font-semibold text-white shadow-lg hover:bg-green-700 transition disabled:opacity-50 flex items-center gap-2"
+        >
+          {saving ? (
+            <><div className="size-3 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Confirming...</>
+          ) : (
+            <><CheckCircleIcon className="size-4" /> Confirm Delivery</>
+          )}
         </button>
       </div>
     </form>

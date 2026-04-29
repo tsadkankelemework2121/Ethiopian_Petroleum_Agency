@@ -182,18 +182,22 @@ const getClusterIcon = (cluster: unknown, supercluster: unknown) => {
   const cached = clusterIconCache.get(cacheKey)
   if (cached) return cached
 
-  // Optionally, get some leaves to show plates if it's a small cluster
-  const maxLeavesToShow = 8
+  // Show leaves on hover for clusters up to 15
+  const maxLeavesToShow = 15
   const leaves =
     count <= maxLeavesToShow && superclusterTyped
       ? superclusterTyped.getLeaves(clusterTyped.id, maxLeavesToShow)
       : []
   
+  // Dynamic size based on count
+  const size = count < 10 ? 36 : count < 50 ? 42 : count < 200 ? 50 : 58
+  const fontSize = count < 10 ? 13 : count < 50 ? 14 : count < 200 ? 15 : 16
+
   const html = `
     <div style="position: relative; display: flex; flex-direction: column; align-items: center;" class="group">
       <div class="absolute bottom-full hidden group-hover:flex flex-col pb-2 z-50">
-        <div class="flex flex-col bg-white p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 min-w-[160px] max-h-[220px] overflow-y-auto cursor-default pointer-events-auto">
-          <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-100 pb-2 uppercase tracking-wider">Vehicles (${count})</div>
+        <div class="flex flex-col bg-white p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-200 min-w-[160px] max-h-[280px] overflow-y-auto cursor-default pointer-events-auto">
+          <div class="text-[10px] font-bold text-slate-400 mb-2 border-b border-slate-100 pb-2 uppercase tracking-wider">${count} Vehicles</div>
           ${leaves.length > 0 ? `
             <div class="flex flex-col gap-1.5">
               ${leaves.map((l) => {
@@ -207,23 +211,24 @@ const getClusterIcon = (cluster: unknown, supercluster: unknown) => {
               }).join('')}
             </div>
           ` : `
-             <div class="text-xs text-slate-500">Zoom in to view vehicles.</div>
+             <div class="text-xs text-slate-500">Click to zoom in and view individual vehicles.</div>
           `}
         </div>
       </div>
 
       <div style="filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transition: transform 0.2s ease; display: flex; align-items: center; justify-content: center;" class="hover:scale-110">
-        <div style="background: #1c8547; color: white; border-radius: 999px; min-width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; padding: 0 8px; font-size: 13px; font-weight: bold; border: 2.5px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
+        <div style="background: #1c8547; color: white; border-radius: 999px; min-width: ${size}px; height: ${size}px; display: flex; align-items: center; justify-content: center; padding: 0 8px; font-size: ${fontSize}px; font-weight: bold; border: 2.5px solid white; box-shadow: 0 4px 12px rgba(0,0,0,0.25);">
           ${count}
         </div>
       </div>
     </div>
   `
+  const iconSize = size + 8
   const icon = L.divIcon({
     html,
     className: '',
-    iconSize: [40, 40],
-    iconAnchor: [20, 20]
+    iconSize: [iconSize, iconSize],
+    iconAnchor: [iconSize / 2, iconSize / 2]
   })
   clusterIconCache.set(cacheKey, icon)
   return icon
@@ -236,7 +241,7 @@ export default function MapView({
   selectedMarkerId,
   onMarkerSelect,
   onMapReady,
-  styleUrl = 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', 
+  styleUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', 
   className,
   isClustered = false
 }: Props) {
@@ -343,7 +348,7 @@ export default function MapView({
       >
         <TileLayer
           url={styleUrl}
-          attribution='&copy; <a href="https://carto.com/">Carto</a>'
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
         <MapController 
           apiRef={apiRef} 

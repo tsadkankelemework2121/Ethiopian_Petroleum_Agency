@@ -19,6 +19,7 @@ import type { UserRole, DispatchTask, GpsVehicle } from '../../data/types'
 import { useQuery } from '@tanstack/react-query'
 import api from '../../api/axios'
 import { fetchGpsVehicles } from '../../data/gpsApi'
+import { parseStatusDurationHours, getStatusCategory } from '../../lib/parseGpsDuration'
 
 type NavItem = {
   to: string
@@ -65,9 +66,16 @@ function NavItemLink({ item, onNavigate }: { item: NavItem; onNavigate?: () => v
 }
 
 function Sidebar({ onNavigate, role }: { onNavigate?: () => void, role: UserRole }) {
-  const filteredEntitiesNav = role === 'OIL_COMPANY_ADMIN' 
-    ? entitiesNav.filter(n => n.to !== '/entities/oil-companies')
-    : entitiesNav;
+  const filteredEntitiesNav = role === 'DEPOT_ADMIN' 
+    ? [] 
+    : role === 'OIL_COMPANY_ADMIN' 
+      ? entitiesNav.filter(n => n.to !== '/entities/oil-companies')
+      : entitiesNav;
+
+  // DEPOT_ADMIN only sees Fuel Dispatch
+  const filteredPrimaryNav = role === 'DEPOT_ADMIN'
+    ? primaryNav.filter(n => n.to === '/fuel-dispatch')
+    : primaryNav;
 
   return (
     <div className="flex h-screen flex-col bg-white border-r border-[#D1D5DB] overflow-y-auto">
@@ -82,30 +90,34 @@ function Sidebar({ onNavigate, role }: { onNavigate?: () => void, role: UserRole
 
         <div className="min-w-0">
           <div className="truncate text-sm font-bold text-text">
-            {role === 'EPA_ADMIN' ? 'PEA ETHIOPIA' : 'OIL COMPANY'}
+            {role === 'EPA_ADMIN' ? 'PEA ETHIOPIA' : role === 'DEPOT_ADMIN' ? 'DEPOT PORTAL' : 'OIL COMPANY'}
           </div>
-          <div className="truncate text-xs text-text-muted">Ops Command Center</div>
+          <div className="truncate text-xs text-text-muted">
+            {role === 'DEPOT_ADMIN' ? 'Delivery Confirmation' : 'Ops Command Center'}
+          </div>
         </div>
       </div>
 
       <div className="px-3 py-2 flex-1">
         <div className="space-y-1">
-          {primaryNav.map((item) => (
+          {filteredPrimaryNav.map((item) => (
             <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
           ))}
         </div>
 
-        <div className="mt-6 space-y-3">
-          <div className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
-            {role === 'OIL_COMPANY_ADMIN' ? 'Company Resources' : 'Stakeholders'}
-          </div>
+        {filteredEntitiesNav.length > 0 && (
+          <div className="mt-6 space-y-3">
+            <div className="px-3 pt-2 text-xs font-semibold uppercase tracking-wider text-text-muted">
+              {role === 'OIL_COMPANY_ADMIN' ? 'Company Resources' : 'Stakeholders'}
+            </div>
 
-          <div className="space-y-1">
-            {filteredEntitiesNav.map((item) => (
-              <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
-            ))}
+            <div className="space-y-1">
+              {filteredEntitiesNav.map((item) => (
+                <NavItemLink key={item.to} item={item} onNavigate={onNavigate} />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
     </div>
@@ -174,26 +186,26 @@ export default function AppLayout() {
   });
 
   const alertsCount = useMemo(() => {
-    const offline = gpsVehicles.filter(v => v.engine === 'off').length;
-    
     const now = new Date();
+
+    // GPS offline > 24 hrs
+    const offline = gpsVehicles.filter(v => {
+      const cat = getStatusCategory(v.status)
+      if (cat !== 'offline') return false
+      return parseStatusDurationHours(v.status) > 24
+    }).length;
+
     const exceeded = dispatches.filter(d => 
         d.status !== 'Delivered' && 
         d.etaDateTime && 
         new Date(d.etaDateTime) < now
     ).length;
 
+    // Stops > 5 hours
     const stopped = gpsVehicles.filter(v => {
-      if (v.status.toLowerCase().includes('stopped')) return true;
-      if (v.speed === "0" || Number(v.speed) === 0 || v.engine === 'off') {
-        if (!v.dt_tracker) return false;
-        const dtTracker = new Date(v.dt_tracker.replace(' ', 'T') + 'Z'); 
-        if (!isNaN(dtTracker.getTime())) {
-          const diffHours = (now.getTime() - dtTracker.getTime()) / (1000 * 60 * 60);
-          if (diffHours > 5) return true;
-        }
-      }
-      return false;
+      const cat = getStatusCategory(v.status)
+      if (cat !== 'stopped') return false
+      return parseStatusDurationHours(v.status) > 5
     }).length;
 
     return offline + exceeded + stopped;
@@ -278,15 +290,25 @@ export default function AppLayout() {
                 <div className="relative group text-left">
                   <button className="flex items-center gap-3 py-2 cursor-pointer">
                     <div className="text-right">
-                      <div className="text-sm font-semibold text-text">Abebe B.</div>
+                      <div className="text-sm font-semibold text-text">
+                        {user?.email ? user.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : 'User'}
+                      </div>
                       <div className="text-xs text-text-muted">{role === 'EPA_ADMIN' ? 'PEA Admin' : 'Company Admin'}</div>
                     </div>
 
-                    <img
-                      src={profileImg}
-                      alt="User profile"
-                      className="h-10 w-10 rounded-full object-cover border border-[#D1D5DB]"
-                    />
+                    {role === 'EPA_ADMIN' ? (
+                      <img
+                        src={profileImg}
+                        alt="User profile"
+                        className="h-10 w-10 rounded-full object-cover border border-[#D1D5DB]"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center">
+                        <span className="text-sm font-bold text-primary">
+                          {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
+                        </span>
+                      </div>
+                    )}
                   </button>
 
                   <div className="absolute right-0 top-full mt-0 w-48 bg-white border border-gray-200 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">

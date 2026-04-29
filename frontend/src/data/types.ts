@@ -1,9 +1,10 @@
-export type UserRole = 'EPA_ADMIN' | 'OIL_COMPANY_ADMIN'
+export type UserRole = 'EPA_ADMIN' | 'OIL_COMPANY_ADMIN' | 'DEPOT_ADMIN'
 
 export type User = {
   email: string
   role: UserRole
   companyId?: string // if role is OIL_COMPANY_ADMIN
+  depotId?: string   // if role is DEPOT_ADMIN
 }
 
 export type FuelType = 'Benzine' | 'Diesel' | 'Jet Fuel'
@@ -70,6 +71,20 @@ export type Depot = {
   mapLocation?: LatLng
   mapLink?: string
   oilCompanyId?: string // If created/owned by an oil company
+  hasDispatches?: boolean // Whether this depot has dispatches assigned
+}
+
+export type DeliveryConfirmation = {
+  id: number
+  dispatch_id: number
+  depot_id: number
+  confirmed_by: number
+  image_path: string
+  latitude: number | null
+  longitude: number | null
+  vehicle_status: string | null
+  confirmed_at: string
+  confirmed_by_user?: { name: string; email: string }
 }
 
 export type GpsPoint = {

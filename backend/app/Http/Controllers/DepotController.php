@@ -3,7 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Depot;
+use App\Models\Dispatch;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class DepotController extends Controller
 {
@@ -11,7 +14,11 @@ class DepotController extends Controller
     {
         $user = $request->user();
         $role = strtoupper($user->role);
-        if ($role === 'OIL_COMPANY_ADMIN' || $role === 'OIL_COMPANY') {
+
+        if ($role === 'DEPOT_ADMIN') {
+            // Depot admin can only see their own depot
+            $depots = Depot::where('id', $user->depot_id)->get();
+        } elseif ($role === 'OIL_COMPANY_ADMIN' || $role === 'OIL_COMPANY') {
             $depots = Depot::where('oil_company_id', $user->company_id)->get();
         } else {
             // EPA can see all, or filter if provided
@@ -22,6 +29,11 @@ class DepotController extends Controller
                 $depots = Depot::all();
             }
         }
+
+        // Add has_dispatches flag for frontend delete protection
+        $depots->each(function ($depot) {
+            $depot->has_dispatches = Dispatch::where('destination_depot_id', $depot->id)->exists();
+        });
         
         return response()->json($depots);
     }
@@ -46,13 +58,36 @@ class DepotController extends Controller
             'lng' => 'nullable|numeric',
             'map_link' => 'nullable|string',
             'oil_company_id' => ($role === 'EPA_ADMIN' || $role === 'SUPER_ADMIN') ? 'required|string' : 'nullable|string',
+            'password' => 'nullable|string|min:6',
         ]);
 
         if ($role === 'OIL_COMPANY' || $role === 'OIL_COMPANY_ADMIN') {
             $validated['oil_company_id'] = $user->company_id;
         }
 
+        // Hash password before storing
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        }
+
         $depot = Depot::create($validated);
+
+        // Auto-create a DEPOT_ADMIN user if email1 and password are provided
+        if (!empty($request->input('email1')) && !empty($request->input('password'))) {
+            // Check if user with this email already exists
+            $existingUser = User::where('email', $request->input('email1'))->first();
+            if (!$existingUser) {
+                User::create([
+                    'name' => $depot->name . ' Admin',
+                    'email' => $request->input('email1'),
+                    'password' => Hash::make($request->input('password')),
+                    'role' => 'DEPOT_ADMIN',
+                    'company_id' => $depot->oil_company_id,
+                    'depot_id' => $depot->id,
+                ]);
+            }
+        }
+
         return response()->json($depot, 201);
     }
 
@@ -89,10 +124,38 @@ class DepotController extends Controller
             'lng' => 'nullable|numeric',
             'map_link' => 'nullable|string',
             'oil_company_id' => ($role === 'EPA_ADMIN' || $role === 'SUPER_ADMIN') ? 'sometimes|required|string' : 'nullable|string',
+            'password' => 'nullable|string|min:6',
         ]);
 
         if (($role === 'OIL_COMPANY' || $role === 'OIL_COMPANY_ADMIN')) {
             unset($validated['oil_company_id']); // Cannot change company id
+        }
+
+        // Handle password update
+        $rawPassword = $request->input('password');
+        if (!empty($rawPassword)) {
+            $validated['password'] = Hash::make($rawPassword);
+
+            // Update or create the linked DEPOT_ADMIN user
+            $depotUser = User::where('depot_id', $depot->id)->first();
+            if ($depotUser) {
+                $depotUser->update(['password' => Hash::make($rawPassword)]);
+                // Update email if changed
+                if (!empty($validated['email1'])) {
+                    $depotUser->update(['email' => $validated['email1']]);
+                }
+            } elseif (!empty($validated['email1'])) {
+                User::create([
+                    'name' => $depot->name . ' Admin',
+                    'email' => $validated['email1'],
+                    'password' => Hash::make($rawPassword),
+                    'role' => 'DEPOT_ADMIN',
+                    'company_id' => $depot->oil_company_id,
+                    'depot_id' => $depot->id,
+                ]);
+            }
+        } else {
+            unset($validated['password']); // Don't clear password if not provided
         }
 
         $depot->update($validated);
@@ -111,6 +174,17 @@ class DepotController extends Controller
         } elseif ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
+
+        // Block deletion if any dispatch is assigned to this depot
+        $hasDispatches = Dispatch::where('destination_depot_id', $depot->id)->exists();
+        if ($hasDispatches) {
+            return response()->json([
+                'message' => 'Cannot delete this depot because it has dispatches assigned to it.'
+            ], 409);
+        }
+
+        // Also delete the linked DEPOT_ADMIN user
+        User::where('depot_id', $depot->id)->delete();
 
         $depot->delete();
         return response()->json(null, 204);

@@ -30,4 +30,9 @@ class Dispatch extends Model
     {
         return $this->belongsTo(Depot::class, 'destination_depot_id');
     }
+
+    public function confirmation()
+    {
+        return $this->hasOne(DeliveryConfirmation::class);
+    }
 }

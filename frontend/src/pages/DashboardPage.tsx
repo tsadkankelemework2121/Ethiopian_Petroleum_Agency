@@ -7,6 +7,7 @@ import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
 import { useAuth } from '../context/AuthContext'
 import { useQuery } from '@tanstack/react-query'
+import { parseStatusDurationHours, getStatusCategory } from '../lib/parseGpsDuration'
 import {
   Bar,
   BarChart,
@@ -84,28 +85,27 @@ export default function DashboardPage() {
 
   // 4. Compute KPIs
   const kpiCards = useMemo(() => {
-    const transit = dispatches.filter(d => d.status === 'On transit').length;
-    const offline = gpsVehicles.filter(v => v.engine === 'off').length;
-    
     const now = new Date();
+    const transit = dispatches.filter(d => d.status === 'On transit').length;
+
+    // GPS offline > 24 hrs: parse duration from the status field
+    const offline = gpsVehicles.filter(v => {
+      const cat = getStatusCategory(v.status)
+      if (cat !== 'offline') return false
+      return parseStatusDurationHours(v.status) > 24
+    }).length;
+    
     const exceeded = dispatches.filter(d => 
         d.status !== 'Delivered' && 
         d.etaDateTime && 
         new Date(d.etaDateTime) < now
     ).length;
 
+    // Stops > 5 hours: only vehicles with "Stopped" status (not offline)
     const stopped = gpsVehicles.filter(v => {
-      if (v.status.toLowerCase().includes('stopped')) return true;
-      if (v.speed === "0" || Number(v.speed) === 0 || v.engine === 'off') {
-        if (!v.dt_tracker) return false;
-        // GPS API usually provides format like "YYYY-MM-DD HH:mm:ss"
-        const dtTracker = new Date(v.dt_tracker.replace(' ', 'T') + 'Z'); 
-        if (!isNaN(dtTracker.getTime())) {
-          const diffHours = (now.getTime() - dtTracker.getTime()) / (1000 * 60 * 60);
-          if (diffHours > 5) return true;
-        }
-      }
-      return false;
+      const cat = getStatusCategory(v.status)
+      if (cat !== 'stopped') return false
+      return parseStatusDurationHours(v.status) > 5
     }).length;
 
     return [

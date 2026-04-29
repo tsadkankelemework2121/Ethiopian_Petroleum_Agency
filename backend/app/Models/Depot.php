@@ -21,5 +21,25 @@ class Depot extends Model
         'lng',
         'map_link',
         'oil_company_id',
+        'password',
     ];
+
+    protected $hidden = [
+        'password',
+    ];
+
+    public function dispatches()
+    {
+        return $this->hasMany(Dispatch::class, 'destination_depot_id');
+    }
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'depot_id');
+    }
+
+    public function deliveryConfirmations()
+    {
+        return $this->hasMany(DeliveryConfirmation::class);
+    }
 }

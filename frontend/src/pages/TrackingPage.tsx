@@ -91,7 +91,8 @@ export default function TrackingPage() {
   const [isListOpen, setIsListOpen] = useState(false) // Start hidden on mobile
   const mapApiRef = useRef<import('../components/map/MapView').MapApi | null>(null)
 
-  const defaultCenter = useMemo(() => ({ lat: 9.0192, lng: 38.7525 }), [])
+  // Center of Ethiopia for initial map view
+  const defaultCenter = useMemo(() => ({ lat: 9.0, lng: 39.5 }), [])
 
   // react-window sizing
   const listHostRef = useRef<HTMLDivElement | null>(null)
@@ -187,9 +188,25 @@ export default function TrackingPage() {
       .filter((m): m is NonNullable<typeof m> => m !== null)
   }, [fleetListItems])
 
+  // Ethiopia bounding box constraints so the map stays focused on Ethiopia
+  const ETHIOPIA_BOUNDS = { minLat: 3.0, maxLat: 15.0, minLng: 33.0, maxLng: 48.0 };
+
   const mapBounds = useMemo(() => {
-    const validItems = items.filter((t) => t.lat && t.lng)
-    if (validItems.length === 0) return null
+    // Only consider vehicles with valid coordinates inside Ethiopia
+    const validItems = items.filter((t) => {
+      if (!t.lat || !t.lng) return false;
+      const lat = Number(t.lat);
+      const lng = Number(t.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+      // Only include vehicles within Ethiopia's bounding box
+      return lat >= ETHIOPIA_BOUNDS.minLat && lat <= ETHIOPIA_BOUNDS.maxLat &&
+             lng >= ETHIOPIA_BOUNDS.minLng && lng <= ETHIOPIA_BOUNDS.maxLng;
+    });
+
+    // If no vehicles in Ethiopia, use Ethiopia's default bounds
+    if (validItems.length === 0) {
+      return [[ETHIOPIA_BOUNDS.minLat, ETHIOPIA_BOUNDS.minLng], [ETHIOPIA_BOUNDS.maxLat, ETHIOPIA_BOUNDS.maxLng]] as [[number, number], [number, number]];
+    }
 
     let minLat = 90, maxLat = -90, minLng = 180, maxLng = -180
     validItems.forEach((v) => {
@@ -204,7 +221,7 @@ export default function TrackingPage() {
     if (minLat === maxLat) { minLat -= 0.01; maxLat += 0.01 }
     if (minLng === maxLng) { minLng -= 0.01; maxLng += 0.01 }
 
-    return [[minLng, minLat], [maxLng, maxLat]] as [[number, number], [number, number]]
+    return [[minLat, minLng], [maxLat, maxLng]] as [[number, number], [number, number]]
   }, [items])
 
   useEffect(() => {

@@ -7,11 +7,12 @@ import { useAuth } from '../context/AuthContext'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
-  const { logout } = useAuth()
+  const { logout, user } = useAuth()
+  const role = user?.role || 'EPA_ADMIN'
 
   const [formData, setFormData] = useState({
-    name: 'PEA Admin',
-    email: 'admin@pea.gov.et',
+    name: user?.email ? user.email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()) : (role === 'EPA_ADMIN' ? 'PEA Admin' : 'Company Admin'),
+    email: user?.email || (role === 'EPA_ADMIN' ? 'admin@pea.gov.et' : ''),
     currentPassword: '',
     password: '',
     confirmPassword: '',
@@ -189,7 +190,7 @@ export default function ProfilePage() {
                       {formData.name}
                     </h1>
                   )}
-                  <p className="text-sm text-gray-500">Administrator Account</p>
+                  <p className="text-sm text-gray-500">{role === 'EPA_ADMIN' ? 'PEA Administrator' : 'Oil Company Administrator'}</p>
                 </div>
               </div>
 
