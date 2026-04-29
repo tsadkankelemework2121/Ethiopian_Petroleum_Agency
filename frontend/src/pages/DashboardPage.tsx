@@ -36,18 +36,18 @@ export default function DashboardPage() {
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery<DispatchTask[]>({
     queryKey: ['dispatches'],
     queryFn: () => api.get('/dispatches', { params: companyId ? { oil_company_id: companyId } : {} }).then(res => res.data.map((d: any) => ({
-        peaDispatchNo: d.pea_dispatch_no,
-        oilCompanyId: d.oil_company_id,
-        transporterId: d.transporter_id,
-        vehicleId: d.vehicle_id,
-        dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
-        dispatchLocation: d.dispatch_location,
-        destinationDepotId: d.destination_depot_id?.toString() || '',
-        etaDateTime: d.eta_datetime?.replace(' ', 'T'),
-        dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
-        fuelType: d.fuel_type,
-        dispatchedLiters: Number(d.dispatched_liters || 0),
-        status: d.status,
+      peaDispatchNo: d.pea_dispatch_no,
+      oilCompanyId: d.oil_company_id,
+      transporterId: d.transporter_id,
+      vehicleId: d.vehicle_id,
+      dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
+      dispatchLocation: d.dispatch_location,
+      destinationDepotId: d.destination_depot_id?.toString() || '',
+      etaDateTime: d.eta_datetime?.replace(' ', 'T'),
+      dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+      fuelType: d.fuel_type,
+      dispatchedLiters: Number(d.dispatched_liters || 0),
+      status: d.status,
     })))
   });
 
@@ -55,10 +55,10 @@ export default function DashboardPage() {
   const { data: depots = [], isLoading: depotsLoading } = useQuery<Depot[]>({
     queryKey: ['depots'],
     queryFn: () => api.get('/depots').then(res => res.data.map((d: any) => ({
-        ...d,
-        id: d.id.toString(),
-        location: { region: d.region, city: d.city, address: d.address },
-        oilCompanyId: d.oil_company_id,
+      ...d,
+      id: d.id.toString(),
+      location: { region: d.region, city: d.city, address: d.address },
+      oilCompanyId: d.oil_company_id,
     })))
   });
 
@@ -94,11 +94,11 @@ export default function DashboardPage() {
       if (cat !== 'offline') return false
       return parseStatusDurationHours(v.status) > 24
     }).length;
-    
-    const exceeded = dispatches.filter(d => 
-        d.status !== 'Delivered' && 
-        d.etaDateTime && 
-        new Date(d.etaDateTime) < now
+
+    const exceeded = dispatches.filter(d =>
+      d.status !== 'Delivered' &&
+      d.etaDateTime &&
+      new Date(d.etaDateTime) < now
     ).length;
 
     // Stops > 5 hours: only vehicles with "Stopped" status (not offline)
@@ -124,7 +124,7 @@ export default function DashboardPage() {
     dispatches.forEach(d => {
       const depot = depotsById.get(d.destinationDepotId);
       if (!depot) return;
-      
+
       const region = depot.location.region || 'Unknown';
       if (!regionMap.has(region)) {
         regionMap.set(region, { region, benzineM3: 0, dieselM3: 0, jetFuelM3: 0 });
@@ -162,10 +162,10 @@ export default function DashboardPage() {
       .sort((a, b) => new Date(b.dispatchDateTime).getTime() - new Date(a.dispatchDateTime).getTime())
       .slice(0, 6)
       .map(d => ({
-          ...d,
-          oilCompany: d.oilCompanyId, 
-          transporter: d.transporterId || '—',
-          eta: d.etaDateTime?.replace('T', ' ').replace('Z', '') || '—'
+        ...d,
+        oilCompany: d.oilCompanyId,
+        transporter: d.transporterId || '—',
+        eta: d.etaDateTime?.replace('T', ' ').replace('Z', '') || '—'
       }));
   }, [dispatches]);
 
@@ -182,12 +182,12 @@ export default function DashboardPage() {
         <div className="md:col-span-12 min-w-0">
           <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
             {isLoading ? (
-                <>
-                  {[1, 2, 3, 4].map((i) => (
-                    <SkeletonCard key={i} />
-                  ))}
-                </>
-              ) : (
+              <>
+                {[1, 2, 3, 4].map((i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </>
+            ) : (
               kpiCards.map((k, i) => {
                 const Icon = k.icon
                 return (

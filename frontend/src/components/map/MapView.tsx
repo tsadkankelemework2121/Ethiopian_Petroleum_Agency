@@ -182,10 +182,10 @@ const getClusterIcon = (cluster: unknown, supercluster: unknown) => {
   const cached = clusterIconCache.get(cacheKey)
   if (cached) return cached
 
-  // Show leaves on hover for clusters up to 15
-  const maxLeavesToShow = 15
+  // Show leaves on hover for clusters (all vehicles)
+  const maxLeavesToShow = count
   const leaves =
-    count <= maxLeavesToShow && superclusterTyped
+    superclusterTyped
       ? superclusterTyped.getLeaves(clusterTyped.id, maxLeavesToShow)
       : []
   
