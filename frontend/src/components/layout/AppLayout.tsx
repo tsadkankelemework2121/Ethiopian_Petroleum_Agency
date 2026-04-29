@@ -155,7 +155,7 @@ export default function AppLayout() {
 
   // 1. Fetch Dispatches
   const { data: dispatches = [] } = useQuery<DispatchTask[]>({
-    queryKey: ['dispatches'],
+    queryKey: ['dispatches', user?.role, user?.companyId],
     queryFn: () => api.get('/dispatches', { params: user?.companyId ? { oil_company_id: user.companyId } : {} }).then(res => res.data.map((d: any) => ({
         peaDispatchNo: d.pea_dispatch_no,
         oilCompanyId: d.oil_company_id,
@@ -174,7 +174,7 @@ export default function AppLayout() {
 
   // 2. Fetch GPS Vehicles
   const { data: gpsVehicles = [] } = useQuery<GpsVehicle[]>({
-    queryKey: ['gps-vehicles'],
+    queryKey: ['gps-vehicles', user?.role, user?.companyId],
     queryFn: async () => {
       let data = await fetchGpsVehicles()
       if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {

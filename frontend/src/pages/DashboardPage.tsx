@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
   // 1. Fetch Dispatches
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery<DispatchTask[]>({
-    queryKey: ['dispatches'],
+    queryKey: ['dispatches', user?.role, companyId],
     queryFn: () => api.get('/dispatches', { params: companyId ? { oil_company_id: companyId } : {} }).then(res => res.data.map((d: any) => ({
       peaDispatchNo: d.pea_dispatch_no,
       oilCompanyId: d.oil_company_id,
@@ -53,7 +53,7 @@ export default function DashboardPage() {
 
   // 2. Fetch Depots
   const { data: depots = [], isLoading: depotsLoading } = useQuery<Depot[]>({
-    queryKey: ['depots'],
+    queryKey: ['depots', user?.role, companyId],
     queryFn: () => api.get('/depots').then(res => res.data.map((d: any) => ({
       ...d,
       id: d.id.toString(),
@@ -64,7 +64,7 @@ export default function DashboardPage() {
 
   // 3. Fetch GPS Vehicles
   const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
-    queryKey: ['gps-vehicles'],
+    queryKey: ['gps-vehicles', user?.role, companyId],
     queryFn: async () => {
       let data = await fetchGpsVehicles()
       if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
@@ -122,6 +122,9 @@ export default function DashboardPage() {
     const depotsById = new Map(depots.map(d => [d.id, d]));
 
     dispatches.forEach(d => {
+      // Only show active dispatches in graphs (exclude Delivered)
+      if (d.status === 'Delivered') return;
+
       const depot = depotsById.get(d.destinationDepotId);
       if (!depot) return;
 

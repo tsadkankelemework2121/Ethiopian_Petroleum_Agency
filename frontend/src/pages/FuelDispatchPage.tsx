@@ -29,7 +29,7 @@ export default function FuelDispatchPage() {
 
   // Fetch Dispatches
   const { data: rawTasks = [], isLoading: isDispatchesLoading } = useQuery({
-    queryKey: ['dispatches'],
+    queryKey: ['dispatches', user?.role, user?.companyId],
     queryFn: async () => {
       const res = await api.get('/dispatches', { 
         params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {} 
@@ -78,7 +78,7 @@ export default function FuelDispatchPage() {
 
   // Fetch GPS Vehicles
   const { data: vehicles = [], isLoading: isVehiclesLoading } = useQuery<GpsVehicle[]>({
-    queryKey: ['gps-vehicles'],
+    queryKey: ['gps-vehicles', user?.role, user?.companyId],
     queryFn: async () => {
       let data = await fetchGpsVehicles()
       if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
