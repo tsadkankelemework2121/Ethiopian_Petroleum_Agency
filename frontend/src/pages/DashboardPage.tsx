@@ -48,7 +48,8 @@ export default function DashboardPage() {
       fuelType: d.fuel_type,
       dispatchedLiters: Number(d.dispatched_liters || 0),
       status: d.status,
-    })))
+    }))),
+    refetchInterval: 5000,
   });
 
   // 2. Fetch Depots
@@ -141,6 +142,24 @@ export default function DashboardPage() {
 
     return Array.from(regionMap.values());
   }, [dispatches, depots]);
+
+  // Compute Delivered Fuel Summary
+  const deliveredSummary = useMemo(() => {
+    let benzineM3 = 0;
+    let dieselM3 = 0;
+    let jetFuelM3 = 0;
+
+    dispatches.forEach(d => {
+      // Only show delivered dispatches
+      if (d.status === 'Delivered') {
+        if (d.fuelType === 'Benzine') benzineM3 += d.dispatchedLiters;
+        else if (d.fuelType === 'Diesel') dieselM3 += d.dispatchedLiters;
+        else if (d.fuelType === 'Jet Fuel') jetFuelM3 += d.dispatchedLiters;
+      }
+    });
+
+    return { benzineM3, dieselM3, jetFuelM3 };
+  }, [dispatches]);
 
   // 6. Compute Pie Chart (Status Counts)
   const statusPie = useMemo(() => {
@@ -363,17 +382,17 @@ export default function DashboardPage() {
                     const fuelData = [
                       {
                         name: 'Benzine',
-                        volume: regionalSummary.reduce((sum, r) => sum + r.benzineM3, 0),
+                        volume: deliveredSummary.benzineM3,
                         color: chartColors.blue,
                       },
                       {
                         name: 'Diesel',
-                        volume: regionalSummary.reduce((sum, r) => sum + r.dieselM3, 0),
+                        volume: deliveredSummary.dieselM3,
                         color: chartColors.gold,
                       },
                       {
                         name: 'Jet Fuel',
-                        volume: regionalSummary.reduce((sum, r) => sum + r.jetFuelM3, 0),
+                        volume: deliveredSummary.jetFuelM3,
                         color: chartColors.gray,
                       },
                     ]

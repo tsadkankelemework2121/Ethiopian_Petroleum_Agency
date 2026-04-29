@@ -169,7 +169,8 @@ export default function AppLayout() {
         fuelType: d.fuel_type,
         dispatchedLiters: Number(d.dispatched_liters || 0),
         status: d.status,
-    })))
+    }))),
+    refetchInterval: 5000,
   });
 
   // 2. Fetch GPS Vehicles

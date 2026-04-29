@@ -50,8 +50,8 @@ export default function FuelDispatchPage() {
         confirmation: d.confirmation || null,
       })) || [];
     },
-    staleTime: 5 * 60 * 1000, 
-    refetchInterval: 5 * 60 * 1000,
+    staleTime: 5000, 
+    refetchInterval: 5000,
   });
 
   // Fetch Depots
