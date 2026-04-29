@@ -24,9 +24,7 @@ class Depot extends Model
         'password',
     ];
 
-    protected $hidden = [
-        'password',
-    ];
+
 
     public function dispatches()
     {

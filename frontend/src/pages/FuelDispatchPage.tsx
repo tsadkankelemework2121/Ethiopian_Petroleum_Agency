@@ -269,6 +269,8 @@ export default function FuelDispatchPage() {
       >
         {confirmTask && <ConfirmReceiptForm
           peaDispatchNo={confirmTask.peaDispatchNo}
+          vehicleId={confirmTask.vehicleId}
+          vehicles={vehicles}
           onClose={() => setConfirmTask(null)}
           onSuccess={() => {
             queryClient.invalidateQueries({ queryKey: ['dispatches'] })
@@ -598,7 +600,7 @@ function DispatchForm({
     }
 
     const request = editingTask 
-        ? api.put(`/dispatches/${editingTask.peaDispatchNo}`, payload)
+        ? api.post(`/dispatches/${editingTask.peaDispatchNo}`, { ...payload, _method: 'PUT' })
         : api.post('/dispatches', payload);
 
     request.then((res) => {
@@ -805,33 +807,22 @@ function DispatchForm({
   )
 }
 
-function ConfirmReceiptForm({ peaDispatchNo, onClose, onSuccess }: {
+function ConfirmReceiptForm({ peaDispatchNo, vehicleId, vehicles, onClose, onSuccess }: {
   peaDispatchNo: string;
+  vehicleId: string;
+  vehicles: GpsVehicle[];
   onClose: () => void;
   onSuccess: () => void;
 }) {
   const [image, setImage] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [geoStatus, setGeoStatus] = useState<string>('Acquiring location...')
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
 
-  // Auto-capture geolocation on mount
-  useEffect(() => {
-    if (!navigator.geolocation) {
-      setGeoStatus('Geolocation not supported')
-      return
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude })
-        setGeoStatus(`${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`)
-      },
-      () => setGeoStatus('Location denied - will proceed without'),
-      { enableHighAccuracy: true, timeout: 10000 }
-    )
-  }, [])
+  const vehicle = useMemo(() => vehicles.find(v => v.imei === vehicleId || v.name === vehicleId), [vehicles, vehicleId])
+  const geoStatus = vehicle && vehicle.lat && vehicle.lng 
+    ? `Vehicle Location: ${Number(vehicle.lat).toFixed(5)}, ${Number(vehicle.lng).toFixed(5)}` 
+    : 'Vehicle GPS location unavailable'
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -848,9 +839,9 @@ function ConfirmReceiptForm({ peaDispatchNo, onClose, onSuccess }: {
     try {
       const fd = new FormData()
       fd.append('image', image)
-      if (coords) {
-        fd.append('latitude', coords.lat.toString())
-        fd.append('longitude', coords.lng.toString())
+      if (vehicle && vehicle.lat && vehicle.lng) {
+        fd.append('latitude', vehicle.lat.toString())
+        fd.append('longitude', vehicle.lng.toString())
       }
       fd.append('vehicle_status', 'Confirmed at depot')
       await api.post(`/dispatches/${peaDispatchNo}/deliver`, fd, {
@@ -868,7 +859,7 @@ function ConfirmReceiptForm({ peaDispatchNo, onClose, onSuccess }: {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-sm text-slate-500">
-        Upload a photo of the delivery and your location will be automatically recorded.
+        Upload a photo of the delivery to confirm receipt.
       </p>
 
       {/* Image Upload */}

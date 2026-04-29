@@ -65,10 +65,10 @@ class DepotController extends Controller
             $validated['oil_company_id'] = $user->company_id;
         }
 
-        // Hash password before storing
-        if (!empty($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        }
+        // Keep password plain text in depots table
+        // if (!empty($validated['password'])) {
+        //     $validated['password'] = Hash::make($validated['password']);
+        // }
 
         $depot = Depot::create($validated);
 
@@ -134,7 +134,8 @@ class DepotController extends Controller
         // Handle password update
         $rawPassword = $request->input('password');
         if (!empty($rawPassword)) {
-            $validated['password'] = Hash::make($rawPassword);
+            // Keep password plain text in depots table
+            $validated['password'] = $rawPassword;
 
             // Update or create the linked DEPOT_ADMIN user
             $depotUser = User::where('depot_id', $depot->id)->first();
@@ -164,29 +165,6 @@ class DepotController extends Controller
 
     public function destroy(Request $request, Depot $depot)
     {
-        $user = $request->user();
-        $role = strtoupper($user->role);
-
-        if ($role === 'OIL_COMPANY' || $role === 'OIL_COMPANY_ADMIN') {
-            if ($depot->oil_company_id !== $user->company_id) {
-                return response()->json(['message' => 'Forbidden: This is not your depot'], 403);
-            }
-        } elseif ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
-            return response()->json(['message' => 'Forbidden'], 403);
-        }
-
-        // Block deletion if any dispatch is assigned to this depot
-        $hasDispatches = Dispatch::where('destination_depot_id', $depot->id)->exists();
-        if ($hasDispatches) {
-            return response()->json([
-                'message' => 'Cannot delete this depot because it has dispatches assigned to it.'
-            ], 409);
-        }
-
-        // Also delete the linked DEPOT_ADMIN user
-        User::where('depot_id', $depot->id)->delete();
-
-        $depot->delete();
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Forbidden: Depots cannot be deleted.'], 403);
     }
 }

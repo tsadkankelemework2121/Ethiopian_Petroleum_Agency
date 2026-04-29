@@ -14,9 +14,9 @@ export default function DepotsPage() {
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
   const [editingDepot, setEditingDepot] = useState<any | null>(null)
-  const [deleting, setDeleting] = useState<string | null>(null)
 
-  const canManage = user?.role === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role === 'EPA_ADMIN'
+  const canAdd = user?.role === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY'
+  const canManage = canAdd || user?.role === 'EPA_ADMIN'
 
   const { data: items = [], isLoading } = useQuery<Depot[]>({
     queryKey: ['depots', user?.companyId],
@@ -51,23 +51,7 @@ export default function DepotsPage() {
     }
   }
 
-  const handleDelete = async (depot: Depot) => {
-    if (depot.hasDispatches) {
-      alert('Cannot delete this depot — it has dispatches assigned to it.')
-      return
-    }
-    if (!window.confirm(`Are you sure you want to delete "${depot.name}"? This action cannot be undone.`)) return
-    setDeleting(depot.id)
-    try {
-      await api.delete(`/depots/${depot.id}`)
-      queryClient.invalidateQueries({ queryKey: ['depots'] })
-    } catch (err: any) {
-      const msg = err?.response?.data?.message || 'Failed to delete depot.'
-      alert(msg)
-    } finally {
-      setDeleting(null)
-    }
-  }
+
 
   const handleEdit = (depot: any) => {
     setEditingDepot(depot)
@@ -77,7 +61,7 @@ export default function DepotsPage() {
   const handleFormSubmit = async (payload: any) => {
     try {
       if (editingDepot) {
-        await api.put(`/depots/${editingDepot.id}`, payload)
+        await api.post(`/depots/${editingDepot.id}`, { ...payload, _method: 'PUT' })
       } else {
         await api.post('/depots', payload)
       }
@@ -96,7 +80,7 @@ export default function DepotsPage() {
         title="Depots"
         subtitle="Depots with contact details and map location."
         right={
-          canManage && (
+          canAdd && (
             <button
               type="button"
               onClick={() => { setEditingDepot(null); setShowForm(!showForm) }}
@@ -154,7 +138,7 @@ export default function DepotsPage() {
           title="No depots yet"
           description="Add your first depot to get started with contact details and map locations."
           action={
-            canManage ? (
+            canAdd ? (
               <button
                 type="button"
                 onClick={() => { setEditingDepot(null); setShowForm(true) }}
@@ -225,6 +209,11 @@ export default function DepotsPage() {
                           <EnvelopeIcon className="size-3.5 text-text-muted" />
                           <span className="truncate max-w-[150px]">{depot.contacts.email1}</span>
                         </div>
+                        {depot.password && (
+                          <div className="flex items-center gap-1 text-xs text-text-muted mt-1 font-mono">
+                            Pass: {depot.password}
+                          </div>
+                        )}
                         {depot.contacts.email2 && (
                           <div className="flex items-center gap-1 text-xs text-text-muted mt-1">
                             <EnvelopeIcon className="size-3" />
@@ -254,19 +243,6 @@ export default function DepotsPage() {
                             title="Edit Depot"
                           >
                             <PencilIcon className="size-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(depot)}
-                            disabled={!!depot.hasDispatches || deleting === depot.id}
-                            className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-sm font-medium text-red-700 hover:bg-red-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                            title={depot.hasDispatches ? "Cannot delete: has dispatches assigned" : "Delete Depot"}
-                          >
-                            {deleting === depot.id ? (
-                              <div className="size-3.5 border-2 border-red-300 border-t-red-700 rounded-full animate-spin" />
-                            ) : (
-                              <TrashIcon className="size-3.5" />
-                            )}
                           </button>
                         </>
                       )}
@@ -319,7 +295,7 @@ function DepotForm({ onClose, onSubmit, companyId, editingDepot }: {
     email2: editingDepot?.contacts?.email2 || editingDepot?.email2 || '',
     lat: editingDepot?.mapLocation?.lat?.toString() || editingDepot?.lat?.toString() || '',
     lng: editingDepot?.mapLocation?.lng?.toString() || editingDepot?.lng?.toString() || '',
-    password: '',
+    password: editingDepot?.password || '',
   })
 
   const [mapLink, setMapLink] = useState(editingDepot?.mapLink || editingDepot?.map_link || '')
