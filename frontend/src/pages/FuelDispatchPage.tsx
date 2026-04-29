@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, useRef } from 'react'
 import { PlusIcon } from 'lucide-react'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
-import type { Depot, DispatchTask, FuelType, OilCompany, DeliveryConfirmation } from '../data/types'
+import type { Depot, DispatchTask, FuelType, OilCompany } from '../data/types'
 import StatusPill from '../components/ui/StatusPill'
 import { Skeleton } from '../components/ui/Skeleton'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
@@ -99,11 +99,6 @@ export default function FuelDispatchPage() {
   }, [vehicles]);
 
   const depotsById = useMemo(() => new Map(depots.map((d) => [d.id, d] as const)), [depots])
-
-  const handleEdit = (task: any) => {
-    setEditingTask(task);
-    setShowDispatchForm(true);
-  };
 
   // Check if ETA day has arrived (confirm button only active on/after ETA date)
   const isEtaDayReached = (etaDateTime?: string) => {
