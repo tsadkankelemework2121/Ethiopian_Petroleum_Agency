@@ -29,7 +29,7 @@ export default function FuelDispatchPage() {
 
   // Fetch Dispatches
   const { data: rawTasks = [], isLoading: isDispatchesLoading } = useQuery({
-    queryKey: ['dispatches', user?.role, user?.companyId],
+    queryKey: ['dispatches', user?.role, user?.companyId, user?.depotId],
     queryFn: async () => {
       const res = await api.get('/dispatches', { 
         params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {} 
@@ -50,7 +50,7 @@ export default function FuelDispatchPage() {
         confirmation: d.confirmation || null,
       })) || [];
     },
-    staleTime: 5000, 
+    staleTime: 0, 
     refetchInterval: 5000,
   });
 
@@ -78,7 +78,7 @@ export default function FuelDispatchPage() {
 
   // Fetch GPS Vehicles
   const { data: vehicles = [], isLoading: isVehiclesLoading } = useQuery<GpsVehicle[]>({
-    queryKey: ['gps-vehicles', user?.role, user?.companyId],
+    queryKey: ['gps-vehicles', user?.role, user?.companyId, user?.depotId],
     queryFn: async () => {
       let data = await fetchGpsVehicles()
       if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
@@ -86,8 +86,8 @@ export default function FuelDispatchPage() {
       }
       return data
     },
-    staleTime: 60 * 1000, 
-    refetchInterval: 5 * 60 * 1000,
+    staleTime: 0, 
+    refetchInterval: 5000,
   });
 
   const isInitialLoading = isDispatchesLoading || isDepotsLoading || isVehiclesLoading;
