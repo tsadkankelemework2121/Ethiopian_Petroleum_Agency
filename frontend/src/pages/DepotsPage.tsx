@@ -3,7 +3,7 @@ import api from '../api/axios'
 import type { Depot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
-import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, MapPinIcon, PhoneIcon, PlusIcon, PencilIcon } from '@heroicons/react/24/outline'
 import EmptyState from '../components/ui/EmptyState'
 import { Skeleton } from '../components/ui/Skeleton'
 import { useAuth } from '../context/AuthContext'
@@ -209,9 +209,9 @@ export default function DepotsPage() {
                           <EnvelopeIcon className="size-3.5 text-text-muted" />
                           <span className="truncate max-w-[150px]">{depot.contacts.email1}</span>
                         </div>
-                        {depot.password && (
+                        {(depot as any).password && (
                           <div className="flex items-center gap-1 text-xs text-text-muted mt-1 font-mono">
-                            Pass: {depot.password}
+                            Pass: {(depot as any).password}
                           </div>
                         )}
                         {depot.contacts.email2 && (

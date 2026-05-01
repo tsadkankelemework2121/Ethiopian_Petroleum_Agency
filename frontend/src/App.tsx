@@ -10,12 +10,14 @@ import SettingsPage from './pages/SettingsPage'
 import TrackingPage from './pages/TrackingPage'
 import TransportersPage from './pages/TransportersPage'
 import LoginPage from './pages/LoginPage'
+import DemoPage from './pages/DemoPage'
 import ProtectedRoute from './components/ProtectedRoute'
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/login" element={<LoginPage />} />
+      <Route path="/login" element={<DemoPage />} />
+      <Route path="/admin-login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<Navigate to="/fuel-dispatch" replace />} />

@@ -67,24 +67,55 @@ export default function TrackingPage() {
     return map;
   }, [depots]);
 
+  const combinedItems = useMemo(() => {
+    const allItems = [...items];
+    const itemNames = new Set(allItems.map(v => v.name));
+    const itemImeis = new Set(allItems.map(v => v.imei));
+    
+    dispatches.forEach((d: any) => {
+      if (d.status !== 'Delivered') {
+        const isExisting = allItems.find(v => v.imei === d.vehicle_id || v.name === d.vehicle_id);
+        if (!isExisting && !itemNames.has(d.vehicle_id) && !itemImeis.has(d.vehicle_id)) {
+           // Add a fallback GPS vehicle for this assigned task so it shows up in the list
+           allItems.push({
+             imei: d.vehicle_id, // Use vehicle_id as a fallback IMEI
+             name: d.vehicle_id,
+             group: d.oil_company_id,
+             status: 'Offline',
+             engine: 'off',
+             speed: '0',
+             lat: '',
+             lng: '',
+             angle: '0',
+             dt_tracker: 'N/A',
+             dt_server: 'N/A',
+             fuel_1: '0',
+             odometer: '0',
+           } as any);
+           itemNames.add(d.vehicle_id);
+        }
+      }
+    });
+    return allItems;
+  }, [items, dispatches]);
+
   const activeDispatchesByVehicle = useMemo(() => {
     const map = new Map<string, any>();
     const sorted = [...dispatches].sort((a, b) => 
       new Date(b.dispatch_datetime).getTime() - new Date(a.dispatch_datetime).getTime()
     );
     
-    // We want to find the GPS vehicle that corresponds to each dispatch
     // Dispatches store either IMEI or Plate Number in 'vehicle_id'
-    sorted.forEach(d => {
+    sorted.forEach((d: any) => {
       if (d.status !== 'Delivered') {
-        const match = items.find(v => v.imei === d.vehicle_id || v.name === d.vehicle_id);
+        const match = combinedItems.find(v => v.imei === d.vehicle_id || v.name === d.vehicle_id);
         if (match && !map.has(match.imei)) {
           map.set(match.imei, d);
         }
       }
     });
     return map;
-  }, [dispatches, items]);
+  }, [dispatches, combinedItems]);
 
   const [isClustered, setIsClustered] = useState(false)
   const [hasFitBounds, setHasFitBounds] = useState(false)
@@ -99,10 +130,14 @@ export default function TrackingPage() {
   const [listSize, setListSize] = useState({ width: 0, height: 0 })
 
   const collapsedRowHeight = 82
-  const expandedRowHeight = 360
-  const expandedDetailsMaxHeight = expandedRowHeight - collapsedRowHeight + 2
-
   const isListLoading = itemsLoading || dispatchesLoading;
+
+  const getItemSize = (index: number) => {
+    const v = fleetListItems[index]
+    if (!v || v.imei !== selectedId) return collapsedRowHeight;
+    const hasDispatch = activeDispatchesByVehicle.has(v.imei);
+    return hasDispatch ? 360 : 250;
+  }
 
   // Define statusTag function first (hoisted with function declaration)
   const statusTag = (v: GpsVehicle): { label: string; color: string } => {
@@ -144,7 +179,7 @@ export default function TrackingPage() {
 
       return searchMatch && statusMatch && assignmentMatch
     })
-  }, [items, deferredSearch, deferredStatus, deferredAssignment, activeDispatchesByVehicle])
+  }, [combinedItems, deferredSearch, deferredStatus, deferredAssignment, activeDispatchesByVehicle])
 
   // Do not slice, show all filtered vehicles
   const fleetListItems = useMemo(() => filtered, [filtered])
@@ -193,7 +228,7 @@ export default function TrackingPage() {
 
   const mapBounds = useMemo(() => {
     // Only consider vehicles with valid coordinates inside Ethiopia
-    const validItems = items.filter((t) => {
+    const validItems = combinedItems.filter((t) => {
       if (!t.lat || !t.lng) return false;
       const lat = Number(t.lat);
       const lng = Number(t.lng);
@@ -222,7 +257,7 @@ export default function TrackingPage() {
     if (minLng === maxLng) { minLng -= 0.01; maxLng += 0.01 }
 
     return [[minLat, minLng], [maxLat, maxLng]] as [[number, number], [number, number]]
-  }, [items])
+  }, [combinedItems])
 
   useEffect(() => {
     if (mapBounds && mapApiRef.current && !hasFitBounds) {
@@ -269,11 +304,7 @@ export default function TrackingPage() {
     return () => ro.disconnect()
   }, [])
 
-  const getItemSize = (index: number) => {
-    const v = fleetListItems[index]
-    return v && v.imei === selectedId ? expandedRowHeight : collapsedRowHeight
-  }
-
+  // Row height is handled dynamically in `getItemSize`
   type RowData = {
     items: GpsVehicle[]
     selectedId: string | undefined
@@ -326,7 +357,7 @@ export default function TrackingPage() {
         </button>
 
         {isSelected && (
-          <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50" style={{ maxHeight: expandedDetailsMaxHeight, overflowY: 'auto' }}>
+          <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50" style={{ maxHeight: (dispatch ? 360 : 250) - collapsedRowHeight + 2, overflowY: 'auto' }}>
             <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate">{v.name}</div>
             <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
               <div className="rounded border bg-white p-2 shadow-sm">
@@ -401,7 +432,7 @@ export default function TrackingPage() {
         selectedMarkerId={selectedId}
         onMarkerSelect={(id) => {
           setSelectedId(id)
-          const v = items.find((x) => x.imei === id)
+          const v = combinedItems.find((x) => x.imei === id)
           if (v) handleSelectVehicle(v)
         }}
         onMapReady={(api) => {
@@ -505,7 +536,7 @@ export default function TrackingPage() {
 
         <div className="px-5 py-3 border-t border-[#EEF2F7] flex items-center justify-between text-[11px] text-slate-500">
           <span>
-            SHOWING {fleetListItems.length} OF {items.length}
+            SHOWING {fleetListItems.length} OF {combinedItems.length}
           </span>
           <button type="button" className="font-semibold" style={{ color: COLORS.blue }}>
             VIEW ALL

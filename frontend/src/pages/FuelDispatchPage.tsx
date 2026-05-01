@@ -111,7 +111,7 @@ export default function FuelDispatchPage() {
   const statusTag = (v?: GpsVehicle) => {
     if (!v) return null;
     const status = v.status.toLowerCase()
-    if (status.includes('offline')) return { label: 'OFFLINE', color: '#cbd5e1' }
+    if (status.includes('offline') || status.includes('signal')) return { label: 'OFFLINE', color: '#cbd5e1' }
     if (status.includes('alert')) return { label: 'ALERT', color: '#ef4444' }
     if (status.includes('idle') || (Number.isFinite(Number(v.speed)) && Number(v.speed) === 0 && v.engine === 'on')) {
       return { label: 'IDLE', color: '#f59f0a' }
@@ -239,7 +239,7 @@ export default function FuelDispatchPage() {
                           id: gpsVehicle.imei,
                           position: { lat, lng },
                           label: gpsVehicle.name,
-                          status: trackingTask?.status || 'On transit',
+                          status: gpsVehicle.status || trackingTask?.status || 'On transit',
                           color: trackingTask?.status === 'Delivered' ? '#22c55e' : '#1c8547'
                         }
                       ]}
@@ -291,7 +291,17 @@ export default function FuelDispatchPage() {
               <div><span className="font-semibold text-slate-500">Confirmed At:</span><br/>{new Date(viewConfirmation.confirmation.confirmed_at).toLocaleString()}</div>
               <div><span className="font-semibold text-slate-500">Confirmed By:</span><br/>{viewConfirmation.confirmation.confirmed_by_user?.name || 'N/A'}</div>
               {viewConfirmation.confirmation.latitude && (
-                <div><span className="font-semibold text-slate-500">Location:</span><br/>{viewConfirmation.confirmation.latitude}, {viewConfirmation.confirmation.longitude}</div>
+                <div>
+                  <span className="font-semibold text-slate-500">Location:</span><br/>
+                  <a 
+                    href={`https://www.google.com/maps?q=${viewConfirmation.confirmation.latitude},${viewConfirmation.confirmation.longitude}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  >
+                    {viewConfirmation.confirmation.latitude}, {viewConfirmation.confirmation.longitude}
+                  </a>
+                </div>
               )}
               {viewConfirmation.confirmation.vehicle_status && (
                 <div><span className="font-semibold text-slate-500">Vehicle Status:</span><br/>{viewConfirmation.confirmation.vehicle_status}</div>
