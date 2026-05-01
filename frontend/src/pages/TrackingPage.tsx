@@ -44,12 +44,29 @@ export default function TrackingPage() {
 
   // Fetch Dispatches
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery({
-    queryKey: ['dispatches-tracking'],
+    queryKey: ['dispatches', user?.role, user?.companyId, user?.depotId],
     queryFn: async () => {
-      const res = await api.get('/dispatches');
-      return res.data;
+      const res = await api.get('/dispatches', { 
+        params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {} 
+      });
+      return res.data?.map((d: any) => ({
+        peaDispatchNo: d.pea_dispatch_no,
+        oilCompanyId: d.oil_company_id,
+        transporterId: d.transporter_id,
+        vehicleId: d.vehicle_id,
+        dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
+        dispatchLocation: d.dispatch_location,
+        destinationDepotId: d.destination_depot_id?.toString() || '',
+        etaDateTime: d.eta_datetime?.replace(' ', 'T'),
+        dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+        fuelType: d.fuel_type,
+        dispatchedLiters: Number(d.dispatched_liters || 0),
+        status: d.status,
+        confirmation: d.confirmation || null,
+      })) || [];
     },
-    refetchInterval: 30000,
+    staleTime: 0,
+    refetchInterval: 5000,
   });
 
   // Fetch Depots for names
@@ -69,18 +86,20 @@ export default function TrackingPage() {
 
   const combinedItems = useMemo(() => {
     const allItems = [...items];
-    const itemNames = new Set(allItems.map(v => v.name));
-    const itemImeis = new Set(allItems.map(v => v.imei));
+    const itemNames = new Set(allItems.map(v => String(v.name).trim()));
+    const itemImeis = new Set(allItems.map(v => String(v.imei).trim()));
     
     dispatches.forEach((d: any) => {
-      if (d.status !== 'Delivered') {
-        const isExisting = allItems.find(v => v.imei === d.vehicle_id || v.name === d.vehicle_id);
-        if (!isExisting && !itemNames.has(d.vehicle_id) && !itemImeis.has(d.vehicle_id)) {
+      if (d.status && d.status.toLowerCase() !== 'delivered') {
+        const dVehicleId = String(d.vehicleId).trim();
+        const isExisting = allItems.find(v => String(v.imei).trim() === dVehicleId || String(v.name).trim() === dVehicleId);
+        
+        if (!isExisting && !itemNames.has(dVehicleId) && !itemImeis.has(dVehicleId)) {
            // Add a fallback GPS vehicle for this assigned task so it shows up in the list
            allItems.push({
-             imei: d.vehicle_id, // Use vehicle_id as a fallback IMEI
-             name: d.vehicle_id,
-             group: d.oil_company_id,
+             imei: dVehicleId, // Use vehicleId as a fallback IMEI
+             name: dVehicleId,
+             group: d.oilCompanyId,
              status: 'Offline',
              engine: 'off',
              speed: '0',
@@ -92,7 +111,7 @@ export default function TrackingPage() {
              fuel_1: '0',
              odometer: '0',
            } as any);
-           itemNames.add(d.vehicle_id);
+           itemNames.add(dVehicleId);
         }
       }
     });
@@ -101,14 +120,17 @@ export default function TrackingPage() {
 
   const activeDispatchesByVehicle = useMemo(() => {
     const map = new Map<string, any>();
-    const sorted = [...dispatches].sort((a, b) => 
-      new Date(b.dispatch_datetime).getTime() - new Date(a.dispatch_datetime).getTime()
-    );
+    const sorted = [...dispatches].sort((a, b) => {
+      const timeA = a.dispatchDateTime ? new Date(a.dispatchDateTime).getTime() : 0;
+      const timeB = b.dispatchDateTime ? new Date(b.dispatchDateTime).getTime() : 0;
+      return timeB - timeA;
+    });
     
-    // Dispatches store either IMEI or Plate Number in 'vehicle_id'
+    // Dispatches store either IMEI or Plate Number in 'vehicleId'
     sorted.forEach((d: any) => {
-      if (d.status !== 'Delivered') {
-        const match = combinedItems.find(v => v.imei === d.vehicle_id || v.name === d.vehicle_id);
+      if (d.status && d.status.toLowerCase() !== 'delivered') {
+        const dVehicleId = String(d.vehicleId).trim();
+        const match = combinedItems.find(v => String(v.imei).trim() === dVehicleId || String(v.name).trim() === dVehicleId);
         if (match && !map.has(match.imei)) {
           map.set(match.imei, d);
         }
@@ -141,10 +163,10 @@ export default function TrackingPage() {
 
   // Define statusTag function first (hoisted with function declaration)
   const statusTag = (v: GpsVehicle): { label: string; color: string } => {
-    const status = v.status.toLowerCase()
+    const status = String(v.status || '').toLowerCase()
 
     // Map exact raw status to the color tag but preserve the exact status for display elsewhere
-    if (status.includes('offline')) return { label: 'OFFLINE', color: COLORS.gray }
+    if (status.includes('offline') || status.includes('signal')) return { label: 'OFFLINE', color: COLORS.gray }
     if (status.includes('alert')) return { label: 'ALERT', color: '#ef4444' }
     if (status.includes('idle') || (Number.isFinite(Number(v.speed)) && Number(v.speed) === 0 && v.engine === 'on')) {
       return { label: 'IDLE', color: COLORS.gold }
