@@ -209,7 +209,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
+    <div className="pb-12">
       <div className="grid gap-4 md:grid-cols-12">
         {/* KPIs */}
         <div className="md:col-span-12 min-w-0">
