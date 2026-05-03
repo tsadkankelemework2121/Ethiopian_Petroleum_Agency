@@ -126,8 +126,8 @@ export default function DashboardPage() {
     const depotsById = new Map(depots.map(d => [d.id, d]));
 
     const ALL_REGIONS = [
-      'Afar', 'Amhara', 'Benishangul-Gumuz', 'Gambela', 'Harari', 
-      'Oromia', 'Sidama', 'Somali', 'South Ethiopia', "Southwest Ethiopia Peoples'", 
+      'Afar', 'Amhara', 'Benishangul', 'Gambela', 'Harari', 
+      'Oromia', 'Sidama', 'Somali', 'South Eth.', 'SW Ethiopia', 
       'Tigray', 'Addis Ababa', 'Dire Dawa'
     ];
 
@@ -143,7 +143,13 @@ export default function DashboardPage() {
       const depot = depotsById.get(d.destinationDepotId);
       if (!depot) return;
 
-      const region = depot.location.region || 'Unknown';
+      let region = depot.location.region || 'Unknown';
+      
+      // Map long names from DB to short names
+      if (region === 'Benishangul-Gumuz') region = 'Benishangul';
+      else if (region === 'South Ethiopia') region = 'South Eth.';
+      else if (region === "Southwest Ethiopia Peoples'") region = 'SW Ethiopia';
+
       if (!regionMap.has(region)) {
         regionMap.set(region, { region, benzineM3: 0, dieselM3: 0, jetFuelM3: 0 });
       }

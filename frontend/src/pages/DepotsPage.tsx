@@ -366,8 +366,8 @@ function DepotForm({ onClose, onSubmit, companyId, editingDepot }: {
           >
             <option value="">Select region...</option>
             {[
-              'Afar', 'Amhara', 'Benishangul-Gumuz', 'Gambela', 'Harari', 
-              'Oromia', 'Sidama', 'Somali', 'South Ethiopia', "Southwest Ethiopia Peoples'", 
+              'Afar', 'Amhara', 'Benishangul', 'Gambela', 'Harari', 
+              'Oromia', 'Sidama', 'Somali', 'South Eth.', 'SW Ethiopia', 
               'Tigray', 'Addis Ababa', 'Dire Dawa'
             ].map(r => (
               <option key={r} value={r}>{r}</option>
