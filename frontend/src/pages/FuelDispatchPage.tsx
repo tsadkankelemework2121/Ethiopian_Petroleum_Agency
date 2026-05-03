@@ -572,7 +572,11 @@ function DispatchForm({
   // Update available depots dynamically 
   const availableDepots = useMemo(() => {
     if (!formData.oilCompanyId) return []
-    return depots.filter(d => d.oilCompanyId === formData.oilCompanyId)
+    const targetId = formData.oilCompanyId.trim().toLowerCase()
+    return depots.filter(d => {
+      const depotCompanyId = d.oilCompanyId || (d as any).oil_company_id
+      return depotCompanyId?.trim().toLowerCase() === targetId
+    })
   }, [formData.oilCompanyId, depots])
 
   // Auto-fill transporter when vehicle changes
