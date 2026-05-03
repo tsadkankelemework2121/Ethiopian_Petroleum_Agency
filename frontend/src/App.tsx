@@ -12,6 +12,15 @@ import TransportersPage from './pages/TransportersPage'
 import LoginPage from './pages/LoginPage'
 import DemoPage from './pages/DemoPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import { useAuth } from './context/AuthContext'
+
+function IndexRoute() {
+  const { user } = useAuth()
+  if (user?.role === 'DEPOT_ADMIN') {
+    return <Navigate to="/fuel-dispatch" replace />
+  }
+  return <Navigate to="/dashboard" replace />
+}
 
 export default function App() {
   return (
@@ -20,7 +29,7 @@ export default function App() {
       <Route path="/admin-login" element={<LoginPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route index element={<IndexRoute />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/tracking" element={<TrackingPage />} />
           <Route path="/fuel-dispatch" element={<FuelDispatchPage />} />
