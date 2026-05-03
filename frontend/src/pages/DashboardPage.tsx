@@ -125,12 +125,15 @@ export default function DashboardPage() {
     const regionMap = new Map<string, { region: string, benzineM3: number, dieselM3: number, jetFuelM3: number }>();
     const depotsById = new Map(depots.map(d => [d.id, d]));
 
+    const ALL_REGIONS = [
+      'Afar', 'Amhara', 'Benishangul-Gumuz', 'Gambela', 'Harari', 
+      'Oromia', 'Sidama', 'Somali', 'South Ethiopia', "Southwest Ethiopia Peoples'", 
+      'Tigray', 'Addis Ababa', 'Dire Dawa'
+    ];
+
     // Pre-populate with all known regions
-    depots.forEach(d => {
-      const region = d.location.region || 'Unknown';
-      if (!regionMap.has(region)) {
-        regionMap.set(region, { region, benzineM3: 0, dieselM3: 0, jetFuelM3: 0 });
-      }
+    ALL_REGIONS.forEach(region => {
+      regionMap.set(region, { region, benzineM3: 0, dieselM3: 0, jetFuelM3: 0 });
     });
 
     dispatches.forEach(d => {

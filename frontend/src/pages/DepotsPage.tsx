@@ -358,14 +358,21 @@ function DepotForm({ onClose, onSubmit, companyId, editingDepot }: {
         </div>
         <div>
           <label className="block text-sm font-semibold text-text mb-1">Region *</label>
-          <input
-            type="text"
+          <select
             required
-            placeholder="Enter region"
             value={formData.region}
             onChange={(e) => setFormData({ ...formData, region: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
-          />
+          >
+            <option value="">Select region...</option>
+            {[
+              'Afar', 'Amhara', 'Benishangul-Gumuz', 'Gambela', 'Harari', 
+              'Oromia', 'Sidama', 'Somali', 'South Ethiopia', "Southwest Ethiopia Peoples'", 
+              'Tigray', 'Addis Ababa', 'Dire Dawa'
+            ].map(r => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-semibold text-text mb-1">City *</label>
