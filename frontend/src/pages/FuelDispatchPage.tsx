@@ -444,8 +444,8 @@ export default function FuelDispatchPage() {
                             </button>
                           )}
 
-                          {/* Confirm Receipt - for DEPOT_ADMIN or OIL_COMPANY */}
-                          {(isDepotAdmin || user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') && t.status !== 'Delivered' && (
+                          {/* Confirm Receipt - for DEPOT_ADMIN */}
+                          {isDepotAdmin && t.status !== 'Delivered' && (
                              <button
                                type="button"
                                disabled={!isEtaDayReached(t.etaDateTime)}
@@ -866,6 +866,12 @@ function ConfirmReceiptForm({ peaDispatchNo, vehicleId, vehicles, onClose, onSuc
       <p className="text-sm text-slate-500">
         Upload a photo of the delivery to confirm receipt.
       </p>
+
+      {/* Show Plate Number */}
+      <div className="flex items-center gap-2 text-sm bg-slate-50 p-3 rounded-lg border border-slate-200">
+        <span className="font-semibold text-slate-700">Vehicle Plate:</span>
+        <span className="text-slate-900 font-bold">{vehicle ? vehicle.name : vehicleId}</span>
+      </div>
 
       {/* Image Upload */}
       <div

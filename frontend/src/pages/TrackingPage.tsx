@@ -156,9 +156,14 @@ export default function TrackingPage() {
 
   const getItemSize = (index: number) => {
     const v = fleetListItems[index]
-    if (!v || v.imei !== selectedId) return collapsedRowHeight;
+    if (!v) return 52;
     const hasDispatch = activeDispatchesByVehicle.has(v.imei);
-    return hasDispatch ? 360 : 250;
+    const isSelected = v.imei === selectedId;
+    
+    if (isSelected) {
+      return hasDispatch ? 360 : 250;
+    }
+    return hasDispatch ? 68 : 52;
   }
 
   // Define statusTag function first (hoisted with function declaration)
@@ -342,12 +347,15 @@ export default function TrackingPage() {
     const isSelected = v.imei === rowSelectedId
     const dispatch = activeDispatchesByVehicle.get(v.imei)
 
+    const collapsedHeight = dispatch ? 68 : 52;
+    const expandedHeight = dispatch ? 360 : 250;
+
     return (
       <div style={style} className="border-b border-[#EEF2F7]">
         <button
           type="button"
           onClick={() => onSelect(v)}
-          className="w-full px-5 py-4 text-left hover:bg-slate-50 transition"
+          className="w-full px-4 py-3 text-left hover:bg-slate-50 transition"
           style={isSelected ? { backgroundColor: 'rgba(28,133,71,0.08)' } : undefined}
         >
           <div className="flex items-center justify-between gap-3">
@@ -364,7 +372,7 @@ export default function TrackingPage() {
             </div>
             <div className="flex flex-col items-end gap-1">
               <span
-                className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold whitespace-nowrap"
+                className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap"
                 style={{ backgroundColor: `${tag.color}1A`, color: tag.color }}
               >
                 {v.status}
@@ -379,7 +387,7 @@ export default function TrackingPage() {
         </button>
 
         {isSelected && (
-          <div className="px-5 pb-4 pt-1 animate-fade-in-up bg-slate-50/50" style={{ maxHeight: (dispatch ? 360 : 250) - collapsedRowHeight + 2, overflowY: 'auto' }}>
+          <div className="px-4 pb-3 pt-1 animate-fade-in-up bg-slate-50/50" style={{ maxHeight: expandedHeight - collapsedHeight + 2, overflowY: 'auto' }}>
             <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate">{v.name}</div>
             <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
               <div className="rounded border bg-white p-2 shadow-sm">
@@ -419,19 +427,19 @@ export default function TrackingPage() {
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-[11px]">
                   <div>
                     <div className="text-slate-500 text-[9px]">Destination</div>
-                    <div className="font-semibold text-slate-900">{depotsById.get(dispatch.destination_depot_id?.toString())?.name || '—'}</div>
+                    <div className="font-semibold text-slate-900">{depotsById.get(dispatch.destinationDepotId?.toString())?.name || '—'}</div>
                   </div>
                   <div>
                     <div className="text-slate-500 text-[9px]">Fuel Type</div>
-                    <div className="font-semibold text-slate-900">{dispatch.fuel_type}</div>
+                    <div className="font-semibold text-slate-900">{dispatch.fuelType}</div>
                   </div>
                   <div>
                     <div className="text-slate-500 text-[9px]">Liters</div>
-                    <div className="font-semibold text-slate-900">{Number(dispatch.dispatched_liters).toLocaleString()} L</div>
+                    <div className="font-semibold text-slate-900">{Number(dispatch.dispatchedLiters).toLocaleString()} L</div>
                   </div>
                   <div>
                     <div className="text-slate-500 text-[9px]">ETA</div>
-                    <div className="font-semibold text-slate-900">{dispatch.eta_datetime?.split(' ')[0]}</div>
+                    <div className="font-semibold text-slate-900">{dispatch.etaDateTime?.split('T')[0]}</div>
                   </div>
                 </div>
               </div>
