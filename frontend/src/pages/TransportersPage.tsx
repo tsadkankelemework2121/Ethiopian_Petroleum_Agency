@@ -48,6 +48,7 @@ function TransporterSkeleton() {
 
 function TransporterCard({ t, onAddTruck, userRole }: { t: Transporter, onAddTruck: (tId: string) => void, userRole: string }) {
   const [search, setSearch] = useState('')
+  const [expandedVehicle, setExpandedVehicle] = useState<string | null>(null)
 
   const filteredVehicles = t.vehicles.filter(v => 
     v.plateRegNo.toLowerCase().includes(search.toLowerCase()) || 
@@ -113,23 +114,18 @@ function TransporterCard({ t, onAddTruck, userRole }: { t: Transporter, onAddTru
       </div>
 
       <div className="flex-1 overflow-auto min-h-0 bg-slate-50/30 rounded-b-xl">
-        <table className="min-w-[500px] w-full text-left text-sm relative">
+        {/* Desktop Table */}
+        <table className="hidden md:table w-full text-left text-sm relative">
           <thead className="bg-muted text-xs text-text-muted sticky top-0 z-10 shadow-sm">
             <tr>
               {['Plate', 'Trailer', 'Side', 'Driver'].map((h) => (
-                <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold border-b border-[#D1D5DB]">
-                  {h}
-                </th>
+                <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold border-b border-[#D1D5DB]">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-[#D1D5DB]">
             {filteredVehicles.length === 0 ? (
-              <tr>
-                <td colSpan={4} className="px-4 py-8 text-center text-text-muted text-xs">
-                  No vehicles found matching your search.
-                </td>
-              </tr>
+              <tr><td colSpan={4} className="px-4 py-8 text-center text-text-muted text-xs">No vehicles found.</td></tr>
             ) : (
               filteredVehicles.map((v) => (
                 <tr key={v.id} className="hover:bg-white transition-colors">
@@ -142,6 +138,34 @@ function TransporterCard({ t, onAddTruck, userRole }: { t: Transporter, onAddTru
             )}
           </tbody>
         </table>
+        {/* Mobile Cards */}
+        <div className="md:hidden divide-y divide-[#D1D5DB]">
+          {filteredVehicles.length === 0 ? (
+            <div className="px-4 py-8 text-center text-text-muted text-xs">No vehicles found.</div>
+          ) : (
+            filteredVehicles.map((v) => (
+              <div
+                key={v.id}
+                onClick={() => setExpandedVehicle(expandedVehicle === v.id ? null : v.id)}
+                className="p-3 cursor-pointer active:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-text truncate">{v.plateRegNo}</div>
+                    <div className="text-xs text-text-muted mt-0.5">{v.driverName}</div>
+                  </div>
+                  <svg className={`size-4 text-text-muted shrink-0 transition-transform duration-200 ${expandedVehicle === v.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                </div>
+                {expandedVehicle === v.id && (
+                  <div className="mt-2 pt-2 border-t border-[#D1D5DB] grid grid-cols-2 gap-2 text-xs animate-fade-in-up">
+                    <div><span className="text-text-muted">Trailer:</span> <span className="font-medium text-text">{v.trailerRegNo}</span></div>
+                    <div><span className="text-text-muted">Side:</span> <span className="font-medium text-text">{v.sideNo}</span></div>
+                  </div>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
     </div>
   )

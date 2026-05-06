@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
@@ -31,6 +31,7 @@ import {
 export default function DashboardPage() {
   const { user } = useAuth();
   const companyId = user?.companyId
+  const [expandedMobileRow, setExpandedMobileRow] = useState<string | null>(null)
 
   // 1. Fetch Dispatches
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery<DispatchTask[]>({
@@ -277,41 +278,47 @@ export default function DashboardPage() {
                 </span>
               }
             />
-            <CardBody className="h-[360px]">
+            <CardBody className="overflow-x-auto p-4 md:p-6">
               {isLoading ? (
-                <SkeletonChart className="h-full" />
+                <div className="h-[360px] min-w-[700px]">
+                  <SkeletonChart className="h-full" />
+                </div>
               ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={regionalSummary} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
-                    <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
-                    <XAxis
-                      dataKey="region"
-                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
-                      angle={-35}
-                      textAnchor="end"
-                      dy={17}
-                      tickLine={false}
-                      axisLine={false}
-                      height={65}
-                    />
-                    <YAxis
-                      label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
-                      tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        borderRadius: 14,
-                        border: '1px solid rgba(203,213,225,0.9)',
-                        background: 'rgba(255,255,255,0.95)',
-                      }}
-                    />
-                    <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.blue} radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.gold} radius={[8, 8, 0, 0]} />
-                    <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.gray} radius={[8, 8, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-[360px] min-w-[700px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={regionalSummary} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                      <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
+                      <XAxis
+                        dataKey="region"
+                        tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
+                        angle={-35}
+                        textAnchor="end"
+                        dy={17}
+                        tickLine={false}
+                        axisLine={false}
+                        height={80}
+                      />
+                      <YAxis
+                        label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
+                        tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <Tooltip
+                        cursor={{ fill: 'rgba(15,23,42,0.03)' }}
+                        contentStyle={{
+                          borderRadius: 14,
+                          border: '1px solid rgba(203,213,225,0.9)',
+                          background: 'rgba(255,255,255,0.95)',
+                          boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+                        }}
+                      />
+                      <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.blue} radius={[8, 8, 0, 0]} maxBarSize={40} />
+                      <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.gold} radius={[8, 8, 0, 0]} maxBarSize={40} />
+                      <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.gray} radius={[8, 8, 0, 0]} maxBarSize={40} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               )}
             </CardBody>
           </Card>
@@ -452,7 +459,8 @@ export default function DashboardPage() {
         <div className="md:col-span-12 min-w-0">
           <Card>
             <CardHeader title="Recent dispatches" subtitle="Latest dispatch tasks with ETA and status" />
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-190 w-full text-left text-sm">
                 <thead className="sticky top-0 z-10 bg-muted text-xs font-semibold text-text-muted border-b border-[#D1D5DB]">
                   <tr>
@@ -484,6 +492,44 @@ export default function DashboardPage() {
                   ) : null}
                 </tbody>
               </table>
+            </div>
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-[#D1D5DB]">
+              {recentDispatches.map((r) => (
+                <div
+                  key={r.peaDispatchNo}
+                  onClick={() => setExpandedMobileRow(expandedMobileRow === r.peaDispatchNo ? null : r.peaDispatchNo)}
+                  className="p-4 cursor-pointer active:bg-muted/50 transition-colors"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-sm text-text truncate">{r.peaDispatchNo}</div>
+                      <div className="text-xs text-text-muted mt-0.5 truncate">{r.oilCompany}</div>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <StatusPill status={r.status} task={r} />
+                      <svg className={`size-4 text-text-muted transition-transform duration-200 ${expandedMobileRow === r.peaDispatchNo ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                  {expandedMobileRow === r.peaDispatchNo && (
+                    <div className="mt-3 pt-3 border-t border-[#D1D5DB] grid grid-cols-2 gap-3 text-sm animate-fade-in-up">
+                      <div>
+                        <div className="text-[11px] text-text-muted font-medium">Transporter</div>
+                        <div className="font-medium text-text mt-0.5">{r.transporter}</div>
+                      </div>
+                      <div>
+                        <div className="text-[11px] text-text-muted font-medium">ETA</div>
+                        <div className="font-medium text-text mt-0.5">{r.eta}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+              {recentDispatches.length === 0 && (
+                <div className="p-6 text-sm text-text-muted text-center">No dispatch tasks found.</div>
+              )}
             </div>
           </Card>
         </div>

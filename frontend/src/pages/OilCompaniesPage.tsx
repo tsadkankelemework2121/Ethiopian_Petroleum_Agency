@@ -8,6 +8,7 @@ import { ModalOverlay } from '../components/ui/ModelOverlay'
 
 export default function OilCompaniesPage() {
   const [showForm, setShowForm] = useState(false)
+  const [expandedMobileRow, setExpandedMobileRow] = useState<string | null>(null)
 
   const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['gps-vehicles'],
@@ -64,61 +65,121 @@ export default function OilCompaniesPage() {
       </ModalOverlay>
 
       {isLoading ? (
-        <div className="overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
-          <table className="min-w-225 w-full text-left text-sm">
-            <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
-              <tr>
-                {['Company', 'Contact person 1', 'Contact person 2', 'Phone 1', 'Phone 2', 'Email 1', 'Email 2'].map(
-                  (h) => (
-                    <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold uppercase tracking-wider">
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#D1D5DB]">
-              {[1, 2, 3, 4, 5, 6].map((i) => (
-                <tr key={i}>
-                  {Array.from({ length: 7 }).map((_, j) => (
-                    <td key={j} className="px-3 py-4 text-left">
-                      <Skeleton className="h-4 w-full max-w-[120px]" />
-                    </td>
-                  ))}
+        <>
+          {/* Desktop Skeleton */}
+          <div className="hidden md:block rounded-xl border border-[#D1D5DB] bg-white">
+            <table className="min-w-225 w-full text-left text-sm">
+              <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
+                <tr>
+                  {['Company', 'Contact person 1', 'Contact person 2', 'Phone 1', 'Phone 2', 'Email 1', 'Email 2'].map(
+                    (h) => (
+                      <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold uppercase tracking-wider">
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-[#D1D5DB]">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <tr key={i}>
+                    {Array.from({ length: 7 }).map((_, j) => (
+                      <td key={j} className="px-3 py-4 text-left">
+                        <Skeleton className="h-4 w-full max-w-[120px]" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile Skeleton */}
+          <div className="md:hidden space-y-3">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="rounded-xl border border-[#D1D5DB] bg-white p-4">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-3 w-28 mt-2" />
+              </div>
+            ))}
+          </div>
+        </>
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white">
-          <table className="min-w-225 w-full text-left text-sm">
-            <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
-              <tr>
-                {['Company', 'Contact person 1', 'Contact person 2', 'Phone 1', 'Phone 2', 'Email 1', 'Email 2'].map(
-                  (h) => (
-                    <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold">
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-[#D1D5DB]">
-              {companies.map((c) => (
-                <tr key={c.id} className="hover:bg-muted/40">
-                  <td className="whitespace-nowrap px-3 py-3 text-text font-medium">{c.name}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person1 ?? '—'}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person2 ?? '—'}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone1 ?? '—'}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone2 ?? '—'}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email1 ?? '—'}</td>
-                  <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email2 ?? '—'}</td>
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block rounded-xl border border-[#D1D5DB] bg-white">
+            <table className="min-w-225 w-full text-left text-sm">
+              <thead className="bg-muted text-xs text-text-muted border-b border-[#D1D5DB]">
+                <tr>
+                  {['Company', 'Contact person 1', 'Contact person 2', 'Phone 1', 'Phone 2', 'Email 1', 'Email 2'].map(
+                    (h) => (
+                      <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold">
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-[#D1D5DB]">
+                {companies.map((c) => (
+                  <tr key={c.id} className="hover:bg-muted/40">
+                    <td className="whitespace-nowrap px-3 py-3 text-text font-medium">{c.name}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person1 ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.person2 ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone1 ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.phone2 ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email1 ?? '—'}</td>
+                    <td className="whitespace-nowrap px-3 py-3 text-text">{c.contacts.email2 ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile Cards */}
+          <div className="md:hidden space-y-3">
+            {companies.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => setExpandedMobileRow(expandedMobileRow === c.id ? null : c.id)}
+                className="rounded-xl border border-[#D1D5DB] bg-white p-4 cursor-pointer active:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="font-semibold text-sm text-text truncate">{c.name}</div>
+                  <svg className={`size-5 text-text-muted shrink-0 transition-transform duration-200 ${expandedMobileRow === c.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+                {expandedMobileRow === c.id && (
+                  <div className="mt-3 pt-3 border-t border-[#D1D5DB] grid grid-cols-2 gap-3 text-sm animate-fade-in-up">
+                    <div>
+                      <div className="text-[11px] text-text-muted font-medium">Contact Person 1</div>
+                      <div className="font-medium text-text mt-0.5">{c.contacts.person1 ?? '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-text-muted font-medium">Contact Person 2</div>
+                      <div className="font-medium text-text mt-0.5">{c.contacts.person2 ?? '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-text-muted font-medium">Phone 1</div>
+                      <div className="font-medium text-text mt-0.5">{c.contacts.phone1 ?? '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-text-muted font-medium">Phone 2</div>
+                      <div className="font-medium text-text mt-0.5">{c.contacts.phone2 ?? '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-text-muted font-medium">Email 1</div>
+                      <div className="font-medium text-text mt-0.5 break-all">{c.contacts.email1 ?? '—'}</div>
+                    </div>
+                    <div>
+                      <div className="text-[11px] text-text-muted font-medium">Email 2</div>
+                      <div className="font-medium text-text mt-0.5 break-all">{c.contacts.email2 ?? '—'}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   )

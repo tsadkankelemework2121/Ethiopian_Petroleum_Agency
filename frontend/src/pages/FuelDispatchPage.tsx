@@ -23,6 +23,7 @@ export default function FuelDispatchPage() {
   const [viewConfirmation, setViewConfirmation] = useState<any | null>(null)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [expandedDispatchRow, setExpandedDispatchRow] = useState<string | null>(null)
 
   const canAddDispatch = user?.role?.toUpperCase() === 'EPA_ADMIN' || user?.role?.toUpperCase() === 'SUPER_ADMIN'
   const isDepotAdmin = user?.role === 'DEPOT_ADMIN'
@@ -150,15 +151,11 @@ export default function FuelDispatchPage() {
               <Skeleton className="h-10 w-full md:w-72 rounded-lg" />
               <Skeleton className="h-10 w-full md:w-56 rounded-lg" />
             </div>
-            <div className="overflow-x-auto">
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-[1200px] w-full text-left text-sm divide-y divide-[#D1D5DB]">
                 <thead className="bg-muted/50 text-xs text-text-muted">
                   <tr>
-                    {[
-                      'PEA Dispatch No.', 'Oil Company', 'Transporter', 'Vehicle Plate',
-                      'Fuel Type', 'Liters', 'Dispatch Location', 'Destination Depot',
-                      'Dispatch Date', 'ETA', 'Drop-off', 'Event'
-                    ].map((h) => (
+                    {['PEA Dispatch No.', 'Oil Company', 'Transporter', 'Vehicle Plate', 'Fuel Type', 'Liters', 'Dispatch Location', 'Destination Depot', 'Dispatch Date', 'ETA', 'Drop-off', 'Event'].map((h) => (
                       <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold">{h}</th>
                     ))}
                   </tr>
@@ -182,6 +179,17 @@ export default function FuelDispatchPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+            <div className="md:hidden space-y-3 p-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="rounded-xl border border-[#D1D5DB] bg-white p-4">
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                  </div>
+                  <Skeleton className="h-3 w-40 mt-2" />
+                </div>
+              ))}
             </div>
           </CardBody>
         </Card>
@@ -358,32 +366,16 @@ export default function FuelDispatchPage() {
               </div>
             </div>
 
-            <div className="overflow-x-auto">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="min-w-300 w-full text-left text-sm">
                 <thead className="bg-muted/50 text-xs text-text-muted">
                   <tr>
-                    {[
-                      'PEA Dispatch No.',
-                      'Oil Company',
-                      'Transporter',
-                      'Vehicle Plate',
-                      'Fuel Type',
-                      'Liters',
-                      'Dispatch Location',
-                      'Destination Depot',
-                      'Dispatch Date',
-                      'ETA',
-                      'Drop-off',
-                      'Event',
-                      '',
-                    ].map((h) => (
-                      <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold">
-                        {h}
-                      </th>
+                    {['PEA Dispatch No.','Oil Company','Transporter','Vehicle Plate','Fuel Type','Liters','Dispatch Location','Destination Depot','Dispatch Date','ETA','Drop-off','Event',''].map((h) => (
+                      <th key={h} className="whitespace-nowrap px-4 py-3 font-semibold">{h}</th>
                     ))}
                   </tr>
                 </thead>
-
                 <tbody className="divide-y divide-[#D1D5DB]">
                   {filteredTasks.map((t: any) => {
                     const gpsVehicle = vehicles.find(v => v.imei === t.vehicleId || v.name === t.vehicleId)
@@ -391,98 +383,102 @@ export default function FuelDispatchPage() {
                     const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
                     const oilCompany = t.oilCompanyId
                     const vTag = statusTag(gpsVehicle)
-
                     return (
                       <tr key={t.peaDispatchNo} className="hover:bg-muted/30">
-                        <td className="whitespace-nowrap px-4 py-4 font-semibold">
-                          {t.peaDispatchNo}
-                        </td>
+                        <td className="whitespace-nowrap px-4 py-4 font-semibold">{t.peaDispatchNo}</td>
                         <td className="whitespace-nowrap px-4 py-4">{oilCompany}</td>
                         <td className="whitespace-nowrap px-4 py-4">{t.transporterId || '—'}</td>
                         <td className="whitespace-nowrap px-4 py-4">
                           <div className="flex flex-col items-start gap-1">
                             <span className="font-medium text-slate-800">{vehicle}</span>
-                            {vTag && (
-                              <span 
-                                className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-wider"
-                                style={{ backgroundColor: `${vTag.color}1A`, color: vTag.color }}
-                              >
-                                {vTag.label}
-                              </span>
-                            )}
+                            {vTag && <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-wider" style={{ backgroundColor: `${vTag.color}1A`, color: vTag.color }}>{vTag.label}</span>}
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-4 py-4">{t.fuelType || '—'}</td>
-                        <td className="whitespace-nowrap px-4 py-4">
-                          {(t.dispatchedLiters || 0).toLocaleString()} L
-                        </td>
+                        <td className="whitespace-nowrap px-4 py-4">{(t.dispatchedLiters || 0).toLocaleString()} L</td>
                         <td className="whitespace-nowrap px-4 py-4 text-slate-600">{t.dispatchLocation}</td>
                         <td className="whitespace-nowrap px-4 py-4">{depot}</td>
-                        <td className="whitespace-nowrap px-4 py-4">
-                          {t.dispatchDateTime?.replace('T', ' ').replace('Z', '')}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-4">
-                          {t.etaDateTime?.replace('T', ' ').replace('Z', '')}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-4">
-                          {t.dropOffDateTime
-                            ? t.dropOffDateTime.replace('T', ' ').replace('Z', '')
-                            : '—'}
-                        </td>
-                        <td className="whitespace-nowrap px-4 py-4">
-                          <StatusPill status={t.status} task={t} />
-                        </td>
+                        <td className="whitespace-nowrap px-4 py-4">{t.dispatchDateTime?.replace('T', ' ').replace('Z', '')}</td>
+                        <td className="whitespace-nowrap px-4 py-4">{t.etaDateTime?.replace('T', ' ').replace('Z', '')}</td>
+                        <td className="whitespace-nowrap px-4 py-4">{t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'}</td>
+                        <td className="whitespace-nowrap px-4 py-4"><StatusPill status={t.status} task={t} /></td>
                         <td className="whitespace-nowrap px-4 py-4 text-right space-x-2">
                           {!isDepotAdmin && (
-                            <button
-                              type="button"
-                              onClick={() => setTrackingTask(t)}
-                              title="Follow Map"
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
-                            >
-                              <MapPinIcon className="size-3.5" />
-                            </button>
+                            <button type="button" onClick={() => setTrackingTask(t)} title="Follow Map" className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"><MapPinIcon className="size-3.5" /></button>
                           )}
-
-                          {/* Confirm Receipt - for DEPOT_ADMIN */}
                           {isDepotAdmin && t.status !== 'Delivered' && (
-                             <button
-                               type="button"
-                               disabled={!isEtaDayReached(t.etaDateTime)}
-                               onClick={() => setConfirmTask(t)}
-                               className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-40 disabled:cursor-not-allowed"
-                               title={!isEtaDayReached(t.etaDateTime) ? 'Available on ETA date' : 'Confirm delivery'}
-                             >
-                               <CheckCircleIcon className="size-3.5" />
-                               Confirm
-                             </button>
+                            <button type="button" disabled={!isEtaDayReached(t.etaDateTime)} onClick={() => setConfirmTask(t)} className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-40 disabled:cursor-not-allowed" title={!isEtaDayReached(t.etaDateTime) ? 'Available on ETA date' : 'Confirm delivery'}><CheckCircleIcon className="size-3.5" />Confirm</button>
                           )}
-
-                          {/* View Confirmation - for delivered dispatches */}
                           {t.status === 'Delivered' && t.confirmation && (
-                            <button
-                              type="button"
-                              onClick={() => setViewConfirmation(t)}
-                              className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"
-                            >
-                              <EyeIcon className="size-3.5" />
-                              View
-                            </button>
+                            <button type="button" onClick={() => setViewConfirmation(t)} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"><EyeIcon className="size-3.5" />View</button>
                           )}
                         </td>
                       </tr>
                     )
                   })}
-
                   {filteredTasks.length === 0 && (
-                    <tr>
-                      <td colSpan={13} className="px-4 py-6 text-text-muted">
-                        No dispatch records found.
-                      </td>
-                    </tr>
+                    <tr><td colSpan={13} className="px-4 py-6 text-text-muted">No dispatch records found.</td></tr>
                   )}
                 </tbody>
               </table>
+            </div>
+            {/* Mobile Cards */}
+            <div className="md:hidden divide-y divide-[#D1D5DB]">
+              {filteredTasks.map((t: any) => {
+                const gpsVehicle = vehicles.find(v => v.imei === t.vehicleId || v.name === t.vehicleId)
+                const vehicle = gpsVehicle?.name ?? t.vehicleId
+                const depot = depotsById.get(t.destinationDepotId)?.name ?? t.destinationDepotId
+                const oilCompany = t.oilCompanyId
+                return (
+                  <div key={t.peaDispatchNo} className="overflow-hidden">
+                    <div
+                      onClick={() => setExpandedDispatchRow(expandedDispatchRow === t.peaDispatchNo ? null : t.peaDispatchNo)}
+                      className="p-4 cursor-pointer active:bg-muted/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm text-text truncate">{t.peaDispatchNo}</div>
+                          <div className="text-xs text-text-muted mt-0.5 truncate">{oilCompany} • {vehicle}</div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <StatusPill status={t.status} task={t} />
+                          <svg className={`size-4 text-text-muted transition-transform duration-200 ${expandedDispatchRow === t.peaDispatchNo ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </div>
+                      </div>
+                    </div>
+                    {expandedDispatchRow === t.peaDispatchNo && (
+                      <div className="px-4 pb-4 border-t border-[#D1D5DB] pt-3 space-y-3 animate-fade-in-up">
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div><div className="text-[11px] text-text-muted font-medium">Oil Company</div><div className="font-medium text-text mt-0.5">{oilCompany}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Transporter</div><div className="font-medium text-text mt-0.5">{t.transporterId || '—'}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Vehicle Plate</div><div className="font-medium text-text mt-0.5">{vehicle}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Fuel Type</div><div className="font-medium text-text mt-0.5">{t.fuelType || '—'}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Liters</div><div className="font-medium text-text mt-0.5">{(t.dispatchedLiters || 0).toLocaleString()} L</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Dispatch Location</div><div className="font-medium text-text mt-0.5">{t.dispatchLocation}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Destination Depot</div><div className="font-medium text-text mt-0.5">{depot}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Dispatch Date</div><div className="font-medium text-text mt-0.5">{t.dispatchDateTime?.replace('T', ' ').replace('Z', '')}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">ETA</div><div className="font-medium text-text mt-0.5">{t.etaDateTime?.replace('T', ' ').replace('Z', '')}</div></div>
+                          <div><div className="text-[11px] text-text-muted font-medium">Drop-off</div><div className="font-medium text-text mt-0.5">{t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'}</div></div>
+                        </div>
+                        <div className="flex items-center gap-2 pt-2 border-t border-[#D1D5DB]">
+                          {!isDepotAdmin && (
+                            <button type="button" onClick={(e) => { e.stopPropagation(); setTrackingTask(t) }} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"><MapPinIcon className="size-3.5" />Track</button>
+                          )}
+                          {isDepotAdmin && t.status !== 'Delivered' && (
+                            <button type="button" disabled={!isEtaDayReached(t.etaDateTime)} onClick={(e) => { e.stopPropagation(); setConfirmTask(t) }} className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-40 disabled:cursor-not-allowed"><CheckCircleIcon className="size-3.5" />Confirm</button>
+                          )}
+                          {t.status === 'Delivered' && t.confirmation && (
+                            <button type="button" onClick={(e) => { e.stopPropagation(); setViewConfirmation(t) }} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 transition"><EyeIcon className="size-3.5" />View</button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+              {filteredTasks.length === 0 && (
+                <div className="p-6 text-sm text-text-muted">No dispatch records found.</div>
+              )}
             </div>
 
           </CardBody>
@@ -853,9 +849,7 @@ function ConfirmReceiptForm({ peaDispatchNo, vehicleId, vehicles, onClose, onSuc
         fd.append('longitude', vehicle.lng.toString())
       }
       fd.append('vehicle_status', 'Confirmed at depot')
-      await api.post(`/dispatches/${peaDispatchNo}/deliver`, fd, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      await api.post(`/dispatches/${peaDispatchNo}/deliver`, fd)
       onSuccess()
     } catch (err: any) {
       console.error(err)

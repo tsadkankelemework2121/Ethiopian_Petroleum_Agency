@@ -151,7 +151,7 @@ export default function TrackingPage() {
   const listHostRef = useRef<HTMLDivElement | null>(null)
   const [listSize, setListSize] = useState({ width: 0, height: 0 })
 
-  const collapsedRowHeight = 82
+  // const collapsedRowHeight = 82
   const isListLoading = itemsLoading || dispatchesLoading;
 
   const getItemSize = (index: number) => {

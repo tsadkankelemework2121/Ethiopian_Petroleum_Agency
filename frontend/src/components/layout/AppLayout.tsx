@@ -3,7 +3,6 @@ import { useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import logo from "../../assets/logo.png"
 import {
-  BellIcon,
   BuildingOffice2Icon,
   ChartBarSquareIcon,
   ClipboardDocumentListIcon,
@@ -15,11 +14,7 @@ import { cn } from '../../lib/cn'
 
 import profileImg from '../../assets/profile.jpg'
 import { useAuth } from '../../context/AuthContext'
-import type { UserRole, DispatchTask, GpsVehicle } from '../../data/types'
-import { useQuery } from '@tanstack/react-query'
-import api from '../../api/axios'
-import { fetchGpsVehicles } from '../../data/gpsApi'
-import { parseStatusDurationHours, getStatusCategory } from '../../lib/parseGpsDuration'
+import type { UserRole } from '../../data/types'
 
 type NavItem = {
   to: string
@@ -153,67 +148,6 @@ export default function AppLayout() {
   const isTracking = location.pathname === '/tracking'
   const role = user?.role || 'EPA_ADMIN'
 
-  // 1. Fetch Dispatches
-  const { data: dispatches = [] } = useQuery<DispatchTask[]>({
-    queryKey: ['dispatches', user?.role, user?.companyId, user?.depotId],
-    queryFn: () => api.get('/dispatches', { params: user?.companyId ? { oil_company_id: user.companyId } : {} }).then(res => res.data.map((d: any) => ({
-        peaDispatchNo: d.pea_dispatch_no,
-        oilCompanyId: d.oil_company_id,
-        transporterId: d.transporter_id,
-        vehicleId: d.vehicle_id,
-        dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
-        dispatchLocation: d.dispatch_location,
-        destinationDepotId: d.destination_depot_id?.toString() || '',
-        etaDateTime: d.eta_datetime?.replace(' ', 'T'),
-        dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
-        fuelType: d.fuel_type,
-        dispatchedLiters: Number(d.dispatched_liters || 0),
-        status: d.status,
-        confirmation: d.confirmation || null,
-    }))),
-    staleTime: 0,
-    refetchInterval: 5000,
-  });
-
-  // 2. Fetch GPS Vehicles
-  const { data: gpsVehicles = [] } = useQuery<GpsVehicle[]>({
-    queryKey: ['gps-vehicles', user?.role, user?.companyId, user?.depotId],
-    queryFn: async () => {
-      let data = await fetchGpsVehicles()
-      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
-        data = data.filter(v => v.group === user.companyId)
-      }
-      return data
-    },
-    refetchInterval: 5 * 60 * 1000,
-  });
-
-  const alertsCount = useMemo(() => {
-    const now = new Date();
-
-    // GPS offline > 24 hrs
-    const offline = gpsVehicles.filter(v => {
-      const cat = getStatusCategory(v.status)
-      if (cat !== 'offline') return false
-      return parseStatusDurationHours(v.status) > 24
-    }).length;
-
-    const exceeded = dispatches.filter(d => 
-        d.status !== 'Delivered' && 
-        d.etaDateTime && 
-        new Date(d.etaDateTime) < now
-    ).length;
-
-    // Stops > 5 hours
-    const stopped = gpsVehicles.filter(v => {
-      const cat = getStatusCategory(v.status)
-      if (cat !== 'stopped') return false
-      return parseStatusDurationHours(v.status) > 5
-    }).length;
-
-    return offline + exceeded + stopped;
-  }, [dispatches, gpsVehicles]);
-
   return (
     <div className="h-full bg-bg">
       <div className="flex h-full">
@@ -275,19 +209,6 @@ export default function AppLayout() {
 
               <div className="flex items-center gap-4">
 
-                {/* Alerts */}
-                <button
-                  onClick={() => navigate('/fuel-dispatch')}
-                  className="relative p-2 rounded-lg border"
-                >
-                  <BellIcon className="size-5" />
-
-                  {alertsCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                      {alertsCount > 99 ? '99+' : alertsCount}
-                    </span>
-                  )}
-                </button>
 
                 {/* Profile Dropdown */}
                 <div className="relative group text-left">

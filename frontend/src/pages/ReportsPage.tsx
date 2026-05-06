@@ -36,6 +36,7 @@ export default function ReportsPage() {
 
   const [filterType, setFilterType] = useState<FilterType>('dispatch')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [expandedReportRow, setExpandedReportRow] = useState<number | null>(null)
 
   const [query, setQuery] = useState('')
   const [from, setFrom] = useState('')
@@ -346,46 +347,79 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="mt-4 overflow-x-auto rounded-xl border border-[#D1D5DB] bg-white min-h-[300px]">
+      <div className="mt-4 rounded-xl border border-[#D1D5DB] bg-white min-h-[300px]">
         {isLoading ? (
             <div className="p-8 flex items-center justify-center">
                  <div className="size-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
             </div>
         ) : (
-        <table className="min-w-[980px] w-full text-left text-sm">
-          <thead className="bg-muted/50 text-xs text-text-muted">
-            <tr>
-              {result.columns.map((h) => (
-                <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold">
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-[#D1D5DB]">
-            {result.rows.map((row, idx) => (
-              <tr key={idx} className="hover:bg-muted/40">
-                {row.cells.map((cell, cellIdx) => (
-                  <td key={cellIdx} className="whitespace-nowrap px-3 py-3 text-text">
-                    {cell}
-                  </td>
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="min-w-[980px] w-full text-left text-sm">
+              <thead className="bg-muted/50 text-xs text-text-muted">
+                <tr>
+                  {result.columns.map((h) => (
+                    <th key={h} className="whitespace-nowrap px-3 py-3 font-semibold">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#D1D5DB]">
+                {result.rows.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-muted/40">
+                    {row.cells.map((cell, cellIdx) => (
+                      <td key={cellIdx} className="whitespace-nowrap px-3 py-3 text-text">{cell}</td>
+                    ))}
+                    <td className="whitespace-nowrap px-3 py-3">
+                      <StatusPill status={row.task.status} task={row.task as DispatchTask} />
+                    </td>
+                  </tr>
                 ))}
-                <td className="whitespace-nowrap px-3 py-3">
-                   {/* Typecasting for mock/real status logic */}
-                  <StatusPill status={row.task.status} task={row.task as DispatchTask} />
-                </td>
-              </tr>
+                {result.rows.length === 0 && (
+                  <tr><td className="px-3 py-6 text-sm text-text-muted text-center" colSpan={result.columns.length || 7}>No results for the selected filters.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* Mobile Cards */}
+          <div className="md:hidden divide-y divide-[#D1D5DB]">
+            {result.rows.map((row, idx) => (
+              <div
+                key={idx}
+                onClick={() => setExpandedReportRow(expandedReportRow === idx ? null : idx)}
+                className="p-4 cursor-pointer active:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="font-semibold text-sm text-text truncate">{row.cells[0]}</div>
+                    <div className="text-xs text-text-muted mt-0.5 truncate">{row.cells[1]}</div>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <StatusPill status={row.task.status} task={row.task as DispatchTask} />
+                    <svg className={`size-4 text-text-muted transition-transform duration-200 ${expandedReportRow === idx ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                  </div>
+                </div>
+                {expandedReportRow === idx && (
+                  <div className="mt-3 pt-3 border-t border-[#D1D5DB] grid grid-cols-2 gap-3 text-sm animate-fade-in-up">
+                    {result.columns.slice(2).map((col, ci) => {
+                      const cellVal = row.cells[ci + 2]
+                      if (cellVal === undefined) return null
+                      return (
+                        <div key={col}>
+                          <div className="text-[11px] text-text-muted font-medium">{col}</div>
+                          <div className="font-medium text-text mt-0.5 break-all">{cellVal}</div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             ))}
-
-            {result.rows.length === 0 ? (
-              <tr>
-                <td className="px-3 py-6 text-sm text-text-muted text-center" colSpan={result.columns.length || 7}>
-                  No results for the selected filters.
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
+            {result.rows.length === 0 && (
+              <div className="p-6 text-sm text-text-muted text-center">No results for the selected filters.</div>
+            )}
+          </div>
+        </>
         )}
       </div>
 

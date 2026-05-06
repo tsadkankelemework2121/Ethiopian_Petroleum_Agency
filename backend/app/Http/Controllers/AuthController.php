@@ -24,9 +24,7 @@ class AuthController extends Controller
             ]);
         }
 
-        // Revoke all existing tokens for the user
-        $user->tokens()->delete();
-
+        // Create a new token (keep existing sessions alive for multi-device support)
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -58,8 +56,8 @@ class AuthController extends Controller
 
     public function logout(Request $request)
     {
-        // Revoke ALL tokens for the user
-        $request->user()->tokens()->delete();
+        // Revoke only the current token (not all devices)
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logged out successfully']);
     }
