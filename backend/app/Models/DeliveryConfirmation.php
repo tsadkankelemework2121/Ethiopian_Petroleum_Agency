@@ -21,6 +21,25 @@ class DeliveryConfirmation extends Model
         'confirmed_at' => 'datetime',
     ];
 
+    protected $appends = ['image_url'];
+
+    public function getImageUrlAttribute()
+    {
+        if ($this->image_path) {
+            
+            try {
+                $base = request()->getSchemeAndHttpHost();
+              
+                $scriptName = request()->server('SCRIPT_NAME', '');
+                $basePath = str_replace('/index.php', '', $scriptName);
+                return $base . $basePath . '/storage/' . $this->image_path;
+            } catch (\Exception $e) {
+                return url('storage/' . $this->image_path);
+            }
+        }
+        return null;
+    }
+
     public function dispatch()
     {
         return $this->belongsTo(Dispatch::class);

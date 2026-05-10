@@ -66,7 +66,7 @@ export default function TrackingPage() {
       })) || [];
     },
     staleTime: 0,
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   // Fetch Depots for names

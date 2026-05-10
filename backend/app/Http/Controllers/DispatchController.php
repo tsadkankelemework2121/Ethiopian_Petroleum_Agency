@@ -5,16 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\Dispatch;
 use App\Models\DeliveryConfirmation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DispatchController extends Controller
 {
     public function index(Request $request)
     {
         $user = $request->user();
-        $role = strtoupper($user->role);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+        $role = strtoupper($user->role ?? '');
 
         if ($role === 'DEPOT_ADMIN') {
-            // Depot admin only sees dispatches targeting their depot
             $dispatches = Dispatch::where('destination_depot_id', $user->depot_id)
                 ->with(['depot', 'confirmation.confirmedByUser'])
                 ->get();
@@ -39,7 +42,10 @@ class DispatchController extends Controller
     public function store(Request $request)
     {
         $user = $request->user();
-        $role = strtoupper($user->role);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+        $role = strtoupper($user->role ?? '');
         if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
             return response()->json(['message' => 'Forbidden'], 403);
         }
@@ -57,7 +63,7 @@ class DispatchController extends Controller
             'dispatched_liters' => 'required|numeric',
         ]);
 
-        // Auto-generate Dispatch No: PEA-YYYY-0001
+       
         $year = date('Y');
         $lastDispatch = Dispatch::where('pea_dispatch_no', 'like', "PEA-$year-%")
             ->orderBy('pea_dispatch_no', 'desc')
@@ -79,19 +85,42 @@ class DispatchController extends Controller
     public function markAsDelivered(Request $request, Dispatch $dispatch)
     {
         $user = $request->user();
-        $role = strtoupper($user->role);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated - no user found'], 401);
+        }
 
-        // DEPOT_ADMIN can only confirm dispatches targeting their depot
+        $role = strtoupper($user->role ?? '');
+
+        Log::info('markAsDelivered attempt', [
+            'user_id' => $user->id,
+            'user_role' => $user->role,
+            'role_upper' => $role,
+            'dispatch_id' => $dispatch->id,
+            'dispatch_pea_no' => $dispatch->pea_dispatch_no,
+            'dispatch_depot_id' => $dispatch->destination_depot_id,
+            'user_depot_id' => $user->depot_id,
+        ]);
+
+ 
         if ($role === 'DEPOT_ADMIN') {
-            if ($dispatch->destination_depot_id != $user->depot_id) {
-                return response()->json(['message' => 'Forbidden: This dispatch is not for your depot'], 403);
+            if ((int)$dispatch->destination_depot_id !== (int)$user->depot_id) {
+                return response()->json([
+                    'message' => 'Forbidden: This dispatch is not for your depot',
+                    'debug' => [
+                        'dispatch_depot' => $dispatch->destination_depot_id,
+                        'user_depot' => $user->depot_id,
+                    ]
+                ], 403);
             }
         } elseif ($role === 'OIL_COMPANY' || $role === 'OIL_COMPANY_ADMIN') {
             if ($dispatch->oil_company_id !== $user->company_id) {
                 return response()->json(['message' => 'Forbidden: This dispatch belongs to another company'], 403);
             }
         } elseif ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
-            return response()->json(['message' => 'Forbidden'], 403);
+            return response()->json([
+                'message' => 'Forbidden: Your role does not have permission',
+                'debug' => ['role' => $user->role, 'role_upper' => $role]
+            ], 403);
         }
 
         // Validate image upload and location data
@@ -134,7 +163,10 @@ class DispatchController extends Controller
     public function update(Request $request, Dispatch $dispatch)
     {
         $user = $request->user();
-        $role = strtoupper($user->role);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthenticated'], 401);
+        }
+        $role = strtoupper($user->role ?? '');
         if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
             return response()->json(['message' => 'Forbidden'], 403);
         }

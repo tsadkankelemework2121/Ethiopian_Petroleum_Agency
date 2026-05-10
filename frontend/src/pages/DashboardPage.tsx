@@ -52,7 +52,7 @@ export default function DashboardPage() {
       confirmation: d.confirmation || null,
     }))),
     staleTime: 0,
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   // 2. Fetch Depots

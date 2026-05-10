@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import truckImage from '../assets/truck.png';
 import logo from '../assets/logo.png';
@@ -10,6 +10,7 @@ const DemoPage = () => {
   const [errorMsg, setErrorMsg] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async (credentials: {email: string, password: string}) => {
@@ -17,7 +18,9 @@ const DemoPage = () => {
       return response.data;
     },
     onSuccess: (data) => {
-      // data contains { token, user: {id, name, email, role, company_id} }
+      
+      queryClient.clear();
+      
       login(data.user, data.token);
       navigate('/', { replace: true });
     },
@@ -32,7 +35,10 @@ const DemoPage = () => {
 
   const handleDemoLogin = (email: string) => {
     setErrorMsg('');
-    // Use the password we assume is correct for all demo accounts
+    // Clear any previous session data BEFORE logging in
+    localStorage.clear();
+    queryClient.clear();
+    // Use the correct password for each demo account
     let password = 'depot2';
     if (email === 'admin@epa.com' || email === 'admin@ola.com') {
       password = 'admin123';

@@ -52,7 +52,7 @@ export default function FuelDispatchPage() {
       })) || [];
     },
     staleTime: 0, 
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   // Fetch Depots
@@ -88,7 +88,7 @@ export default function FuelDispatchPage() {
       return data
     },
     staleTime: 0, 
-    refetchInterval: 5000,
+    refetchInterval: 30000,
   });
 
   const isInitialLoading = isDispatchesLoading || isDepotsLoading || isVehiclesLoading;
@@ -291,7 +291,15 @@ export default function FuelDispatchPage() {
         {viewConfirmation?.confirmation && (
           <div className="space-y-4">
             <img
-              src={`${(import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000').replace('/api', '')}/storage/${viewConfirmation.confirmation.image_path}`}
+              src={(() => {
+                const c = viewConfirmation.confirmation;
+                // Use image_url from backend if available
+                if (c.image_url) return c.image_url;
+                // Construct URL dynamically based on the access hostname
+                const apiBase = `http://${window.location.hostname}/pea/backend/public/api`;
+                const storageBase = apiBase.replace(/\/api\/?$/, '/storage/');
+                return storageBase + c.image_path;
+              })()}
               alt="Delivery confirmation"
               className="w-full rounded-lg border border-slate-200 max-h-[400px] object-contain bg-slate-50"
             />
@@ -852,8 +860,10 @@ function ConfirmReceiptForm({ peaDispatchNo, vehicleId, vehicles, onClose, onSuc
       await api.post(`/dispatches/${peaDispatchNo}/deliver`, fd)
       onSuccess()
     } catch (err: any) {
-      console.error(err)
-      alert(err?.response?.data?.message || 'Error confirming delivery.')
+      console.error('Delivery confirmation error:', err?.response?.data || err)
+      const msg = err?.response?.data?.message || 'Error confirming delivery.'
+      const debug = err?.response?.data?.debug ? '\n\nDebug: ' + JSON.stringify(err.response.data.debug) : ''
+      alert(msg + debug)
     } finally {
       setSaving(false)
     }
