@@ -43,3 +43,25 @@ api.interceptors.response.use(
 );
 
 export default api;
+//on local working code
+// import axios from 'axios';
+
+// const hostname = window.location.hostname;
+
+// // Add only this special case for local React dev
+// const apiHost =
+//   hostname === 'localhost' || hostname === '127.0.0.1'
+//     ? '197.156.90.84' // put your real public server IP here
+//     : hostname;
+
+// const dynamicBaseUrl = `http://${apiHost}/pea/backend/public/api`;
+
+// const api = axios.create({
+//   baseURL: dynamicBaseUrl,
+//   headers: {
+//     'Content-Type': 'application/json',
+//     Accept: 'application/json',
+//   },
+// });
+
+// export default api;
