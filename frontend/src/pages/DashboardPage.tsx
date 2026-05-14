@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
-import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
+import type { DispatchTask, GpsVehicle } from '../data/types'
 import { Card, CardBody, CardHeader } from '../components/ui/Card'
 import { SkeletonCard, SkeletonChart } from '../components/ui/Skeleton'
 import StatusPill from '../components/ui/StatusPill'
@@ -22,9 +22,9 @@ import {
 } from 'recharts'
 import {
   ExclamationTriangleIcon,
+  GlobeAltIcon,
   MapPinIcon,
   SignalSlashIcon,
-  StopCircleIcon,
   TruckIcon,
 } from '@heroicons/react/24/outline'
 
@@ -55,16 +55,6 @@ export default function DashboardPage() {
     refetchInterval: 30000,
   });
 
-  // 2. Fetch Depots
-  const { data: depots = [], isLoading: depotsLoading } = useQuery<Depot[]>({
-    queryKey: ['depots', user?.role, companyId, user?.depotId],
-    queryFn: () => api.get('/depots').then(res => res.data.map((d: any) => ({
-      ...d,
-      id: d.id.toString(),
-      location: { region: d.region, city: d.city, address: d.address },
-      oilCompanyId: d.oil_company_id,
-    })))
-  });
 
   // 3. Fetch GPS Vehicles
   const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
@@ -80,7 +70,7 @@ export default function DashboardPage() {
     refetchInterval: 5 * 60 * 1000,
   });
 
-  const isLoading = dispatchesLoading || depotsLoading || gpsLoading;
+  const isLoading = dispatchesLoading || gpsLoading;
 
   const chartColors = {
     blue: '#1c8547',
@@ -91,6 +81,18 @@ export default function DashboardPage() {
   // 4. Compute KPIs
   const kpiCards = useMemo(() => {
     const now = new Date();
+
+    // Total vehicles count
+    const totalVehicles = gpsVehicles.length;
+
+    // Vehicles in Djibouti: lat 10.9-12.7, lng 41.7-43.5
+    const djiboutiCount = gpsVehicles.filter(v => {
+      const lat = Number(v.lat)
+      const lng = Number(v.lng)
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
+      return lat >= 10.9 && lat <= 12.7 && lng >= 41.7 && lng <= 43.5
+    }).length;
+
     const transit = dispatches.filter(d => d.status === 'On transit').length;
 
     // GPS offline > 24 hrs: parse duration from the status field
@@ -106,63 +108,50 @@ export default function DashboardPage() {
       new Date(d.etaDateTime) < now
     ).length;
 
-    // Stops > 5 hours: only vehicles with "Stopped" status (not offline)
-    const stopped = gpsVehicles.filter(v => {
-      const cat = getStatusCategory(v.status)
-      if (cat !== 'stopped') return false
-      return parseStatusDurationHours(v.status) > 5
-    }).length;
-
     return [
+      { label: 'Total Vehicles', value: String(totalVehicles), hint: 'All tracked vehicles', icon: TruckIcon },
+      { label: 'Vehicles in Djibouti', value: String(djiboutiCount), hint: 'Inside Djibouti border', icon: GlobeAltIcon },
       { label: 'Vehicles on transit', value: String(transit), hint: 'Active dispatches now', icon: TruckIcon },
       { label: 'GPS offline > 24 hrs', value: String(offline), hint: 'Check connectivity', icon: SignalSlashIcon },
       { label: 'Exceeded ETA', value: String(exceeded), hint: 'Needs attention', icon: ExclamationTriangleIcon },
-      { label: 'Stops > 5 hours', value: String(stopped), hint: 'Out of Addis Ababa', icon: StopCircleIcon },
     ] as const
   }, [dispatches, gpsVehicles]);
 
-  // 5. Compute Regional Fuel Summary
-  const regionalSummary = useMemo(() => {
-    const regionMap = new Map<string, { region: string, benzineM3: number, dieselM3: number, jetFuelM3: number }>();
-    const depotsById = new Map(depots.map(d => [d.id, d]));
+  // 5. Compute Daily Dispatch Summary (current week: Mon-Sun)
+  const dailyDispatchSummary = useMemo(() => {
+    const now = new Date();
+    // Get Monday of the current week
+    const dayOfWeek = now.getDay(); // 0=Sun, 1=Mon, ...
+    const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + mondayOffset);
+    monday.setHours(0, 0, 0, 0);
 
-    const ALL_REGIONS = [
-      'Afar', 'Amhara', 'Benishangul', 'Gambela', 'Harari', 
-      'Oromia', 'Sidama', 'Somali', 'South Eth.', 'SW Ethiopia', 
-      'Tigray', 'Addis Ababa', 'Dire Dawa'
-    ];
-
-    // Pre-populate with all known regions
-    ALL_REGIONS.forEach(region => {
-      regionMap.set(region, { region, benzineM3: 0, dieselM3: 0, jetFuelM3: 0 });
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    const days = dayNames.map((name, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return {
+        day: name,
+        date: d.toISOString().split('T')[0],
+        benzineL: 0,
+        dieselL: 0,
+        jetFuelL: 0,
+      };
     });
 
     dispatches.forEach(d => {
-      // Only show active dispatches in graphs (exclude Delivered)
-      if (d.status === 'Delivered') return;
-
-      const depot = depotsById.get(d.destinationDepotId);
-      if (!depot) return;
-
-      let region = depot.location.region || 'Unknown';
-      
-      // Map long names from DB to short names
-      if (region === 'Benishangul-Gumuz') region = 'Benishangul';
-      else if (region === 'South Ethiopia') region = 'South Eth.';
-      else if (region === "Southwest Ethiopia Peoples'") region = 'SW Ethiopia';
-
-      if (!regionMap.has(region)) {
-        regionMap.set(region, { region, benzineM3: 0, dieselM3: 0, jetFuelM3: 0 });
-      }
-
-      const row = regionMap.get(region)!;
-      if (d.fuelType === 'Benzine') row.benzineM3 += d.dispatchedLiters;
-      else if (d.fuelType === 'Diesel') row.dieselM3 += d.dispatchedLiters;
-      else if (d.fuelType === 'Jet Fuel') row.jetFuelM3 += d.dispatchedLiters;
+      if (!d.dispatchDateTime) return;
+      const dispDate = d.dispatchDateTime.split('T')[0];
+      const match = days.find(day => day.date === dispDate);
+      if (!match) return;
+      if (d.fuelType === 'Benzine') match.benzineL += d.dispatchedLiters;
+      else if (d.fuelType === 'Diesel') match.dieselL += d.dispatchedLiters;
+      else if (d.fuelType === 'Jet Fuel') match.jetFuelL += d.dispatchedLiters;
     });
 
-    return Array.from(regionMap.values());
-  }, [dispatches, depots]);
+    return days;
+  }, [dispatches]);
 
   // Compute Delivered Fuel Summary
   const deliveredSummary = useMemo(() => {
@@ -223,7 +212,7 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-12">
         {/* KPIs */}
         <div className="md:col-span-12 min-w-0">
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-5">
             {isLoading ? (
               <>
                 {[1, 2, 3, 4].map((i) => (
@@ -269,34 +258,30 @@ export default function DashboardPage() {
         <div className="md:col-span-12 lg:col-span-8 min-w-0">
           <Card>
             <CardHeader
-              title="Regional fuel dispatch overview"
-              subtitle="Grouped view by region (liters) — Benzine / Diesel / Jet Fuel"
+              title="Daily fuel dispatch — This week"
+              subtitle="Daily dispatched volume (liters) — Benzine / Diesel / Jet Fuel"
               right={
                 <span className="inline-flex items-center gap-2 rounded-lg bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
                   <MapPinIcon className="size-4" />
-                  Ethiopia regions
+                  Mon – Sun
                 </span>
               }
             />
             <CardBody className="overflow-x-auto p-4 md:p-6">
               {isLoading ? (
-                <div className="h-[360px] min-w-[700px]">
+                <div className="h-[360px] min-w-[500px]">
                   <SkeletonChart className="h-full" />
                 </div>
               ) : (
-                <div className="h-[360px] min-w-[700px]">
+                <div className="h-[360px] min-w-[500px]">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={regionalSummary} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
+                    <BarChart data={dailyDispatchSummary} margin={{ left: 10, right: 10, top: 10, bottom: 10 }}>
                       <CartesianGrid strokeDasharray="4 6" stroke="rgba(15, 23, 42, 0.08)" />
                       <XAxis
-                        dataKey="region"
-                        tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 11 }}
-                        angle={-35}
-                        textAnchor="end"
-                        dy={17}
+                        dataKey="day"
+                        tick={{ fill: 'rgba(71,85,105,0.9)', fontSize: 12 }}
                         tickLine={false}
                         axisLine={false}
-                        height={80}
                       />
                       <YAxis
                         label={{ value: 'Liters', angle: -90, position: 'insideLeft', offset: 10 }}
@@ -313,9 +298,9 @@ export default function DashboardPage() {
                           boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
                         }}
                       />
-                      <Bar dataKey="benzineM3" name="Benzine" fill={chartColors.blue} radius={[8, 8, 0, 0]} maxBarSize={40} />
-                      <Bar dataKey="dieselM3" name="Diesel" fill={chartColors.gold} radius={[8, 8, 0, 0]} maxBarSize={40} />
-                      <Bar dataKey="jetFuelM3" name="Jet Fuel" fill={chartColors.gray} radius={[8, 8, 0, 0]} maxBarSize={40} />
+                      <Bar dataKey="benzineL" name="Benzine" fill={chartColors.blue} radius={[8, 8, 0, 0]} maxBarSize={50} />
+                      <Bar dataKey="dieselL" name="Diesel" fill={chartColors.gold} radius={[8, 8, 0, 0]} maxBarSize={50} />
+                      <Bar dataKey="jetFuelL" name="Jet Fuel" fill={chartColors.gray} radius={[8, 8, 0, 0]} maxBarSize={50} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -401,9 +386,9 @@ export default function DashboardPage() {
         <div className="md:col-span-12 min-w-0">
           <Card>
             <CardHeader title="Fuel type dispatch summary" subtitle="Total dispatched volume by fuel type" />
-            <CardBody className="h-48">
+            <CardBody className="h-auto py-5">
               {!isLoading ? (
-                <div className="space-y-4 h-full flex flex-col justify-center">
+                <div className="space-y-4">
                   {/* Calculate totals for each fuel type */}
                   {(() => {
                     const fuelData = [
@@ -424,29 +409,42 @@ export default function DashboardPage() {
                       },
                     ]
                     const totalVolume = fuelData.reduce((sum, f) => sum + f.volume, 0)
-                    return fuelData.map((fuel) => {
-                      const percentage = totalVolume > 0 ? (fuel.volume / totalVolume) * 100 : 0
-                      return (
-                        <div key={fuel.name} className="space-y-2">
+                    return (
+                      <>
+                        {fuelData.map((fuel) => {
+                          const percentage = totalVolume > 0 ? (fuel.volume / totalVolume) * 100 : 0
+                          return (
+                            <div key={fuel.name} className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium text-text">{fuel.name}</span>
+                                <span className="text-sm font-semibold text-text">
+                                  {fuel.volume.toLocaleString()}L
+                                  <span className="text-text-muted"> ({percentage.toFixed(0)}%)</span>
+                                </span>
+                              </div>
+                              <div className="w-full h-3 rounded-lg overflow-hidden border border-[#CBD5E1] bg-transparent">
+                                <div
+                                  className="h-full transition-all duration-300 rounded-lg"
+                                  style={{
+                                    width: `${percentage}%`,
+                                    backgroundColor: fuel.color,
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                        {/* Total dispatched liters */}
+                        <div className="mt-4 pt-4 border-t border-[#CBD5E1]">
                           <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium text-text">{fuel.name}</span>
-                            <span className="text-sm font-semibold text-text">
-                              {fuel.volume.toLocaleString()}L
-                              <span className="text-text-muted"> ({percentage.toFixed(0)}%)</span>
+                            <span className="text-sm font-bold text-text">Total Dispatched</span>
+                            <span className="text-lg font-bold text-primary">
+                              {totalVolume.toLocaleString()} L
                             </span>
                           </div>
-                          <div className="w-full h-3 rounded-lg overflow-hidden border border-[#CBD5E1] bg-transparent">
-                            <div
-                              className="h-full transition-all duration-300 rounded-lg"
-                              style={{
-                                width: `${percentage}%`,
-                                backgroundColor: fuel.color,
-                              }}
-                            />
-                          </div>
                         </div>
-                      )
-                    })
+                      </>
+                    )
                   })()}
                 </div>
               ) : (
