@@ -414,6 +414,9 @@ export default function FuelDispatchPage() {
                           {!isDepotAdmin && (
                             <button type="button" onClick={() => setTrackingTask(t)} title="Follow Map" className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-2 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"><MapPinIcon className="size-3.5" /></button>
                           )}
+                          {isDepotAdmin && (
+                            <button type="button" onClick={() => setTrackingTask(t)} title="Follow on Map" className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"><MapPinIcon className="size-3.5" />Follow</button>
+                          )}
                           {isDepotAdmin && t.status !== 'Delivered' && (
                             <button type="button" disabled={!isEtaDayReached(t.etaDateTime)} onClick={() => setConfirmTask(t)} className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-40 disabled:cursor-not-allowed" title={!isEtaDayReached(t.etaDateTime) ? 'Available on ETA date' : 'Confirm delivery'}><CheckCircleIcon className="size-3.5" />Confirm</button>
                           )}
@@ -471,6 +474,9 @@ export default function FuelDispatchPage() {
                         <div className="flex items-center gap-2 pt-2 border-t border-[#D1D5DB]">
                           {!isDepotAdmin && (
                             <button type="button" onClick={(e) => { e.stopPropagation(); setTrackingTask(t) }} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"><MapPinIcon className="size-3.5" />Track</button>
+                          )}
+                          {isDepotAdmin && (
+                            <button type="button" onClick={(e) => { e.stopPropagation(); setTrackingTask(t) }} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"><MapPinIcon className="size-3.5" />Follow</button>
                           )}
                           {isDepotAdmin && t.status !== 'Delivered' && (
                             <button type="button" disabled={!isEtaDayReached(t.etaDateTime)} onClick={(e) => { e.stopPropagation(); setConfirmTask(t) }} className="inline-flex items-center gap-1.5 rounded-lg bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700 hover:bg-green-100 transition disabled:opacity-40 disabled:cursor-not-allowed"><CheckCircleIcon className="size-3.5" />Confirm</button>
