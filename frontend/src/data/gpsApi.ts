@@ -4,6 +4,12 @@ const GPS_API_URL =
   'https://mellatech.et/et/api/api.php?api=user&ver=1.0&key=4DC7C24EDCF88C5B3F8B03A72631DBF8&cmd=USER_GET_OBJECTS'
 
 export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
+  // const res = await fetch(GPS_API_URL, {
+  //   method: 'GET',
+  //   headers: {
+  //     'key': '4DC7C24EDCF88C5B3F8B03A72631DBF8'
+  //   }
+  // })
   const res = await fetch(GPS_API_URL)
 
   if (!res.ok) {
@@ -19,4 +25,3 @@ export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
   // Trust the backend keys but defensively cast to our type
   return data as GpsVehicle[]
 }
-

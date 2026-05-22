@@ -112,7 +112,9 @@ export type DispatchTask = {
 
   status: DispatchStatus
   lastGpsPoint?: GpsPoint
+  confirmation?: DeliveryConfirmation | null
 }
+
 
 export type RegionFuelSummary = {
   region: string
