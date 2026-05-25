@@ -43,7 +43,6 @@ export default function FleetListSidebar({
   selectedId,
   onSelect,
   isListOpen,
-  setIsListOpen,
   activeDispatchesByVehicle,
   depotsById,
   listHostRef,

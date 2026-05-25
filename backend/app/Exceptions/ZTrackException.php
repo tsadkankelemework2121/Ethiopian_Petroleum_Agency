@@ -21,7 +21,7 @@ class ZTrackException extends Exception
      * @param mixed $responsePayload
      * @param \Throwable|null $previous
      */
-    public function __construct(string $message = "", int $code = 0, $responsePayload = null, \Throwable $previous = null)
+    public function __construct(string $message = "", int $code = 0, $responsePayload = null, ?\Throwable $previous = null)
     {
         parent::__construct($message, $code, $previous);
         $this->responsePayload = $responsePayload;
