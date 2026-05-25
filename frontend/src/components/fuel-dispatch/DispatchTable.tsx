@@ -1,6 +1,6 @@
 import { MapPinIcon, CheckCircleIcon, EyeIcon } from '@heroicons/react/24/outline'
 import StatusPill from '../ui/StatusPill'
-import type { GpsVehicle, DispatchTask } from '../../data/types'
+import type { GpsVehicle } from '../../data/types'
 
 export default function DispatchTable({
   filteredTasks,
