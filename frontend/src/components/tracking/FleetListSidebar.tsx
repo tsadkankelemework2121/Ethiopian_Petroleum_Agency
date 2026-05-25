@@ -83,8 +83,19 @@ export default function FleetListSidebar({
         >
           <div className="flex items-center justify-between gap-3">
             <div className="flex flex-col">
-              <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
-                {plate}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <div className="text-sm font-bold" style={{ color: isSelected ? COLORS.blue : '#0f172a' }}>
+                  {plate}
+                </div>
+                {v.source && (
+                  <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border ${
+                    v.source === 'ztrack'
+                      ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800'
+                      : 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800'
+                  }`}>
+                    {v.source}
+                  </span>
+                )}
               </div>
               {dispatch && (
                 <div className="text-[10px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">

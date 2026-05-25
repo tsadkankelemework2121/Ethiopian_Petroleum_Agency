@@ -22,9 +22,10 @@ export default function DispatchTrackingModal({
   const center = { lat, lng }
   const label = gpsVehicle?.name ?? trackingTask.vehicleId
   const speed = gpsVehicle?.speed || '0'
+  const sourceTag = gpsVehicle?.source ? ` [${gpsVehicle.source.toUpperCase()}]` : '';
 
   return (
-    <ModalOverlay isOpen={true} onClose={onClose} title={`Real-time Tracking - ${trackingTask.peaDispatchNo}`}>
+    <ModalOverlay isOpen={true} onClose={onClose} title={`Real-time Tracking - ${trackingTask.peaDispatchNo}${sourceTag}`}>
       <div className="h-[450px] relative rounded-lg overflow-hidden border border-[#D1D5DB]">
         <MapView
           center={center}

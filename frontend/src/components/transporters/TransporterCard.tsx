@@ -92,7 +92,16 @@ export default function TransporterCard({
             ) : (
               filteredVehicles.map((v) => (
                 <tr key={v.id} className="hover:bg-white transition-colors">
-                  <td className="whitespace-nowrap px-4 py-2.5 text-text font-medium">{v.plateRegNo}</td>
+                  <td className="whitespace-nowrap px-4 py-2.5 text-text font-medium flex items-center gap-1.5">
+                    <span>{v.plateRegNo}</span>
+                    <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border ${
+                      v.id.startsWith('ztrack_')
+                        ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800'
+                        : 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800'
+                    }`}>
+                      {v.id.startsWith('ztrack_') ? 'ztrack' : 'mella'}
+                    </span>
+                  </td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-text">{v.trailerRegNo}</td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-text">{v.sideNo}</td>
                   <td className="whitespace-nowrap px-4 py-2.5 text-text">{v.driverName}</td>
@@ -114,7 +123,16 @@ export default function TransporterCard({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="text-sm font-medium text-text truncate">{v.plateRegNo}</div>
+                    <div className="text-sm font-medium text-text truncate flex items-center gap-1.5">
+                      <span>{v.plateRegNo}</span>
+                      <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border ${
+                        v.id.startsWith('ztrack_')
+                          ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800'
+                          : 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800'
+                      }`}>
+                        {v.id.startsWith('ztrack_') ? 'ztrack' : 'mella'}
+                      </span>
+                    </div>
                     <div className="text-xs text-text-muted mt-0.5">{v.driverName}</div>
                   </div>
                   <svg

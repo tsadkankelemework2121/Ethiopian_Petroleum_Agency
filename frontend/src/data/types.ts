@@ -143,5 +143,6 @@ export type GpsVehicle = {
   fuel_can_level_percent: number | null
   fuel_can_level_value: number | null
   custom_fields: unknown | null
+  source?: 'ztrack' | 'mella'
 }
 

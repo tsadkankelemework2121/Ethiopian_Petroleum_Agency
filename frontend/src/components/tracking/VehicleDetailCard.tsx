@@ -11,7 +11,18 @@ export default function VehicleDetailCard({
 }) {
   return (
     <div className="px-4 pb-3 pt-1 animate-fade-in-up bg-slate-50/50" style={{ overflowY: 'auto' }}>
-      <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate">{v.name}</div>
+      <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate flex items-center gap-1.5">
+        <span>{v.name}</span>
+        {v.source && (
+          <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border ${
+            v.source === 'ztrack'
+              ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800'
+              : 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800'
+          }`}>
+            {v.source}
+          </span>
+        )}
+      </div>
       <div className="mb-3 grid grid-cols-2 gap-2 text-[11px]">
         <div className="rounded border bg-white p-2 shadow-sm">
           <div className="text-slate-500">Speed</div>
