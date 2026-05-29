@@ -61,7 +61,9 @@ class ZTrackController extends Controller
             return response()->json($data);
         } catch (\Exception $e) {
             Log::warning('ZTrack API getVehicleStatus failed, falling back to mock generator:', [
-                'message' => $e->getMessage()
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+                'trace' => $e->getTraceAsString()
             ]);
 
             try {
@@ -141,7 +143,9 @@ class ZTrackController extends Controller
 
             } catch (\Exception $subEx) {
                 Log::critical('ZTrack fallback generation failed completely:', [
-                    'message' => $subEx->getMessage()
+                    'message' => $subEx->getMessage(),
+                    'exception' => get_class($subEx),
+                    'trace' => $subEx->getTraceAsString()
                 ]);
 
                 return response()->json([
