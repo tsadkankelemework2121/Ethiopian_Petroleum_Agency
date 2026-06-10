@@ -27,7 +27,7 @@ export default function FuelDispatchPage() {
   const isEpaAdmin = user?.role?.toUpperCase() === 'EPA_ADMIN'
   const isOilCompany = user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN'
 
-  const canAddDispatch = isEpaAdmin
+  const canAddDispatch = isEpaAdmin || isOilCompany
 
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')

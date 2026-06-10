@@ -46,8 +46,12 @@ class DispatchController extends Controller
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
         $role = strtoupper($user->role ?? '');
-        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN' && $role !== 'OIL_COMPANY_ADMIN' && $role !== 'OIL_COMPANY') {
             return response()->json(['message' => 'Forbidden'], 403);
+        }
+        
+        if (($role === 'OIL_COMPANY_ADMIN' || $role === 'OIL_COMPANY') && $request->input('oil_company_id') !== $user->company_id) {
+            return response()->json(['message' => 'Forbidden: Cannot create dispatch for another company'], 403);
         }
 
         $validated = $request->validate([
@@ -167,8 +171,16 @@ class DispatchController extends Controller
             return response()->json(['message' => 'Unauthenticated'], 401);
         }
         $role = strtoupper($user->role ?? '');
-        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN') {
+        if ($role !== 'EPA_ADMIN' && $role !== 'SUPER_ADMIN' && $role !== 'OIL_COMPANY_ADMIN' && $role !== 'OIL_COMPANY') {
             return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        if (($role === 'OIL_COMPANY_ADMIN' || $role === 'OIL_COMPANY') && $request->input('oil_company_id') !== $user->company_id) {
+            return response()->json(['message' => 'Forbidden: Cannot update dispatch for another company'], 403);
+        }
+
+        if (($role === 'OIL_COMPANY_ADMIN' || $role === 'OIL_COMPANY') && $dispatch->oil_company_id !== $user->company_id) {
+            return response()->json(['message' => 'Forbidden: This dispatch belongs to another company'], 403);
         }
 
         $validated = $request->validate([
