@@ -15,11 +15,7 @@ export default function VehicleDetailCard({
       <div className="mb-3 text-[10px] font-semibold text-slate-700 truncate flex items-center gap-1.5">
         <span>{v.name}</span>
         {v.source && (
-          <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border ${
-            v.source === 'ztrack'
-              ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800'
-              : 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800'
-          }`}>
+          <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border bg-slate-100 text-slate-600 border-slate-200">
             {v.source}
           </span>
         )}
