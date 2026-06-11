@@ -341,20 +341,7 @@ export default function ReportsPage() {
     return days
   }, [dispatches])
 
-  const statusBreakdown = useMemo(() => {
-    const counts: Record<string, number> = { Delivered: 0, 'On transit': 0, 'Exceeded ETA': 0, 'GPS Offline >24h': 0 }
-    dispatches.forEach((d) => {
-      const s = d.status || 'On transit'
-      counts[s] = (counts[s] || 0) + 1
-    })
-    return Object.entries(counts).filter(([, v]) => v > 0)
-  }, [dispatches])
 
-  const recentDispatches = useMemo(() => {
-    return [...dispatches]
-      .sort((a, b) => new Date(b.dispatchDateTime).getTime() - new Date(a.dispatchDateTime).getTime())
-      .slice(0, 10)
-  }, [dispatches])
 
   return (
     <div className="space-y-6">

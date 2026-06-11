@@ -11,11 +11,9 @@ type OperationalAuditReportProps = {
 }
 
 export default function OperationalAuditReport({
-  dispatches,
   dashboardKpis,
   fuelSummary,
   dailyDispatch,
-  dispatchesLength,
   showDashboardReport,
   setShowDashboardReport,
 }: OperationalAuditReportProps) {
