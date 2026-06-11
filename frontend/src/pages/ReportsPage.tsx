@@ -6,9 +6,11 @@ import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { useAuth } from '../context/AuthContext'
 import { parseStatusDurationHours, getStatusCategory } from '../lib/parseGpsDuration'
+import { isVehicleInDjibouti } from '../lib/geofence'
 
 // Child components
-import DashboardSummaryReport from '../components/reports/DashboardSummaryReport'
+import OperationalAuditReport from '../components/reports/OperationalAuditReport'
+import DjiboutiGeofenceReport from '../components/reports/DjiboutiGeofenceReport'
 import FormalReportSection from '../components/reports/FormalReportSection'
 
 type FilterType = 'dispatch' | 'vehicle' | 'depot'
@@ -38,6 +40,7 @@ export default function ReportsPage() {
   const { user } = useAuth()
   const companyId = user?.companyId
 
+  const [activeTab, setActiveTab] = useState<'audit' | 'geofence' | 'registry'>('audit')
   const [filterType, setFilterType] = useState<FilterType>('dispatch')
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [expandedReportRow, setExpandedReportRow] = useState<number | null>(null)
@@ -280,12 +283,7 @@ export default function ReportsPage() {
   const dashboardKpis = useMemo(() => {
     const now = new Date()
     const totalVehicles = gpsVehicles.length
-    const djiboutiCount = gpsVehicles.filter((v) => {
-      const lat = Number(v.lat)
-      const lng = Number(v.lng)
-      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false
-      return lat >= 10.9 && lat <= 12.7 && lng >= 41.7 && lng <= 43.5
-    }).length
+    const djiboutiCount = gpsVehicles.filter((v) => isVehicleInDjibouti(v.lat, v.lng)).length
     const transit = dispatches.filter((d) => d.status === 'On transit').length
     const offline = gpsVehicles.filter((v) => {
       const cat = getStatusCategory(v.status)
@@ -359,41 +357,94 @@ export default function ReportsPage() {
   }, [dispatches])
 
   return (
-    <div>
-      <PageHeader title="Reports" subtitle="Generate report tables using period filters and identifiers." />
+    <div className="space-y-6">
+      <div className="no-print">
+        <PageHeader title="National Logistics Reports" subtitle="Analyze fleet positions, geofences, and petroleum dispatch cycles." />
+      </div>
 
-      {/* Dashboard Summary Report Section */}
-      <DashboardSummaryReport
-        showDashboardReport={showDashboardReport}
-        setShowDashboardReport={setShowDashboardReport}
-        dashboardKpis={dashboardKpis}
-        fuelSummary={fuelSummary}
-        dailyDispatch={dailyDispatch}
-        statusBreakdown={statusBreakdown}
-        recentDispatches={recentDispatches}
-        dispatchesLength={dispatches.length}
-      />
+      {/* Tabs Menu - hidden on print */}
+      <div className="flex border-b border-[#D1D5DB] gap-6 mb-6 no-print">
+        <button
+          onClick={() => setActiveTab('audit')}
+          className={`pb-3 font-semibold text-sm transition-all relative ${
+            activeTab === 'audit' ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Operational Audit
+          {activeTab === 'audit' && (
+            <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-primary rounded-t-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('geofence')}
+          className={`pb-3 font-semibold text-sm transition-all relative ${
+            activeTab === 'geofence' ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Port Geofence (Djibouti)
+          {activeTab === 'geofence' && (
+            <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-primary rounded-t-full" />
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab('registry')}
+          className={`pb-3 font-semibold text-sm transition-all relative ${
+            activeTab === 'registry' ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800'
+          }`}
+        >
+          Formal Registry Search
+          {activeTab === 'registry' && (
+            <div className="absolute bottom-0 left-0 right-0 h-[2.5px] bg-primary rounded-t-full" />
+          )}
+        </button>
+      </div>
 
-      {/* Formal Report Query Section */}
-      <FormalReportSection
-        filterType={filterType}
-        setFilterType={setFilterType}
-        isDropdownOpen={isDropdownOpen}
-        setIsDropdownOpen={setIsDropdownOpen}
-        expandedReportRow={expandedReportRow}
-        setExpandedReportRow={setExpandedReportRow}
-        query={query}
-        setQuery={setQuery}
-        from={from}
-        setFrom={setFrom}
-        to={to}
-        setTo={setTo}
-        setApplied={setApplied}
-        title={title}
-        getSearchPlaceholder={getSearchPlaceholder}
-        result={result}
-        isLoading={isLoading}
-      />
+      {/* Tab Contents */}
+      {activeTab === 'audit' && (
+        <OperationalAuditReport
+          dispatches={dispatches}
+          dashboardKpis={dashboardKpis}
+          fuelSummary={fuelSummary}
+          dailyDispatch={dailyDispatch}
+          dispatchesLength={dispatches.length}
+          showDashboardReport={showDashboardReport}
+          setShowDashboardReport={setShowDashboardReport}
+        />
+      )}
+
+      {activeTab === 'geofence' && (
+        <div className="no-print">
+          <DjiboutiGeofenceReport
+            gpsVehicles={gpsVehicles}
+            dispatches={dispatches}
+            depotsById={depotsById}
+          />
+        </div>
+      )}
+
+      {activeTab === 'registry' && (
+        <div className="no-print">
+          <FormalReportSection
+            filterType={filterType}
+            setFilterType={setFilterType}
+            isDropdownOpen={isDropdownOpen}
+            setIsDropdownOpen={setIsDropdownOpen}
+            expandedReportRow={expandedReportRow}
+            setExpandedReportRow={setExpandedReportRow}
+            query={query}
+            setQuery={setQuery}
+            from={from}
+            setFrom={setFrom}
+            to={to}
+            setTo={setTo}
+            setApplied={setApplied}
+            title={title}
+            getSearchPlaceholder={getSearchPlaceholder}
+            result={result}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
 
       <style>{`
         @keyframes fade-in {
@@ -403,6 +454,22 @@ export default function ReportsPage() {
         
         .animate-fade-in {
           animation: fade-in 0.2s ease-out;
+        }
+
+        @media print {
+          body {
+            background: white !important;
+            color: black !important;
+          }
+          /* Hide normal UI wrapper components for clean printable sheet */
+          header, aside, nav, button, input, select, .no-print, h2 {
+            display: none !important;
+          }
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+          }
         }
       `}</style>
     </div>

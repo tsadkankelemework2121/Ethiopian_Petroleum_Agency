@@ -7,6 +7,7 @@ import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import type { Depot } from '../data/types'
 import { isVehicleInDjibouti } from '../lib/geofence'
+import { useSearchParams } from 'react-router-dom'
 
 // Child components
 import FleetListSidebar from '../components/tracking/FleetListSidebar'
@@ -23,6 +24,9 @@ const ETHIOPIA_BOUNDS = { minLat: 3.0, maxLat: 15.0, minLng: 33.0, maxLng: 48.0 
 
 export default function TrackingPage() {
   const { user } = useAuth()
+  const [searchParams] = useSearchParams()
+  const vehicleParam = searchParams.get('vehicle')
+
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | undefined>(undefined)
   const [statusFilter, setStatusFilter] = useState('All')
@@ -47,6 +51,23 @@ export default function TrackingPage() {
     },
     refetchInterval: 30000,
   })
+
+  // Auto-select vehicle from query parameter if provided
+  useEffect(() => {
+    if (vehicleParam && items.length > 0) {
+      const matched = items.find(v => v.imei === vehicleParam || v.name === vehicleParam)
+      if (matched) {
+        setSelectedId(matched.imei)
+        const lat = Number(matched.lat)
+        const lng = Number(matched.lng)
+        if (Number.isFinite(lat) && Number.isFinite(lng)) {
+          setTimeout(() => {
+            mapApiRef.current?.flyTo({ lat, lng }, 18)
+          }, 600)
+        }
+      }
+    }
+  }, [vehicleParam, items])
 
   // Fetch Dispatches
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery({
