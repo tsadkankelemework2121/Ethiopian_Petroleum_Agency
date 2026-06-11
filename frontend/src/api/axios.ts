@@ -3,7 +3,7 @@ import axios from 'axios';
 const dynamicBaseUrl = `http://${window.location.hostname}/pea/backend/public/api`;
 
 const api = axios.create({
-  baseURL: dynamicBaseUrl, 
+  baseURL: dynamicBaseUrl,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',

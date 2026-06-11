@@ -1,6 +1,7 @@
 import { List as VirtualList, type RowComponentProps } from 'react-window'
 import type { GpsVehicle } from '../../data/types'
 import VehicleDetailCard from './VehicleDetailCard'
+import { isVehicleInDjibouti } from '../../lib/geofence'
 
 type FleetListSidebarProps = {
   search: string
@@ -95,6 +96,11 @@ export default function FleetListSidebar({
                     {v.source}
                   </span>
                 )}
+                {isVehicleInDjibouti(v.lat, v.lng) && (
+                  <span className="inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border bg-red-50 text-red-700 border-red-200 animate-pulse">
+                    📍 Djibouti
+                  </span>
+                )}
               </div>
               {dispatch && (
                 <div className="text-[10px] text-blue-600 font-medium flex items-center gap-1 mt-0.5">
@@ -167,6 +173,7 @@ export default function FleetListSidebar({
             <option value="Idle">IDLE</option>
             <option value="Stopped">STOPPED</option>
             <option value="Offline">OFFLINE</option>
+            <option value="Djibouti">INSIDE DJIBOUTI</option>
           </select>
 
           <div className="relative">

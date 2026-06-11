@@ -1,4 +1,5 @@
 import type { GpsVehicle } from '../../data/types'
+import { isVehicleInDjibouti } from '../../lib/geofence'
 
 export default function VehicleDetailCard({
   v,
@@ -43,6 +44,15 @@ export default function VehicleDetailCard({
         <div className="rounded border border-blue-200 bg-blue-50/30 p-2 shadow-sm col-span-2">
           <div className="text-blue-600 font-bold uppercase tracking-widest text-[8px] mb-0.5">Oil Company</div>
           <div className="font-bold text-slate-900">{v.group || '—'}</div>
+        </div>
+        <div className={`rounded border p-2 shadow-sm col-span-2 ${isVehicleInDjibouti(v.lat, v.lng) ? 'border-red-200 bg-red-50/30' : 'border-slate-200 bg-white'}`}>
+          <div className={`${isVehicleInDjibouti(v.lat, v.lng) ? 'text-red-600' : 'text-slate-500'} font-bold uppercase tracking-widest text-[8px] mb-0.5`}>Geofence Status</div>
+          <div className="flex items-center gap-1.5">
+            <div className={`size-2 rounded-full ${isVehicleInDjibouti(v.lat, v.lng) ? 'bg-red-500 animate-pulse' : 'bg-slate-300'}`} />
+            <span className="font-bold text-xs text-slate-900">
+              {isVehicleInDjibouti(v.lat, v.lng) ? 'Inside Djibouti Zone' : 'Outside Djibouti Zone'}
+            </span>
+          </div>
         </div>
       </div>
       <div className="rounded border bg-white p-2 text-[10px] shadow-sm">

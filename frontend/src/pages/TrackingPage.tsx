@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import type { Depot } from '../data/types'
+import { isVehicleInDjibouti } from '../lib/geofence'
 
 // Child components
 import FleetListSidebar from '../components/tracking/FleetListSidebar'
@@ -202,7 +203,13 @@ export default function TrackingPage() {
       const searchMatch = !q || searchHay.includes(q)
 
       const tag = statusTag(t)
-      const statusMatch = deferredStatus === 'All' || tag.label.toUpperCase() === deferredStatus.toUpperCase()
+      const isInsideDjibouti = isVehicleInDjibouti(t.lat, t.lng)
+      const statusMatch =
+        deferredStatus === 'All'
+          ? true
+          : deferredStatus.toUpperCase() === 'DJIBOUTI'
+          ? isInsideDjibouti
+          : tag.label.toUpperCase() === deferredStatus.toUpperCase()
 
       const isAssigned = activeDispatchesByVehicle.has(t.imei)
       const assignmentMatch =
@@ -230,6 +237,7 @@ export default function TrackingPage() {
 
         const tag = statusTag(t)
         const dispatch = activeDispatchesByVehicle.get(t.imei)
+        const inDjibouti = isVehicleInDjibouti(t.lat, t.lng)
 
         let markerColor =
           tag.label === 'MOVING'
@@ -240,8 +248,12 @@ export default function TrackingPage() {
             ? COLORS.gray
             : '#ef4444'
 
-        const statusLabel = dispatch ? `Dispatch: ${dispatch.status}` : t.status
+        let statusLabel = dispatch ? `Dispatch: ${dispatch.status}` : t.status
         if (dispatch && dispatch.status === 'On transit') markerColor = '#1c8547'
+
+        if (inDjibouti) {
+          statusLabel = `${statusLabel} (Inside Djibouti)`
+        }
 
         return {
           id: t.imei,

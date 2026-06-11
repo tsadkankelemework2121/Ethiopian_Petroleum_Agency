@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type MutableRefObject } from 'react'
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Polygon, Tooltip, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import useSupercluster from 'use-supercluster'
 import { cn } from '../../lib/cn'
+import { DJIBOUTI_ZONE } from '../../lib/geofence'
 
 type Position = {
   lat: number
@@ -350,6 +351,20 @@ export default function MapView({
           url={styleUrl}
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         />
+        <Polygon
+          positions={DJIBOUTI_ZONE}
+          pathOptions={{
+            color: '#ef4444',
+            fillColor: '#ef4444',
+            fillOpacity: 0.08,
+            weight: 2,
+            dashArray: '5, 5'
+          }}
+        >
+          <Tooltip sticky direction="top" opacity={0.9}>
+            <span className="font-bold text-red-600">Djibouti Geofence Zone</span>
+          </Tooltip>
+        </Polygon>
         <MapController 
           apiRef={apiRef} 
           onMapReady={onMapReady} 
