@@ -40,7 +40,10 @@ class Kernel extends HttpKernel
         ],
 
         'api' => [
-            \Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful::class,
+            // NOTE: EnsureFrontendRequestsAreStateful was removed because this app
+            // uses token-based auth (Bearer tokens via localStorage), NOT session/cookie-based
+            // SPA auth. That middleware caused Sanctum to ignore Bearer tokens for requests
+            // from stateful domains, resulting in 401 errors on all protected endpoints.
             'throttle:api',
             \Illuminate\Routing\Middleware\SubstituteBindings::class,
         ],
