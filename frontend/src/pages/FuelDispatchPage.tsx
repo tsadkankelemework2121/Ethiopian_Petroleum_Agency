@@ -95,7 +95,7 @@ export default function FuelDispatchPage() {
       }
       return data
     },
-    staleTime: 60 * 1000,
+    refetchInterval: 60 * 1000, // 1 minute
   })
 
   const isInitialLoading = isDispatchesLoading || isDepotsLoading || isVehiclesLoading

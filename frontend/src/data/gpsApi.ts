@@ -8,22 +8,42 @@ export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
   let mellaVehicles: GpsVehicle[] = []
   let ztrackVehicles: GpsVehicle[] = []
 
+  // Initialize Mellatech cache from localStorage
+  let cachedMella: GpsVehicle[] = []
+  try {
+    const stored = localStorage.getItem('pea_cached_mella_vehicles')
+    if (stored) {
+      cachedMella = JSON.parse(stored)
+    }
+  } catch (e) {
+    console.error('Error parsing cached Mella vehicles:', e)
+  }
+
   // 1. Fetch Mellatech (Mella) vehicles
   try {
     const res = await fetch(GPS_API_URL)
     if (res.ok) {
       const data = (await res.json()) as any[]
-      if (Array.isArray(data)) {
+      if (Array.isArray(data) && data.length > 0) {
         mellaVehicles = data.map((v) => ({
           ...v,
           source: 'mella' as const,
         }))
+        // Update localStorage cache on successful fetch with data
+        localStorage.setItem('pea_cached_mella_vehicles', JSON.stringify(mellaVehicles))
+      } else {
+        console.warn('Mella GPS API returned empty or invalid data, using cached data if available.')
       }
     } else {
-      console.warn(`Mella GPS API request failed with status ${res.status}`)
+      console.warn(`Mella GPS API request failed with status ${res.status}, using cached data if available.`)
     }
   } catch (err) {
-    console.error('Error fetching Mella GPS vehicles:', err)
+    console.error('Error fetching Mella GPS vehicles, using cached data if available:', err)
+  }
+
+  // Fallback to cache if the current fetch failed or returned empty
+  if (mellaVehicles.length === 0 && cachedMella.length > 0) {
+    mellaVehicles = cachedMella
   }
 
   // 2. Fetch ZTrack vehicles from the Laravel backend
@@ -33,7 +53,7 @@ export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
       ztrackVehicles = ztrackRes.data.data.map((v: any) => ({
         imei: v.imei || `ztrack_${v.unitId}`,
         name: v.plateNo || `ZTrack ${v.unitId}`,
-        group: 'OLA', // Assign group OLA so they show up for OLA Energy admin and EPA
+        group: v.group || 'OLA', // Assign group OLA so they show up for OLA Energy admin and EPA
         odometer: String(v.odometer || '0'),
         engine: v.engine === 'on' ? 'on' : 'off',
         status: v.status || 'Offline',

@@ -49,7 +49,7 @@ export default function TrackingPage() {
       }
       return data
     },
-    refetchInterval: 30000,
+    refetchInterval: 60000, // 1 minute
   })
 
   // Auto-select vehicle from query parameter if provided

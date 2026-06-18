@@ -64,7 +64,7 @@ export default function DashboardPage() {
       return data
     },
     staleTime: 0,
-    refetchInterval: 5 * 60 * 1000,
+    refetchInterval: 5* 60 * 1000,
   })
 
   const isLoading = dispatchesLoading || gpsLoading
