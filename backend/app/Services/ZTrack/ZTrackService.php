@@ -168,24 +168,33 @@ class ZTrackService
         $fullPayload = array_merge(['sid' => $sid], $payload);
 
         try {
-            Log::debug("Sending request to ZTrack API endpoint: {$endpoint}", [
-                'payload' => array_merge($fullPayload, ['sid' => '***' . substr($sid, -6)])
+            Log::debug("ZTrack: Sending request to endpoint: {$endpoint}", [
+                'url' => $url,
+                'payload' => array_merge($fullPayload, ['sid' => '***' . substr($sid, -6)]),
+                'isRetry' => $isRetry,
             ]);
 
-            $response = Http::timeout(30)->post($url, $fullPayload);
+            $response = Http::timeout(60)->post($url, $fullPayload);
         } catch (\Exception $e) {
-            Log::error("ZTrack API request communication failed.", [
+            Log::error("ZTrack: HTTP communication failed.", [
                 'endpoint' => $endpoint,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
             throw new ZTrackException("Communication failure on ZTrack endpoint {$endpoint}: " . $e->getMessage(), 0, null, $e);
         }
 
+        // Log raw response details for debugging
+        Log::debug("ZTrack: Raw response received for {$endpoint}", [
+            'http_status' => $response->status(),
+            'body_length' => strlen($response->body()),
+            'body_preview' => substr($response->body(), 0, 500),
+        ]);
+
         if ($response->failed()) {
-            Log::error("ZTrack API returned dynamic HTTP failure.", [
+            Log::error("ZTrack: HTTP failure response.", [
                 'endpoint' => $endpoint,
                 'status' => $response->status(),
-                'body' => $response->body()
+                'body' => $response->body(),
             ]);
             throw new ZTrackException(
                 "ZTrack endpoint {$endpoint} returned HTTP status {$response->status()}",
@@ -196,33 +205,42 @@ class ZTrackService
 
         $data = $response->json();
 
-        // Detect SID expiration or invalid session.
-        // Usually indicated by:
-        // - 'auth' => false
-        // - 'success' => false with message mentioning 'sid', 'session', 'token', or 'unauthorized'
+        Log::debug("ZTrack: Parsed JSON response for {$endpoint}", [
+            'auth' => $data['auth'] ?? 'not set',
+            'success' => $data['success'] ?? 'not set',
+            'msg' => $data['msg'] ?? 'not set',
+            'data_type' => isset($data['data']) ? (is_array($data['data']) ? 'array(' . count($data['data']) . ')' : gettype($data['data'])) : 'not set',
+        ]);
+
+        // Detect explicit auth failure
         $isAuthFailure = false;
-        
         if (isset($data['auth']) && $data['auth'] === false) {
             $isAuthFailure = true;
-        } elseif (isset($data['success']) && $data['success'] === false) {
-            $msg = strtolower($data['msg'] ?? '');
-            if (strpos($msg, 'sid') !== false || strpos($msg, 'session') !== false || strpos($msg, 'token') !== false || strpos($msg, 'auth') !== false) {
-                $isAuthFailure = true;
-            }
         }
 
-        if ($isAuthFailure) {
+        // Check for success: false (could be stale SID or genuine API error)
+        $success = $data['success'] ?? false;
+
+        if ($isAuthFailure || !$success) {
+            // On the FIRST attempt, always retry with a fresh SID.
+            // ZTrack sometimes returns success:false with misleading messages
+            // (e.g. "No units found or API response malformed") when the SID
+            // is actually expired, instead of returning auth:false.
             if (!$isRetry) {
-                Log::warning("ZTrack API session expired or invalid. Attempting dynamic token refresh and retry.", [
+                $msg = $data['msg'] ?? 'unknown';
+                Log::warning("ZTrack: Request failed on first attempt (auth={$data['auth']}, success={$data['success']}, msg={$msg}). Clearing SID cache and retrying with fresh SID.", [
                     'endpoint' => $endpoint,
-                    'response' => $data
+                    'response' => $data,
                 ]);
                 $this->clearCachedSid();
                 return $this->request($endpoint, $payload, true);
-            } else {
-                Log::error("ZTrack API session refresh failed or is still invalid during retry.", [
+            }
+
+            // On the retry (second attempt), this is a genuine failure
+            if ($isAuthFailure) {
+                Log::error("ZTrack: Authentication still failing after SID refresh.", [
                     'endpoint' => $endpoint,
-                    'response' => $data
+                    'response' => $data,
                 ]);
                 throw new ZTrackException(
                     "ZTrack session authentication failed repeatedly: " . ($data['msg'] ?? 'Session invalid'),
@@ -230,15 +248,11 @@ class ZTrackService
                     $data
                 );
             }
-        }
 
-        // Validate basic success parameters if present
-        $success = $data['success'] ?? false;
-        if (!$success) {
             $msg = $data['msg'] ?? 'API request returned success as false';
-            Log::error("ZTrack API returned error status.", [
+            Log::error("ZTrack: API returned error status on retry.", [
                 'endpoint' => $endpoint,
-                'response' => $data
+                'response' => $data,
             ]);
             throw new ZTrackException("ZTrack API error on {$endpoint}: {$msg}", 400, $data);
         }

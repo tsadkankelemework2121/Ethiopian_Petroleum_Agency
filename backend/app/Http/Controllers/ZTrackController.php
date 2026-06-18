@@ -56,9 +56,54 @@ class ZTrackController extends Controller
      */
     public function getVehiclesStatus(): JsonResponse
     {
+        // Extend PHP execution limit for this request (ZTrack can take >30s for large fleet)
+        @set_time_limit(120);
+        @ini_set('max_execution_time', 120);
+
         try {
             $data = $this->ztrack->getVehicleStatus();
-            return response()->json($data);
+
+            // The ZTrack API returns 'data' as an object keyed by unitId,
+            // e.g. {"2962": {"unitId":2962, "name":"...", "lon":42.6}, ...}
+            // The frontend expects an array with 'plateNo' and 'lng' fields.
+            $vehicles = $data['data'] ?? [];
+            if (is_object($vehicles) || (is_array($vehicles) && !array_is_list($vehicles))) {
+                $vehicles = array_values((array) $vehicles);
+            }
+
+            // Map ZTrack field names to the frontend-expected names
+            $normalized = array_map(function ($v) {
+                return [
+                    'unitId'   => $v['unitId'] ?? 0,
+                    'plateNo'  => $v['name'] ?? $v['plateNo'] ?? 'Unknown',
+                    'imei'     => 'ztrack_' . ($v['unitId'] ?? 0),
+                    'lat'      => $v['lat'] ?? 0,
+                    'lng'      => $v['lon'] ?? $v['lng'] ?? 0,
+                    'speed'    => $v['speed'] ?? 0,
+                    'engine'   => ($v['speed'] ?? 0) > 0 ? 'on' : 'off',
+                    'status'   => ($v['speed'] ?? 0) > 0 ? 'Moving' : (isset($v['time']) && (time() - ($v['time'] ?? 0)) < 3600 ? 'Idle' : 'Stopped'),
+                    'dt_tracker' => isset($v['time']) ? date('Y-m-d H:i:s', $v['time']) : now()->format('Y-m-d H:i:s'),
+                    'dt_server'  => now()->format('Y-m-d H:i:s'),
+                    'odometer'   => $v['odometer'] ?? 0,
+                    'angle'      => $v['angle'] ?? 0,
+                    'altitude'   => $v['altitude'] ?? 0,
+                    'fuel_1'     => $v['fuel_1'] ?? '0 L',
+                    'fuel_2'     => $v['fuel_2'] ?? '0 L',
+                    'fuel_can_level_percent' => $v['fuel_can_level_percent'] ?? null,
+                    'fuel_can_level_value'   => $v['fuel_can_level_value'] ?? null,
+                    'custom_fields' => $v['custom_fields'] ?? 'ZTrack Vehicle',
+                ];
+            }, $vehicles);
+
+            Log::info('ZTrack getVehiclesStatus: Returning ' . count($normalized) . ' vehicles with real data.');
+
+            return response()->json([
+                'auth'    => true,
+                'success' => true,
+                'msg'     => 'Vehicle status fetched successfully',
+                'data'    => $normalized,
+            ]);
+
         } catch (\Exception $e) {
             Log::warning('ZTrack API getVehicleStatus failed, falling back to mock generator:', [
                 'message' => $e->getMessage()
@@ -162,18 +207,23 @@ class ZTrackController extends Controller
      */
     public function getMovementReport(Request $request, $unitId): JsonResponse
     {
-        $request->validate([
-            'st' => 'required|date_format:Y-m-d H:i:s',
-            'ed' => 'required|date_format:Y-m-d H:i:s',
-        ], [
-            'st.required' => 'The start date and time (st) is required.',
-            'st.date_format' => 'The start date and time (st) must be in the format Y-m-d H:i:s.',
-            'ed.required' => 'The end date and time (ed) is required.',
-            'ed.date_format' => 'The end date and time (ed) must be in the format Y-m-d H:i:s.',
-        ]);
+        // Extend PHP execution limit for this request
+        @set_time_limit(120);
+        @ini_set('max_execution_time', 120);
 
-        $st = $request->input('st');
-        $ed = $request->input('ed');
+        $stInput = $request->input('st');
+        $edInput = $request->input('ed');
+
+        // Parse dates robustly using Carbon
+        try {
+            $st = $stInput ? \Illuminate\Support\Carbon::parse($stInput)->format('Y-m-d H:i:s') : \Illuminate\Support\Carbon::today()->startOfDay()->format('Y-m-d H:i:s');
+            $ed = $edInput ? \Illuminate\Support\Carbon::parse($edInput)->format('Y-m-d H:i:s') : \Illuminate\Support\Carbon::today()->endOfDay()->format('Y-m-d H:i:s');
+        } catch (\Exception $ex) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid date format provided for st or ed query parameters. Please use Y-m-d H:i:s or ISO-8601.'
+            ], 422);
+        }
 
         try {
             $data = $this->ztrack->getMovReport($unitId, $st, $ed);

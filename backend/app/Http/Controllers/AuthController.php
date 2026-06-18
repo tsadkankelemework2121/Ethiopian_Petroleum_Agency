@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Services\ZTrack\ZTrackService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -22,6 +23,13 @@ class AuthController extends Controller
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
+        }
+
+        // Clear ZTrack cached SID on login to force fresh session ID
+        try {
+            app(ZTrackService::class)->clearCachedSid();
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Failed to clear cached ZTrack SID on login: ' . $e->getMessage());
         }
 
         // Create a new token (keep existing sessions alive for multi-device support)
