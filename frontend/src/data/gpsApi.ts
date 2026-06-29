@@ -2,7 +2,7 @@ import type { GpsVehicle } from './types'
 import api from '../api/axios'
 
 const GPS_API_URL =
-  'https://mellatech.et/et/api/api.php?api=user&ver=1.0&key=4DC7C24EDCF88C5B3F8B03A72631DBF8&cmd=USER_GET_OBJECTS'
+  'https://mellatech.et/et/api/api.php?api=user&ver=1.0&cmd=USER_GET_OBJECTS'
 
 export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
   // Start Mellatech and ZTrack fetches in parallel
@@ -20,7 +20,11 @@ export async function fetchGpsVehicles(): Promise<GpsVehicle[]> {
     }
 
     try {
-      const res = await fetch(GPS_API_URL)
+      const res = await fetch(GPS_API_URL, {
+        headers: {
+          'key': '4DC7C24EDCF88C5B3F8B03A72631DBF8'
+        }
+      })
       if (res.ok) {
         const data = (await res.json()) as any[]
         if (Array.isArray(data) && data.length > 0) {
