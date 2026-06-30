@@ -8,6 +8,7 @@ import logo from '../assets/logo.png';
 
 const DemoPage = () => {
   const [errorMsg, setErrorMsg] = useState('');
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -28,7 +29,7 @@ const DemoPage = () => {
       if (err.response && err.response.data && err.response.data.message) {
          setErrorMsg(err.response.data.message);
       } else {
-         setErrorMsg('Invalid demo credentials or server error.');
+         setErrorMsg('Invalid credentials or server error.');
       }
     }
   });
@@ -39,10 +40,7 @@ const DemoPage = () => {
     localStorage.clear();
     queryClient.clear();
     // Use the correct password for each demo account
-    let password = 'depot2';
-    if (email === 'admin@epa.com' || email === 'admin@ola.com') {
-      password = 'admin123';
-    }
+    let password = 'admin123';
     mutation.mutate({ email, password });
   };
 
@@ -95,7 +93,7 @@ const DemoPage = () => {
             <button
               type="button"
               disabled={mutation.isPending}
-              onClick={() => handleDemoLogin('depot2@ola.com')}
+              onClick={() => navigate('/admin-login')}
               className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-lg shadow-md text-sm font-bold text-white bg-[#1c8547] hover:bg-[#15803d] disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#1c8547] transition-all"
             >
               Log in as Depot Admin
