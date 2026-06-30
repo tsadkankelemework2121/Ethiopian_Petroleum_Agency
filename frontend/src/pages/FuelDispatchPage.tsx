@@ -99,9 +99,8 @@ export default function FuelDispatchPage() {
 
   // Derived Mappings
   const oilCompanies = useMemo(() => {
-    const names = Array.from(new Set(vehicles.map((v) => v.group).filter(Boolean))) as string[]
-    return names.map((name) => ({ id: name, name: name, contacts: {} }))
-  }, [vehicles])
+    return [{ id: 'OLA', name: 'OLA', contacts: {} }]
+  }, [])
 
   const depotsById = useMemo(() => new Map(depots.map((d) => [d.id, d] as const)), [depots])
 

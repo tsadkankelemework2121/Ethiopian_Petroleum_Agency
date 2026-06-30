@@ -19,10 +19,9 @@ export default function OilCompaniesPage() {
   const [localCompanies, setLocalCompanies] = useState<OilCompany[]>([])
 
   const companies = useMemo(() => {
-    const groups = Array.from(new Set(vehicles.map((v) => v.group).filter(Boolean))) as string[];
-    const apiCompanies: OilCompany[] = groups.map((group) => ({
-      id: `OC-${group}`,
-      name: group,
+    const apiCompanies: OilCompany[] = [{
+      id: `OLA`,
+      name: 'OLA',
       contacts: {
         person1: undefined,
         person2: undefined,
@@ -31,7 +30,7 @@ export default function OilCompaniesPage() {
         email1: undefined,
         email2: undefined,
       },
-    }));
+    }];
 
     // Merge with localCompanies
     const combined = [...apiCompanies]

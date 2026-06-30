@@ -65,7 +65,6 @@ export default function DispatchForm({
     )
 
     return vehicles.filter(v => 
-      v.group === formData.oilCompanyId && 
       !occupiedVehicleIds.has(v.imei)
     )
   }, [formData.oilCompanyId, vehicles, dispatches, editingTask])
