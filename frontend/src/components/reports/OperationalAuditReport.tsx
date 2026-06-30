@@ -20,15 +20,22 @@ export default function OperationalAuditReport({
   
 
   const handlePrint = () => {
-    window.print()
+    // Force the report open before printing
+    if (!showDashboardReport) {
+      setShowDashboardReport(true)
+      // Small delay to let React render the content before triggering print
+      setTimeout(() => window.print(), 100)
+    } else {
+      window.print()
+    }
   }
 
   return (
-    <div className="mt-6 rounded-2xl border border-[#D1D5DB] bg-white overflow-hidden shadow-card no-print">
+    <div className="mt-6 rounded-2xl border border-[#D1D5DB] bg-white overflow-hidden shadow-card print:border-none print:shadow-none print:mt-0 print:rounded-none">
       <button
         type="button"
         onClick={() => setShowDashboardReport(!showDashboardReport)}
-        className="w-full flex items-center justify-between px-6 py-5 bg-slate-50 hover:bg-slate-100/80 transition"
+        className="w-full flex items-center justify-between px-6 py-5 bg-slate-50 hover:bg-slate-100/80 transition no-print"
       >
         <div className="text-left">
           <div className="text-base font-bold text-text">National Fuel Dispatch & Fleet Operational Audit Report</div>

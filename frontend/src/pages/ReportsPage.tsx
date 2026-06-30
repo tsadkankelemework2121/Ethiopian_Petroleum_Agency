@@ -448,13 +448,23 @@ export default function ReportsPage() {
             color: black !important;
           }
           /* Hide normal UI wrapper components for clean printable sheet */
-          header, aside, nav, button, input, select, .no-print, h2 {
+          header, aside, nav, .no-print {
             display: none !important;
           }
           main {
             padding: 0 !important;
             margin: 0 !important;
             overflow: visible !important;
+          }
+          /* Clean up the printable report area */
+          .print\\:hidden {
+            display: none !important;
+          }
+          .print\\:block {
+            display: block !important;
+          }
+          @page {
+            margin: 1.5cm;
           }
         }
       `}</style>
