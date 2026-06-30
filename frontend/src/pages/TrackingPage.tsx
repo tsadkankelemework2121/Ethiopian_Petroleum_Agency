@@ -71,7 +71,7 @@ export default function TrackingPage() {
 
   // Fetch Dispatches
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery({
-    queryKey: ['dispatches', user?.role, user?.companyId, user?.depotId],
+    queryKey: ['dispatches'],
     queryFn: async () => {
       const res = await api.get('/dispatches', {
         params: user?.role?.toUpperCase() === 'OIL_COMPANY' ? { oil_company_id: user?.companyId } : {},
@@ -96,8 +96,7 @@ export default function TrackingPage() {
         })) || []
       )
     },
-    staleTime: 0,
-    refetchInterval: 30000,
+    refetchInterval: 3 * 60 * 1000,
   })
 
   // Fetch Depots

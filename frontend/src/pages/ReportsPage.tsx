@@ -105,7 +105,6 @@ export default function ReportsPage() {
       }
       return data
     },
-    refetchInterval: 60 * 1000, // 1 minute
   })
 
   const isLoading = dispatchesLoading || depotsLoading || gpsLoading

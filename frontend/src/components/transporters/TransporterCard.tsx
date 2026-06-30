@@ -94,10 +94,10 @@ export default function TransporterCard({
                 <tr key={v.id} className="hover:bg-white transition-colors">
                   <td className="whitespace-nowrap px-4 py-2.5 text-text font-medium flex items-center gap-1.5">
                     <span>{v.plateRegNo}</span>
-                    <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border ${
+                    <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider leading-none border ${
                       v.id.startsWith('ztrack_')
-                        ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800'
-                        : 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800'
+                        ? 'bg-indigo-50/60 text-indigo-600 border-indigo-200/60 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-800/40'
+                        : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800/40'
                     }`}>
                       {v.id.startsWith('ztrack_') ? 'ztrack' : 'mella'}
                     </span>
@@ -125,10 +125,10 @@ export default function TransporterCard({
                   <div className="min-w-0">
                     <div className="text-sm font-medium text-text truncate flex items-center gap-1.5">
                       <span>{v.plateRegNo}</span>
-                      <span className={`inline-flex items-center rounded px-1.5 py-0.2 text-[8px] font-extrabold uppercase tracking-wide leading-none border ${
+                      <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider leading-none border ${
                         v.id.startsWith('ztrack_')
-                          ? 'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/30 dark:text-purple-400 dark:border-purple-800'
-                          : 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/30 dark:text-teal-400 dark:border-teal-800'
+                          ? 'bg-indigo-50/60 text-indigo-600 border-indigo-200/60 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-800/40'
+                          : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800/40'
                       }`}>
                         {v.id.startsWith('ztrack_') ? 'ztrack' : 'mella'}
                       </span>

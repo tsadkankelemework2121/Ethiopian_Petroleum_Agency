@@ -20,7 +20,7 @@ const queryClient = new QueryClient({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter basename="/pea"> 
+      <BrowserRouter basename="/pea">
         <AuthProvider>
           <App />
         </AuthProvider>

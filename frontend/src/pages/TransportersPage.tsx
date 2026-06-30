@@ -21,7 +21,6 @@ export default function TransportersPage() {
   const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['gps-vehicles'],
     queryFn: fetchGpsVehicles,
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
   })
 
   // Local state for newly created transporters/trucks (simulating persistence for this session)

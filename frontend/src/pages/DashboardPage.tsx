@@ -24,16 +24,13 @@ export default function DashboardPage() {
 
   // 1. Fetch Dispatches
   const { data: dispatches = [], isLoading: dispatchesLoading } = useQuery<DispatchTask[]>({
-    queryKey: ['dispatches', user?.role, companyId, user?.depotId],
+    queryKey: ['dispatches'],
     queryFn: () =>
       api
         .get('/dispatches', { params: companyId ? { oil_company_id: companyId } : {} })
         .then((res) =>
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           res.data.map((d: any) => ({
-
-
-
             peaDispatchNo: d.pea_dispatch_no,
             oilCompanyId: d.oil_company_id,
             transporterId: d.transporter_id,
@@ -49,13 +46,12 @@ export default function DashboardPage() {
             confirmation: d.confirmation || null,
           }))
         ),
-    staleTime: 0,
-    refetchInterval: 30000,
+    refetchInterval: 5 * 60 * 1000,
   })
 
   // 2. Fetch GPS Vehicles
   const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
-    queryKey: ['gps-vehicles', user?.role, companyId, user?.depotId],
+    queryKey: ['gps-vehicles'],
     queryFn: async () => {
       let data = await fetchGpsVehicles()
       if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
@@ -63,8 +59,7 @@ export default function DashboardPage() {
       }
       return data
     },
-    staleTime: 0,
-    refetchInterval: 5* 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   })
 
   const isLoading = dispatchesLoading || gpsLoading

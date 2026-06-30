@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
@@ -22,6 +22,7 @@ import DispatchTrackingModal from '../components/fuel-dispatch/DispatchTrackingM
 export default function FuelDispatchPage() {
   const { user } = useAuth()
   const companyId = user?.companyId
+  const queryClient = useQueryClient()
 
   const isDepotAdmin = user?.role?.toUpperCase() === 'DEPOT_ADMIN'
   const isEpaAdmin = user?.role?.toUpperCase() === 'EPA_ADMIN'
@@ -42,7 +43,6 @@ export default function FuelDispatchPage() {
   const {
     data: rawTasks = [],
     isLoading: isDispatchesLoading,
-    refetch: refetchDispatches,
   } = useQuery<DispatchTask[]>({
     queryKey: ['dispatches'],
     queryFn: () =>
@@ -66,8 +66,6 @@ export default function FuelDispatchPage() {
             confirmation: d.confirmation || null,
           }))
         ),
-    staleTime: 0,
-    refetchInterval: 30000,
   })
 
   // 2. Fetch Depots
@@ -95,7 +93,6 @@ export default function FuelDispatchPage() {
       }
       return data
     },
-    refetchInterval: 60 * 1000, // 1 minute
   })
 
   const isInitialLoading = isDispatchesLoading || isDepotsLoading || isVehiclesLoading
@@ -258,7 +255,7 @@ export default function FuelDispatchPage() {
           onClose={() => setShowDispatchForm(false)}
           onSubmit={() => {
             setShowDispatchForm(false)
-            refetchDispatches()
+            queryClient.invalidateQueries({ queryKey: ['dispatches'] })
           }}
         />
       </ModalOverlay>
@@ -277,7 +274,7 @@ export default function FuelDispatchPage() {
             onClose={() => setConfirmTask(null)}
             onSuccess={() => {
               setConfirmTask(null)
-              refetchDispatches()
+              queryClient.invalidateQueries({ queryKey: ['dispatches'] })
             }}
           />
         )}

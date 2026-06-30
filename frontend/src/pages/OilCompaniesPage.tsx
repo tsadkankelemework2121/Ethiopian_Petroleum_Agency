@@ -13,7 +13,6 @@ export default function OilCompaniesPage() {
   const { data: vehicles = [], isLoading } = useQuery({
     queryKey: ['gps-vehicles'],
     queryFn: fetchGpsVehicles,
-    refetchInterval: 5 * 60 * 1000, // 5 minutes
   })
 
   // Local state for persistence in current session

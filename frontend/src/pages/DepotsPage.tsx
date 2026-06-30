@@ -23,7 +23,7 @@ export default function DepotsPage() {
   const canManage = canAdd || user?.role === 'EPA_ADMIN'
 
   const { data: items = [], isLoading } = useQuery<Depot[]>({
-    queryKey: ['depots', user?.companyId],
+    queryKey: ['depots'],
     queryFn: async () => {
       const res = await api.get('/depots', { params: { oil_company_id: user?.companyId } })
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,7 +44,6 @@ export default function DepotsPage() {
       }))
     },
     enabled: !!user?.companyId || user?.role === 'EPA_ADMIN',
-    refetchInterval: 5 * 60 * 1000,
   })
 
   const openGoogleMaps = (depot: Depot) => {
