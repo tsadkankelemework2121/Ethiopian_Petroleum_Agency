@@ -91,7 +91,7 @@ export default function DispatchForm({
 
   // Auto-fill transporter when vehicle changes
   const handleVehicleSelect = (v: GpsVehicle) => {
-    const transporterName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
+    const transporterName = v.group || ''
     setFormData(prev => ({
       ...prev,
       vehicleId: v.name,

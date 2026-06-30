@@ -31,7 +31,7 @@ export default function TransportersPage() {
 
     // Start with API data
     vehicles.forEach((v) => {
-      const transName = typeof v.custom_fields === 'string' ? v.custom_fields : ''
+      const transName = v.group || ''
       if (!transName) return
 
       let transporter = transportersMap.get(transName)
