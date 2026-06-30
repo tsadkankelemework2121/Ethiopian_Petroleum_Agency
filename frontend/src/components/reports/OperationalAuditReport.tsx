@@ -83,13 +83,23 @@ export default function OperationalAuditReport({
             <h3 className="text-sm font-extrabold uppercase tracking-wider text-slate-800 border-b border-slate-200 pb-2">
               1. Executive KPI Summary
             </h3>
-            <div className="grid gap-3 grid-cols-2 sm:grid-cols-5 text-center">
-              {dashboardKpis.map((k) => (
-                <div key={k.label} className="p-4 rounded-xl border border-slate-200 bg-white print:border-slate-300">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{k.label}</div>
-                  <div className="mt-2 text-2xl font-extrabold text-slate-900">{k.value}</div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left border border-slate-200 print:border-slate-300">
+                <thead className="bg-slate-50 text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                  <tr>
+                    <th className="px-4 py-3 border border-slate-200">Metric Indicator</th>
+                    <th className="px-4 py-3 border border-slate-200 text-right">Current Value / Count</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {dashboardKpis.map((k) => (
+                    <tr key={k.label} className="hover:bg-slate-50/50">
+                      <td className="px-4 py-3 font-semibold text-slate-800 border border-slate-200">{k.label}</td>
+                      <td className="px-4 py-3 text-right font-extrabold text-slate-900 border border-slate-200">{k.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 

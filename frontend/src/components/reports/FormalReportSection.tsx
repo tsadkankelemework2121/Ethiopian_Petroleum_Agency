@@ -1,5 +1,6 @@
 import StatusPill from '../ui/StatusPill'
 import type { DispatchTask } from '../../data/types'
+import { useState } from 'react'
 
 export default function FormalReportSection({
   filterType,
@@ -38,6 +39,16 @@ export default function FormalReportSection({
   result: { columns: string[]; rows: any[] }
   isLoading: boolean
 }) {
+  const [isSimulating, setIsSimulating] = useState(false)
+
+  const handleRunReport = () => {
+    setIsSimulating(true)
+    setTimeout(() => {
+      setApplied({ query, from, to })
+      setIsSimulating(false)
+    }, 800)
+  }
+
   return (
     <>
       <div className="flex items-center gap-2 mt-6 relative">
@@ -125,10 +136,18 @@ export default function FormalReportSection({
         <div className="mt-3 flex justify-end">
           <button
             type="button"
-            onClick={() => setApplied({ query, from, to })}
-            className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-card hover:shadow-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 bg-primary hover:bg-primary-strong"
+            onClick={handleRunReport}
+            disabled={isSimulating}
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-white shadow-card hover:shadow-md transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 bg-primary hover:bg-primary-strong disabled:opacity-70 disabled:cursor-wait cursor-pointer active:scale-95 flex items-center gap-2"
           >
-            Run report
+            {isSimulating ? (
+              <>
+                <div className="size-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                Running...
+              </>
+            ) : (
+              'Run report'
+            )}
           </button>
         </div>
       </div>
