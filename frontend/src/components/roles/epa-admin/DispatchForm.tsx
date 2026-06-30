@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import api from '../../../api/axios'
 import type { Depot, DispatchTask, FuelType, OilCompany, GpsVehicle } from '../../../data/types'
 import { useAuth } from '../../../context/AuthContext'
@@ -26,7 +26,7 @@ export default function DispatchForm({
     transporterId: editingTask?.transporterId || '',
     vehicleId: editingTask?.vehicleId || '',
     dispatchDateTime: (editingTask?.dispatchDateTime || '').split('.')[0],
-    dispatchLocation: editingTask?.dispatchLocation || '',
+    dispatchLocation: editingTask?.dispatchLocation || 'Djibouti',
     destinationDepotId: editingTask?.destinationDepotId || '',
     etaDateTime: (editingTask?.etaDateTime || '').split('.')[0],
     fuelType: (editingTask?.fuelType || 'Benzine') as FuelType,
@@ -44,6 +44,17 @@ export default function DispatchForm({
   const [vehicleSearch, setVehicleSearch] = useState('')
   const [showVehicleDropdown, setShowVehicleDropdown] = useState(false)
   const [saving, setSaving] = useState(false)
+  const dropdownRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowVehicleDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   // Initialization: if editing, set the search text to the plate number
   useEffect(() => {
@@ -180,7 +191,7 @@ export default function DispatchForm({
 
         <div className="sm:col-span-2 relative">
           <label className="block text-sm font-semibold mb-1 text-slate-700">Vehicle (Plate Registration) *</label>
-          <div className="relative">
+          <div className="relative" ref={dropdownRef}>
             <input
               type="text"
               placeholder={formData.oilCompanyId ? "Search plate number..." : "Select company first..."}
