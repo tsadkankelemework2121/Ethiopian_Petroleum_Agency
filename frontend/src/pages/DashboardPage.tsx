@@ -53,11 +53,7 @@ export default function DashboardPage() {
   const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: async () => {
-      let data = await fetchGpsVehicles()
-      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
-        data = data.filter((v) => v.group === companyId)
-      }
-      return data
+      return await fetchGpsVehicles()
     },
     refetchInterval: 5 * 60 * 1000,
   })
@@ -186,13 +182,20 @@ export default function DashboardPage() {
     return [...dispatches]
       .sort((a, b) => new Date(b.dispatchDateTime).getTime() - new Date(a.dispatchDateTime).getTime())
       .slice(0, 6)
-      .map((d) => ({
-        ...d,
-        oilCompany: d.oilCompanyId,
-        transporter: d.transporterId || '—',
-        eta: d.etaDateTime?.replace('T', ' ').replace('Z', '') || '—',
-      }))
-  }, [dispatches])
+      .map((d) => {
+        const vehicle = gpsVehicles.find(
+          (v) =>
+            v.name?.toLowerCase() === d.vehicleId?.toLowerCase() ||
+            v.imei === d.vehicleId
+        )
+        return {
+          ...d,
+          oilCompany: d.oilCompanyId,
+          transporter: vehicle?.group || d.transporterId || '—',
+          eta: d.etaDateTime?.replace('T', ' ').replace('Z', '') || '—',
+        }
+      })
+  }, [dispatches, gpsVehicles])
 
   const pieColors: Record<string, string> = {
     Delivered: chartColors.blue,

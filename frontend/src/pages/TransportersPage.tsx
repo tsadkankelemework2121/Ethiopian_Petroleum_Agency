@@ -4,7 +4,6 @@ import type { Transporter, Vehicle } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { useAuth } from '../context/AuthContext'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
-import { PlusIcon } from '@heroicons/react/24/outline'
 import { useQuery } from '@tanstack/react-query'
 
 // Child components
@@ -100,17 +99,6 @@ export default function TransportersPage() {
       <PageHeader
         title="Transporters & Trucks"
         subtitle="Manage transporter fleets, trucks registry, and driver details."
-        right={
-          user?.role === 'OIL_COMPANY_ADMIN' && (
-            <button
-              onClick={() => setShowTransporterForm(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-            >
-              <PlusIcon className="size-5" />
-              New Transporter
-            </button>
-          )
-        }
       />
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -125,8 +113,6 @@ export default function TransportersPage() {
             <TransporterCard
               key={t.id}
               t={t}
-              onAddTruck={(tId) => setShowTruckFormForTransporter(tId)}
-              userRole={user?.role || ''}
             />
           ))
         )}

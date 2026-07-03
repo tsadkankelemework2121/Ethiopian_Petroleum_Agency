@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '../api/axios'
 import { useAuth } from '../context/AuthContext'
 import type { Depot } from '../data/types'
+import { mapDepot } from '../data/types'
 import { isVehicleInDjibouti } from '../lib/geofence'
 import { useSearchParams } from 'react-router-dom'
 
@@ -43,13 +44,9 @@ export default function TrackingPage() {
   const { data: items = [], isLoading: itemsLoading, error: queryError } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: async () => {
-      let data = await fetchGpsVehicles()
-      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
-        data = data.filter((v) => v.group === user.companyId)
-      }
-      return data
+      return await fetchGpsVehicles()
     },
-    refetchInterval: 60000, // 1 minute
+    refetchInterval: 5 * 60 * 1000, // 5 minutes
   })
 
   // Auto-select vehicle from query parameter if provided
@@ -104,7 +101,7 @@ export default function TrackingPage() {
     queryKey: ['depots'],
     queryFn: async () => {
       const res = await api.get('/depots')
-      return res.data
+      return res.data.map(mapDepot)
     },
   })
 

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
+import { mapDepot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { useAuth } from '../context/AuthContext'
 import { parseStatusDurationHours, getStatusCategory } from '../lib/parseGpsDuration'
@@ -83,15 +84,7 @@ export default function ReportsPage() {
   const { data: depots = [], isLoading: depotsLoading } = useQuery<Depot[]>({
     queryKey: ['depots'],
     queryFn: () =>
-      api.get('/depots').then((res) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        res.data.map((d: any) => ({
-          ...d,
-          id: d.id.toString(),
-          location: { region: d.region, city: d.city, address: d.address },
-          oilCompanyId: d.oil_company_id,
-        }))
-      ),
+      api.get('/depots').then((res) => res.data.map(mapDepot)),
   })
 
 
@@ -99,11 +92,7 @@ export default function ReportsPage() {
   const { data: gpsVehicles = [], isLoading: gpsLoading } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: async () => {
-      let data = await fetchGpsVehicles()
-      if (user?.role?.toUpperCase() === 'OIL_COMPANY' || user?.role?.toUpperCase() === 'OIL_COMPANY_ADMIN') {
-        data = data.filter((v) => v.group === user.companyId)
-      }
-      return data
+      return await fetchGpsVehicles()
     },
   })
 

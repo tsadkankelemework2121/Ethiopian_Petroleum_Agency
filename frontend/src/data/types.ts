@@ -146,3 +146,26 @@ export type GpsVehicle = {
   source?: 'ztrack' | 'mella'
 }
 
+export function mapDepot(d: any): Depot {
+  return {
+    ...d,
+    id: d.id.toString(),
+    location: {
+      region: d.region || '—',
+      city: d.city || '—',
+      address: d.address || '—',
+    },
+    contacts: {
+      person1: d.person1 || undefined,
+      person2: d.person2 || undefined,
+      phone1: d.phone1 || undefined,
+      phone2: d.phone2 || undefined,
+      email1: d.email1 || undefined,
+      email2: d.email2 || undefined,
+    },
+    mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
+    mapLink: d.map_link || undefined,
+    hasDispatches: d.has_dispatches ?? false,
+  }
+}
+

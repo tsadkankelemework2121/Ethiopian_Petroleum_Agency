@@ -1,15 +1,10 @@
 import { useState } from 'react'
-import { PlusIcon } from '@heroicons/react/24/outline'
 import type { Transporter } from '../../data/types'
 
 export default function TransporterCard({
   t,
-  onAddTruck,
-  userRole,
 }: {
   t: Transporter
-  onAddTruck: (tId: string) => void
-  userRole: string
 }) {
   const [search, setSearch] = useState('')
   const [expandedVehicle, setExpandedVehicle] = useState<string | null>(null)
@@ -56,16 +51,6 @@ export default function TransporterCard({
               onChange={(e) => setSearch(e.target.value)}
               className="w-48 rounded-md border border-[#D1D5DB] bg-white px-2 py-1 text-xs outline-none focus:ring-2 focus:ring-primary/40"
             />
-            {userRole === 'OIL_COMPANY_ADMIN' && (
-              <button
-                type="button"
-                onClick={() => onAddTruck(t.id)}
-                className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/20 transition animate-fade-in-up"
-              >
-                <PlusIcon className="size-3" />
-                Add Truck
-              </button>
-            )}
           </div>
         </div>
       </div>
@@ -97,7 +82,7 @@ export default function TransporterCard({
                     <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider leading-none border ${
                       v.id.startsWith('ztrack_')
                         ? 'bg-indigo-50/60 text-indigo-600 border-indigo-200/60 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-800/40'
-                        : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800/40'
+                        : 'bg-primary/15 text-primary-strong border-primary/20 dark:bg-primary/10 dark:text-primary dark:border-primary/30'
                     }`}>
                       {v.id.startsWith('ztrack_') ? 'ztrack' : 'mella'}
                     </span>
@@ -128,7 +113,7 @@ export default function TransporterCard({
                       <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider leading-none border ${
                         v.id.startsWith('ztrack_')
                           ? 'bg-indigo-50/60 text-indigo-600 border-indigo-200/60 dark:bg-indigo-950/20 dark:text-indigo-400 dark:border-indigo-800/40'
-                          : 'bg-emerald-50/60 text-emerald-600 border-emerald-200/60 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-800/40'
+                          : 'bg-primary/15 text-primary-strong border-primary/20 dark:bg-primary/10 dark:text-primary dark:border-primary/30'
                       }`}>
                         {v.id.startsWith('ztrack_') ? 'ztrack' : 'mella'}
                       </span>

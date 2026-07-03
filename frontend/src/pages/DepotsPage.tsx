@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import api from '../api/axios'
 import type { Depot } from '../data/types'
+import { mapDepot } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { MapPinIcon, PlusIcon } from '@heroicons/react/24/outline'
@@ -26,22 +27,7 @@ export default function DepotsPage() {
     queryKey: ['depots'],
     queryFn: async () => {
       const res = await api.get('/depots', { params: { oil_company_id: user?.companyId } })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return res.data.map((d: any) => ({
-        ...d,
-        location: { region: d.region, city: d.city, address: d.address },
-        contacts: {
-          person1: d.person1,
-          person2: d.person2,
-          phone1: d.phone1,
-          phone2: d.phone2,
-          email1: d.email1,
-          email2: d.email2,
-        },
-        mapLocation: d.lat && d.lng ? { lat: Number(d.lat), lng: Number(d.lng) } : undefined,
-        mapLink: d.map_link,
-        hasDispatches: d.has_dispatches ?? false,
-      }))
+      return res.data.map(mapDepot)
     },
     enabled: !!user?.companyId || user?.role === 'EPA_ADMIN',
   })

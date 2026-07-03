@@ -161,9 +161,14 @@ export default function DepotForm({
           <label className="block text-sm font-semibold text-text mb-1">Phone 1</label>
           <input
             type="tel"
-            placeholder="e.g. +251 911 234 567"
+            placeholder="e.g. 0911234567"
+            pattern="[0-9]{10}"
+            title="Phone number must be exactly 10 digits (e.g. 0911234567)"
             value={formData.phone1}
-            onChange={(e) => setFormData({ ...formData, phone1: e.target.value })}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 10)
+              setFormData({ ...formData, phone1: val })
+            }}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
@@ -171,16 +176,22 @@ export default function DepotForm({
           <label className="block text-sm font-semibold text-text mb-1">Phone 2</label>
           <input
             type="tel"
-            placeholder="e.g. +251 911 234 568"
+            placeholder="e.g. 0911234568"
+            pattern="[0-9]{10}"
+            title="Phone number must be exactly 10 digits (e.g. 0911234568)"
             value={formData.phone2}
-            onChange={(e) => setFormData({ ...formData, phone2: e.target.value })}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, '').slice(0, 10)
+              setFormData({ ...formData, phone2: val })
+            }}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
         <div>
-          <label className="block text-sm font-semibold text-text mb-1">Email 1</label>
+          <label className="block text-sm font-semibold text-text mb-1">Email 1 *</label>
           <input
             type="email"
+            required
             placeholder="e.g. contact@depot.com"
             value={formData.email1}
             onChange={(e) => setFormData({ ...formData, email1: e.target.value })}
@@ -201,13 +212,14 @@ export default function DepotForm({
         {/* Password for depot login */}
         <div className="sm:col-span-2 pt-2 border-t border-[#D1D5DB] mt-2">
           <label className="block text-sm font-semibold text-text mb-1">
-            Depot Login Password {editingDepot ? '(leave blank to keep current)' : ''}
+            Depot Login Password {editingDepot ? '(leave blank to keep current)' : '*'}
           </label>
           <p className="text-xs text-text-muted mb-2">
             If Email 1 and password are provided, a login account will be created for this depot to confirm deliveries.
           </p>
           <input
             type="password"
+            required={!editingDepot}
             placeholder={editingDepot ? 'Leave blank to keep current password' : 'Set depot login password (min 6 chars)'}
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}

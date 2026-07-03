@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import api from '../api/axios'
 import { fetchGpsVehicles } from '../data/gpsApi'
 import type { Depot, DispatchTask, GpsVehicle } from '../data/types'
+import { mapDepot } from '../data/types'
 import { useAuth } from '../context/AuthContext'
 
 import PageHeader from '../components/layout/PageHeader'
@@ -72,26 +73,14 @@ export default function FuelDispatchPage() {
   const { data: depots = [], isLoading: isDepotsLoading } = useQuery<Depot[]>({
     queryKey: ['depots'],
     queryFn: () =>
-      api.get('/depots').then((res) =>
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        res.data.map((d: any) => ({
-          ...d,
-          id: d.id.toString(),
-          location: { region: d.region, city: d.city, address: d.address },
-          oilCompanyId: d.oil_company_id,
-        }))
-      ),
+      api.get('/depots').then((res) => res.data.map(mapDepot)),
   })
 
   // 3. Fetch GPS Vehicles
   const { data: vehicles = [], isLoading: isVehiclesLoading } = useQuery<GpsVehicle[]>({
     queryKey: ['gps-vehicles'],
     queryFn: async () => {
-      let data = await fetchGpsVehicles()
-      if (isOilCompany) {
-        data = data.filter((v) => v.group === companyId)
-      }
-      return data
+      return await fetchGpsVehicles()
     },
   })
 
