@@ -35,11 +35,11 @@ export default function DashboardPage() {
             oilCompanyId: d.oil_company_id,
             transporterId: d.transporter_id,
             vehicleId: d.vehicle_id,
-            dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
+            dispatchDateTime: d.dispatch_datetime ? d.dispatch_datetime.split(' ')[0].split('T')[0] : '',
             dispatchLocation: d.dispatch_location,
             destinationDepotId: d.destination_depot_id?.toString() || '',
-            etaDateTime: d.eta_datetime?.replace(' ', 'T'),
-            dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+            etaDateTime: d.eta_datetime ? d.eta_datetime.split(' ')[0].split('T')[0] : '',
+            dropOffDateTime: d.drop_off_datetime ? d.drop_off_datetime.split(' ')[0].split('T')[0] : '',
             fuelType: d.fuel_type,
             dispatchedLiters: Number(d.dispatched_liters || 0),
             status: d.status,
@@ -90,8 +90,9 @@ export default function DashboardPage() {
       return parseStatusDurationHours(v.status) > 24
     }).length
 
+    const todayStr = now.toISOString().split('T')[0]
     const exceeded = dispatches.filter(
-      (d) => d.status !== 'Delivered' && d.etaDateTime && new Date(d.etaDateTime) < now
+      (d) => d.status !== 'Delivered' && d.etaDateTime && d.etaDateTime.split('T')[0].split(' ')[0] < todayStr
     ).length
 
     return [
@@ -192,7 +193,7 @@ export default function DashboardPage() {
           ...d,
           oilCompany: d.oilCompanyId,
           transporter: vehicle?.group || d.transporterId || '—',
-          eta: d.etaDateTime?.replace('T', ' ').replace('Z', '') || '—',
+          eta: d.etaDateTime || '—',
         }
       })
   }, [dispatches, gpsVehicles])

@@ -1,7 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import AppLayout from './components/layout/AppLayout'
 import DashboardPage from './pages/DashboardPage'
-import DepotsPage from './pages/DepotsPage'
+import DestinationsPage from './pages/DestinationsPage'
 import FuelDispatchPage from './pages/FuelDispatchPage'
 import OilCompaniesPage from './pages/OilCompaniesPage'
 import ProfilePage from './pages/ProfilePage'
@@ -39,7 +39,7 @@ export default function App() {
             <Route index element={<Navigate to="/entities/oil-companies" replace />} />
             <Route path="oil-companies" element={<OilCompaniesPage />} />
             <Route path="transporters" element={<TransportersPage />} />
-            <Route path="depots" element={<DepotsPage />} />
+            <Route path="destinations" element={<DestinationsPage />} />
           </Route>
 
           <Route path="/settings" element={<SettingsPage />} />

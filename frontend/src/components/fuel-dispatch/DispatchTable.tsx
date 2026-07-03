@@ -23,9 +23,9 @@ export default function DispatchTable({
 }) {
   const isEtaDayReached = (etaDateTime?: string) => {
     if (!etaDateTime) return true
-    const etaDate = new Date(etaDateTime)
-    const today = new Date()
-    return today.toDateString() >= etaDate.toDateString()
+    const etaDateStr = etaDateTime.split('T')[0].split(' ')[0]
+    const todayStr = new Date().toISOString().split('T')[0]
+    return todayStr >= etaDateStr
   }
 
   return (
@@ -41,7 +41,7 @@ export default function DispatchTable({
               'Fuel Type',
               'Liters',
               'Dispatch Location',
-              'Destination Depot',
+              'Destination',
               'Dispatch Date',
               'ETA',
               'Drop-off',
@@ -84,13 +84,13 @@ export default function DispatchTable({
                 <td className="whitespace-nowrap px-4 py-4 text-slate-600">{t.dispatchLocation}</td>
                 <td className="whitespace-nowrap px-4 py-4">{depot}</td>
                 <td className="whitespace-nowrap px-4 py-4">
-                  {t.dispatchDateTime?.replace('T', ' ').replace('Z', '')}
+                  {t.dispatchDateTime?.split('T')[0].split(' ')[0]}
                 </td>
                 <td className="whitespace-nowrap px-4 py-4">
-                  {t.etaDateTime?.replace('T', ' ').replace('Z', '')}
+                  {t.etaDateTime?.split('T')[0].split(' ')[0]}
                 </td>
                 <td className="whitespace-nowrap px-4 py-4">
-                  {t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'}
+                  {t.dropOffDateTime ? t.dropOffDateTime.split('T')[0].split(' ')[0] : '—'}
                 </td>
                 <td className="whitespace-nowrap px-4 py-4">
                   <StatusPill status={t.status} task={t} />

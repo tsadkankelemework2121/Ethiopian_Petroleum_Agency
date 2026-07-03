@@ -13,7 +13,7 @@ import {ModalOverlay} from '../components/ui/ModelOverlay'
 
 // Existing role components
 import NewDispatchForm from '../components/roles/epa-admin/DispatchForm'
-import ConfirmReceiptForm from '../components/roles/depot/ConfirmReceiptForm'
+import ConfirmReceiptForm from '../components/roles/destination/ConfirmReceiptForm'
 
 // New page sub-components
 import DispatchTable from '../components/fuel-dispatch/DispatchTable'
@@ -56,11 +56,11 @@ export default function FuelDispatchPage() {
             oilCompanyId: d.oil_company_id,
             transporterId: d.transporter_id,
             vehicleId: d.vehicle_id,
-            dispatchDateTime: d.dispatch_datetime?.replace(' ', 'T'),
+            dispatchDateTime: d.dispatch_datetime ? d.dispatch_datetime.split(' ')[0].split('T')[0] : '',
             dispatchLocation: d.dispatch_location,
             destinationDepotId: d.destination_depot_id?.toString() || '',
-            etaDateTime: d.eta_datetime?.replace(' ', 'T'),
-            dropOffDateTime: d.drop_off_datetime?.replace(' ', 'T'),
+            etaDateTime: d.eta_datetime ? d.eta_datetime.split(' ')[0].split('T')[0] : '',
+            dropOffDateTime: d.drop_off_datetime ? d.drop_off_datetime.split(' ')[0].split('T')[0] : '',
             fuelType: d.fuel_type,
             dispatchedLiters: Number(d.dispatched_liters || 0),
             status: d.status,
@@ -114,7 +114,7 @@ export default function FuelDispatchPage() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return rawTasks.filter((t: any) => {
 
-      // If depot admin is logged in, show only tasks assigned to their destination depot
+      // If destination admin is logged in, show only tasks assigned to their destination
       if (isDepotAdmin && user?.depotId) {
         if (t.destinationDepotId?.toString() !== user.depotId.toString()) {
           return false
@@ -248,7 +248,7 @@ export default function FuelDispatchPage() {
         />
       </ModalOverlay>
 
-      {/* Depot Admin Confirm Delivery Form Dialog */}
+      {/* Destination Admin Confirm Delivery Form Dialog */}
       <ModalOverlay
         isOpen={!!confirmTask}
         onClose={() => setConfirmTask(null)}
@@ -280,12 +280,12 @@ export default function FuelDispatchPage() {
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="block font-semibold text-slate-500">Confirmed By</span>
-                <span className="font-bold text-slate-800">{viewConfirmation.confirmation?.confirmed_by || 'Depot Manager'}</span>
+                <span className="font-bold text-slate-800">{viewConfirmation.confirmation?.confirmed_by || 'Destination Manager'}</span>
               </div>
               <div>
                 <span className="block font-semibold text-slate-500">Delivery Date</span>
                 <span className="font-bold text-slate-800">
-                  {viewConfirmation.dropOffDateTime?.replace('T', ' ').replace('Z', '') || '—'}
+                  {viewConfirmation.dropOffDateTime || '—'}
                 </span>
               </div>
             </div>

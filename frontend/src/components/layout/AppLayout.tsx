@@ -2,6 +2,7 @@ import type { ComponentType, SVGProps } from 'react'
 import { useMemo, useState } from 'react'
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom'
 import logo from "../../assets/logo.png"
+import NotificationBell from './NotificationBell'
 import {
   BuildingOffice2Icon,
   ChartBarSquareIcon,
@@ -33,7 +34,7 @@ const primaryNav: NavItem[] = [
 const entitiesNav: NavItem[] = [
   { to: '/entities/oil-companies', label: 'Oil Companies', icon: BuildingOffice2Icon },
   { to: '/entities/transporters', label: 'Transporters', icon: TruckIcon },
-  { to: '/entities/depots', label: 'Depots', icon: MapIcon },
+  { to: '/entities/destinations', label: 'Destinations', icon: MapIcon },
 ]
 
 
@@ -85,7 +86,7 @@ function Sidebar({ onNavigate, role }: { onNavigate?: () => void, role: UserRole
 
         <div className="min-w-0">
           <div className="truncate text-sm font-bold text-text">
-            {role === 'EPA_ADMIN' ? 'PEA ETHIOPIA' : role === 'DEPOT_ADMIN' ? 'DEPOT PORTAL' : 'OIL COMPANY'}
+            {role === 'EPA_ADMIN' ? 'PEA ETHIOPIA' : role === 'DEPOT_ADMIN' ? 'DESTINATION PORTAL' : 'OIL COMPANY'}
           </div>
           <div className="truncate text-xs text-text-muted">
             {role === 'DEPOT_ADMIN' ? 'Delivery Confirmation' : 'Ops Command Center'}
@@ -138,7 +139,7 @@ export default function AppLayout() {
     if (pathname === '/reports') return 'Reports'
     if (pathname.includes('/entities/oil-companies')) return 'Oil Companies'
     if (pathname.includes('/entities/transporters')) return 'Transporters'
-    if (pathname.includes('/entities/depots')) return 'Depots'
+    if (pathname.includes('/entities/destinations')) return 'Destinations'
     if (pathname === '/settings') return 'Settings'
     if (pathname === '/profile') return 'Profile'
     return 'Dashboard'
@@ -200,7 +201,7 @@ export default function AppLayout() {
                     <input
                       value={globalSearch}
                       onChange={(e) => setGlobalSearch(e.target.value)}
-                      placeholder="Search dispatches, vehicles, or depots..."
+                      placeholder="Search dispatches, vehicles, or destinations..."
                       className="w-full rounded-xl border border-[#D1D5DB] bg-muted/40 px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
                     />
                   </div>
@@ -209,6 +210,8 @@ export default function AppLayout() {
 
               <div className="flex items-center gap-4">
 
+                {/* Notification Dropdown */}
+                <NotificationBell />
 
                 {/* Profile Dropdown */}
                 <div className="relative group text-left">

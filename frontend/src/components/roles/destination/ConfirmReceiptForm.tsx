@@ -39,7 +39,7 @@ export default function ConfirmReceiptForm({ peaDispatchNo, vehicleId, vehicles,
         fd.append('latitude', vehicle.lat.toString())
         fd.append('longitude', vehicle.lng.toString())
       }
-      fd.append('vehicle_status', 'Confirmed at depot')
+      fd.append('vehicle_status', 'Confirmed at destination')
       await api.post(`/dispatches/${peaDispatchNo}/deliver`, fd)
       onSuccess()
     } catch (err: any) {

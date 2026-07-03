@@ -24,9 +24,9 @@ export default function DispatchMobileCards({
 
   const isEtaDayReached = (etaDateTime?: string) => {
     if (!etaDateTime) return true
-    const etaDate = new Date(etaDateTime)
-    const today = new Date()
-    return today.toDateString() >= etaDate.toDateString()
+    const etaDateStr = etaDateTime.split('T')[0].split(' ')[0]
+    const todayStr = new Date().toISOString().split('T')[0]
+    return todayStr >= etaDateStr
   }
 
   return (
@@ -78,21 +78,21 @@ export default function DispatchMobileCards({
                     <div className="font-medium text-text mt-0.5">{t.dispatchLocation}</div>
                   </div>
                   <div>
-                    <div className="text-[11px] text-text-muted font-medium">Destination Depot</div>
+                    <div className="text-[11px] text-text-muted font-medium">Destination</div>
                     <div className="font-medium text-text mt-0.5">{depot}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-text-muted font-medium">Dispatch Date</div>
-                    <div className="font-medium text-text mt-0.5">{t.dispatchDateTime?.replace('T',' ').replace('Z','')}</div>
+                    <div className="font-medium text-text mt-0.5">{t.dispatchDateTime?.split('T')[0].split(' ')[0]}</div>
                   </div>
                   <div>
                     <div className="text-[11px] text-text-muted font-medium">ETA</div>
-                    <div className="font-medium text-text mt-0.5">{t.etaDateTime?.replace('T',' ').replace('Z','')}</div>
+                    <div className="font-medium text-text mt-0.5">{t.etaDateTime?.split('T')[0].split(' ')[0]}</div>
                   </div>
                   {t.dropOffDateTime && (
                     <div>
                       <div className="text-[11px] text-text-muted font-medium">Drop-off</div>
-                      <div className="font-medium text-text mt-0.5">{t.dropOffDateTime.replace('T',' ').replace('Z','')}</div>
+                      <div className="font-medium text-text mt-0.5">{t.dropOffDateTime.split('T')[0].split(' ')[0]}</div>
                     </div>
                   )}
                   <div className="col-span-2 flex justify-end gap-2 pt-2 border-t border-slate-100">

@@ -71,7 +71,7 @@ export default function FleetListSidebar({
 
     const collapsedHeight = dispatch ? 68 : 52
     const expandedHeight = dispatch ? 360 : 250
-    const depotName = dispatch ? (depotsById.get(dispatch.destinationDepotId?.toString() || dispatch.destination_depot_id?.toString())?.name || 'Unknown Depot') : ''
+    const depotName = dispatch ? (depotsById.get(dispatch.destinationDepotId?.toString() || dispatch.destination_depot_id?.toString())?.name || 'Unknown Destination') : ''
 
     return (
       <div style={style} className="border-b border-[#EEF2F7]">

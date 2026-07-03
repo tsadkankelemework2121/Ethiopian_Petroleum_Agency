@@ -25,10 +25,10 @@ export default function DispatchForm({
     oilCompanyId: editingTask?.oilCompanyId || '',
     transporterId: editingTask?.transporterId || '',
     vehicleId: editingTask?.vehicleId || '',
-    dispatchDateTime: (editingTask?.dispatchDateTime || '').split('.')[0],
+    dispatchDateTime: (editingTask?.dispatchDateTime || '').split('T')[0].split(' ')[0],
     dispatchLocation: editingTask?.dispatchLocation || 'Djibouti',
     destinationDepotId: editingTask?.destinationDepotId || '',
-    etaDateTime: (editingTask?.etaDateTime || '').split('.')[0],
+    etaDateTime: (editingTask?.etaDateTime || '').split('T')[0].split(' ')[0],
     fuelType: (editingTask?.fuelType || 'Benzine') as FuelType,
     dispatchedLiters: editingTask?.dispatchedLiters || '',
     status: editingTask?.status || 'On transit'
@@ -227,7 +227,7 @@ export default function DispatchForm({
         </div>
 
         <div>
-           <label className="block text-sm font-semibold mb-1 text-slate-700">Destination Depot *</label>
+           <label className="block text-sm font-semibold mb-1 text-slate-700">Destination *</label>
           <select
             required
             disabled={!formData.oilCompanyId}
@@ -235,7 +235,7 @@ export default function DispatchForm({
             onChange={(e) => setFormData({ ...formData, destinationDepotId: e.target.value })}
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-primary/20"
           >
-            <option value="">Select Depot...</option>
+            <option value="">Select Destination...</option>
             {availableDepots.map((d) => (
               <option key={d.id} value={d.id}>
                 {d.name} ({d.location.city})
@@ -258,9 +258,9 @@ export default function DispatchForm({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1 text-slate-700">Dispatch Date & Time *</label>
+          <label className="block text-sm font-semibold mb-1 text-slate-700">Dispatch Date *</label>
           <input
-            type="datetime-local"
+            type="date"
             required
             value={formData.dispatchDateTime}
             onChange={(e) => setFormData({ ...formData, dispatchDateTime: e.target.value })}
@@ -281,9 +281,9 @@ export default function DispatchForm({
         </div>
 
         <div>
-          <label className="block text-sm font-semibold mb-1 text-slate-700">ETA Date & Time *</label>
+          <label className="block text-sm font-semibold mb-1 text-slate-700">ETA Date *</label>
           <input
-            type="datetime-local"
+            type="date"
             required
             value={formData.etaDateTime}
             onChange={(e) => setFormData({ ...formData, etaDateTime: e.target.value })}

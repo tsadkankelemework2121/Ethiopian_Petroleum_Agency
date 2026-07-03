@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import api from '../api/axios'
-import type { Depot } from '../data/types'
-import { mapDepot } from '../data/types'
+import type { Depot as Destination } from '../data/types'
+import { mapDepot as mapDestination } from '../data/types'
 import PageHeader from '../components/layout/PageHeader'
 import { ModalOverlay } from '../components/ui/ModelOverlay'
 import { MapPinIcon, PlusIcon } from '@heroicons/react/24/outline'
@@ -11,79 +11,78 @@ import { useAuth } from '../context/AuthContext'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 // Child components
-import DepotForm from '../components/depots/DepotForm'
-import DepotTable from '../components/depots/DepotTable'
+import DestinationForm from '../components/destinations/DestinationForm'
+import DestinationTable from '../components/destinations/DestinationTable'
 
-export default function DepotsPage() {
+export default function DestinationsPage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
   const [showForm, setShowForm] = useState(false)
-  const [editingDepot, setEditingDepot] = useState<Depot | null>(null)
+  const [editingDestination, setEditingDestination] = useState<Destination | null>(null)
 
   const canAdd = user?.role === 'OIL_COMPANY_ADMIN' || user?.role?.toUpperCase() === 'OIL_COMPANY'
   const canManage = canAdd || user?.role === 'EPA_ADMIN'
 
-  const { data: items = [], isLoading } = useQuery<Depot[]>({
+  const { data: items = [], isLoading } = useQuery<Destination[]>({
     queryKey: ['depots'],
     queryFn: async () => {
       const res = await api.get('/depots', { params: { oil_company_id: user?.companyId } })
-      return res.data.map(mapDepot)
+      return res.data.map(mapDestination)
     },
     enabled: !!user?.companyId || user?.role === 'EPA_ADMIN',
   })
 
-  const openGoogleMaps = (depot: Depot) => {
-    if (depot.mapLink) {
-      window.open(depot.mapLink, '_blank')
-    } else if (depot.mapLocation) {
-      const { lat, lng } = depot.mapLocation
+  const openGoogleMaps = (destination: Destination) => {
+    if (destination.mapLink) {
+      window.open(destination.mapLink, '_blank')
+    } else if (destination.mapLocation) {
+      const { lat, lng } = destination.mapLocation
       window.open(`https://www.google.com/maps/search/?api=1&query=${lat},${lng}`, '_blank')
     } else {
-      const query = encodeURIComponent(`${depot.location.address}, ${depot.location.city}, ${depot.location.region}`)
+      const query = encodeURIComponent(`${destination.location.address}, ${destination.location.city}, ${destination.location.region}`)
       window.open(`https://www.google.com/maps/search/?api=1&query=${query}`, '_blank')
     }
   }
 
-  const handleEdit = (depot: Depot) => {
-    setEditingDepot(depot)
+  const handleEdit = (destination: Destination) => {
+    setEditingDestination(destination)
     setShowForm(true)
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleFormSubmit = async (payload: any) => {
     try {
-      if (editingDepot) {
-
-        await api.post(`/depots/${editingDepot.id}`, { ...payload, _method: 'PUT' })
+      if (editingDestination) {
+        await api.post(`/depots/${editingDestination.id}`, { ...payload, _method: 'PUT' })
       } else {
         await api.post('/depots', payload)
       }
       setShowForm(false)
-      setEditingDepot(null)
+      setEditingDestination(null)
       queryClient.invalidateQueries({ queryKey: ['depots'] })
     } catch (err) {
       console.error(err)
-      alert('Error saving depot. Please check your data.')
+      alert('Error saving destination. Please check your data.')
     }
   }
 
   return (
     <div>
       <PageHeader
-        title="Depots"
-        subtitle="Depots with contact details and map location."
+        title="Destinations"
+        subtitle="Destinations with contact details and map location."
         right={
           canAdd && (
             <button
               type="button"
               onClick={() => {
-                setEditingDepot(null)
+                setEditingDestination(null)
                 setShowForm(!showForm)
               }}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               <PlusIcon className="size-4" />
-              New Depot
+              New Destination
             </button>
           )
         }
@@ -93,16 +92,16 @@ export default function DepotsPage() {
         isOpen={showForm}
         onClose={() => {
           setShowForm(false)
-          setEditingDepot(null)
+          setEditingDestination(null)
         }}
-        title={editingDepot ? `Edit Depot: ${editingDepot.name}` : 'Add New Depot'}
+        title={editingDestination ? `Edit Destination: ${editingDestination.name}` : 'Add New Destination'}
       >
-        <DepotForm
+        <DestinationForm
           companyId={user?.companyId}
-          editingDepot={editingDepot}
+          editingDestination={editingDestination}
           onClose={() => {
             setShowForm(false)
-            setEditingDepot(null)
+            setEditingDestination(null)
           }}
           onSubmit={handleFormSubmit}
         />
@@ -114,7 +113,7 @@ export default function DepotsPage() {
             <table className="min-w-[800px] w-full divide-y divide-[#D1D5DB]">
               <thead className="bg-muted/50">
                 <tr>
-                  {['Depot', 'Location', 'Contact Person', 'Phone', 'Email', 'Actions'].map((header) => (
+                  {['Destination', 'Location', 'Contact Person', 'Phone', 'Email', 'Actions'].map((header) => (
                     <th
                       key={header}
                       className="px-6 py-4 text-left text-xs font-semibold text-text-muted uppercase tracking-wider"
@@ -164,26 +163,26 @@ export default function DepotsPage() {
       ) : items.length === 0 ? (
         <EmptyState
           icon={<MapPinIcon className="size-8" />}
-          title="No depots yet"
-          description="Add your first depot to get started with contact details and map locations."
+          title="No destinations yet"
+          description="Add your first destination to get started with contact details and map locations."
           action={
             canAdd ? (
               <button
                 type="button"
                 onClick={() => {
-                  setEditingDepot(null)
+                  setEditingDestination(null)
                   setShowForm(true)
                 }}
                 className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
               >
                 <PlusIcon className="size-4" />
-                Add your first depot
+                Add your first destination
               </button>
             ) : undefined
           }
         />
       ) : (
-        <DepotTable
+        <DestinationTable
           items={items}
           canManage={canManage}
           openGoogleMaps={openGoogleMaps}

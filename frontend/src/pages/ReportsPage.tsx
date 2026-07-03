@@ -116,7 +116,7 @@ export default function ReportsPage() {
       case 'vehicle':
         return 'Search by Vehicle Plate Reg. No. & Period'
       case 'depot':
-        return 'Search by Depot'
+        return 'Search by Destination'
     }
   }, [filterType])
 
@@ -127,7 +127,7 @@ export default function ReportsPage() {
       case 'vehicle':
         return 'Vehicle Plate (e.g., 3-11111 ET)'
       case 'depot':
-        return 'Depot Name/ID (e.g., ID8548)'
+        return 'Destination Name/ID (e.g., ID8548)'
     }
   }
 
@@ -165,8 +165,8 @@ export default function ReportsPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((t: any) => {
           const plate = getVehicleName(t.vehicleId)
-          const dispatchDt = t.dispatchDateTime?.replace('T', ' ').replace('Z', '') || '—'
-          const dropDt = t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'
+          const dispatchDt = t.dispatchDateTime?.split('T')[0].split(' ')[0] || '—'
+          const dropDt = t.dropOffDateTime ? t.dropOffDateTime.split('T')[0].split(' ')[0] : '—'
           const duration = t.dropOffDateTime
             ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime())
             : '—'
@@ -178,7 +178,7 @@ export default function ReportsPage() {
         })
 
       return {
-        columns: ['Dispatch No.', 'Plate', 'Oil Company', 'Transporter', 'Dispatch Date/Time', 'Drop Off Date/Time', 'Duration', 'Event'],
+        columns: ['Dispatch No.', 'Plate', 'Oil Company', 'Transporter', 'Dispatch Date', 'Drop Off Date', 'Duration', 'Event'],
         rows,
       }
     }
@@ -194,8 +194,8 @@ export default function ReportsPage() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         .map((t: any) => {
           const plate = getVehicleName(t.vehicleId)
-          const dispatchDt = t.dispatchDateTime?.replace('T', ' ').replace('Z', '') || '—'
-          const dropDt = t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'
+          const dispatchDt = t.dispatchDateTime?.split('T')[0].split(' ')[0] || '—'
+          const dropDt = t.dropOffDateTime ? t.dropOffDateTime.split('T')[0].split(' ')[0] : '—'
           const duration = t.dropOffDateTime
             ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime())
             : '—'
@@ -222,10 +222,10 @@ export default function ReportsPage() {
           'Transporter',
           'Oil Company',
           'Dispatch ID',
-          'Dispatch Date/Time',
+          'Dispatch Date',
           'Dispatch Location',
-          'Depot Name',
-          'Drop Off Date/Time',
+          'Destination Name',
+          'Drop Off Date',
           'Duration',
           'Event',
         ],
@@ -247,7 +247,7 @@ export default function ReportsPage() {
         const depot = depotsById.get(t.destinationDepotId)
         const depotName = depot?.name ?? '—'
         const plate = getVehicleName(t.vehicleId)
-        const dropDt = t.dropOffDateTime ? t.dropOffDateTime.replace('T', ' ').replace('Z', '') : '—'
+        const dropDt = t.dropOffDateTime ? t.dropOffDateTime.split('T')[0].split(' ')[0] : '—'
         const duration = t.dropOffDateTime
           ? formatDurationMs(new Date(t.dropOffDateTime).getTime() - new Date(t.dispatchDateTime).getTime())
           : '—'
@@ -259,7 +259,7 @@ export default function ReportsPage() {
       })
 
     return {
-      columns: ['Depot ID', 'Depot Name', 'Drop Off Date/Time', 'Vehicle', 'Oil Company', 'Transporter', 'Duration', 'Event'],
+      columns: ['Destination ID', 'Destination Name', 'Drop Off Date', 'Vehicle', 'Oil Company', 'Transporter', 'Duration', 'Event'],
       rows,
     }
   }, [applied, filterType, dispatches, depotsById, vehiclesByImeiOrName, isLoading])

@@ -1,33 +1,33 @@
 import { useState } from 'react'
 
-export default function DepotForm({
+export default function DestinationForm({
   onClose,
   onSubmit,
   companyId,
-  editingDepot,
+  editingDestination,
 }: {
   onClose: () => void
-  onSubmit: (depot: any) => void
+  onSubmit: (destination: any) => void
   companyId?: string
-  editingDepot?: any
+  editingDestination?: any
 }) {
   const [formData, setFormData] = useState({
-    name: editingDepot?.name || '',
-    region: editingDepot?.location?.region || editingDepot?.region || '',
-    city: editingDepot?.location?.city || editingDepot?.city || '',
-    address: editingDepot?.location?.address || editingDepot?.address || '',
-    person1: editingDepot?.contacts?.person1 || editingDepot?.person1 || '',
-    person2: editingDepot?.contacts?.person2 || editingDepot?.person2 || '',
-    phone1: editingDepot?.contacts?.phone1 || editingDepot?.phone1 || '',
-    phone2: editingDepot?.contacts?.phone2 || editingDepot?.phone2 || '',
-    email1: editingDepot?.contacts?.email1 || editingDepot?.email1 || '',
-    email2: editingDepot?.contacts?.email2 || editingDepot?.email2 || '',
-    lat: editingDepot?.mapLocation?.lat?.toString() || editingDepot?.lat?.toString() || '',
-    lng: editingDepot?.mapLocation?.lng?.toString() || editingDepot?.lng?.toString() || '',
-    password: editingDepot?.password || '',
+    name: editingDestination?.name || '',
+    region: editingDestination?.location?.region || editingDestination?.region || '',
+    city: editingDestination?.location?.city || editingDestination?.city || '',
+    address: editingDestination?.location?.address || editingDestination?.address || '',
+    person1: editingDestination?.contacts?.person1 || editingDestination?.person1 || '',
+    person2: editingDestination?.contacts?.person2 || editingDestination?.person2 || '',
+    phone1: editingDestination?.contacts?.phone1 || editingDestination?.phone1 || '',
+    phone2: editingDestination?.contacts?.phone2 || editingDestination?.phone2 || '',
+    email1: editingDestination?.contacts?.email1 || editingDestination?.email1 || '',
+    email2: editingDestination?.contacts?.email2 || editingDestination?.email2 || '',
+    lat: editingDestination?.mapLocation?.lat?.toString() || editingDestination?.lat?.toString() || '',
+    lng: editingDestination?.mapLocation?.lng?.toString() || editingDestination?.lng?.toString() || '',
+    password: editingDestination?.password || '',
   })
 
-  const [mapLink, setMapLink] = useState(editingDepot?.mapLink || editingDepot?.map_link || '')
+  const [mapLink, setMapLink] = useState(editingDestination?.mapLink || editingDestination?.map_link || '')
 
   const handleMapLinkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
@@ -75,11 +75,11 @@ export default function DepotForm({
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-sm font-semibold text-text mb-1">Depot Name *</label>
+          <label className="block text-sm font-semibold text-text mb-1">Destination Name *</label>
           <input
             type="text"
             required
-            placeholder="Enter depot name"
+            placeholder="Enter destination name"
             value={formData.name}
             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -192,7 +192,7 @@ export default function DepotForm({
           <input
             type="email"
             required
-            placeholder="e.g. contact@depot.com"
+            placeholder="e.g. contact@destination.com"
             value={formData.email1}
             onChange={(e) => setFormData({ ...formData, email1: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -202,25 +202,25 @@ export default function DepotForm({
           <label className="block text-sm font-semibold text-text mb-1">Email 2</label>
           <input
             type="email"
-            placeholder="e.g. alt@depot.com"
+            placeholder="e.g. alt@destination.com"
             value={formData.email2}
             onChange={(e) => setFormData({ ...formData, email2: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
           />
         </div>
 
-        {/* Password for depot login */}
+        {/* Password for destination login */}
         <div className="sm:col-span-2 pt-2 border-t border-[#D1D5DB] mt-2">
           <label className="block text-sm font-semibold text-text mb-1">
-            Depot Login Password {editingDepot ? '(leave blank to keep current)' : '*'}
+            Destination Login Password {editingDestination ? '(leave blank to keep current)' : '*'}
           </label>
           <p className="text-xs text-text-muted mb-2">
-            If Email 1 and password are provided, a login account will be created for this depot to confirm deliveries.
+            If Email 1 and password are provided, a login account will be created for this destination to confirm deliveries.
           </p>
           <input
             type="password"
-            required={!editingDepot}
-            placeholder={editingDepot ? 'Leave blank to keep current password' : 'Set depot login password (min 6 chars)'}
+            required={!editingDestination}
+            placeholder={editingDestination ? 'Leave blank to keep current password' : 'Set destination login password (min 6 chars)'}
             value={formData.password}
             onChange={(e) => setFormData({ ...formData, password: e.target.value })}
             className="w-full rounded-lg border border-[#D1D5DB] bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/40"
@@ -273,7 +273,7 @@ export default function DepotForm({
           type="submit"
           className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white shadow-card hover:bg-primary-strong transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
         >
-          {editingDepot ? 'Update Depot' : 'Create Depot'}
+          {editingDestination ? 'Update Destination' : 'Create Destination'}
         </button>
       </div>
     </form>
